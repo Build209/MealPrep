@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Modal, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { Modal } from '../BackAwareModal';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BrandLogo } from '../BrandLogo';
 import { APP_BRAND } from '../../config/appBrand';

@@ -1,6 +1,7 @@
 import { Ionicons } from '../lib/icons/Ionicons';
 import { useMemo, useState } from 'react';
-import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Modal } from './BackAwareModal';
 import { THEME } from '../config/appConfig';
 import {
   countRecipesTabFilterOption,

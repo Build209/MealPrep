@@ -1,11 +1,11 @@
 import { type ReactNode, useCallback, useRef, useState } from 'react';
 import {
-  Modal,
   Pressable,
   useWindowDimensions,
   type LayoutChangeEvent,
   type View as RNView,
 } from 'react-native';
+import { Modal } from './BackAwareModal';
 
 export type AnchorRect = { x: number; y: number; width: number; height: number };
 

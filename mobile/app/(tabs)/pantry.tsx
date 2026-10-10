@@ -7,7 +7,6 @@ import {
   ActivityIndicator,
   Alert,
   Image,
-  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -15,6 +14,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { Modal } from '../../components/BackAwareModal';
 import { Card } from '../../components/Card';
 import { CategoryChips } from '../../components/CategoryChips';
 import { ConfirmDialog } from '../../components/ConfirmDialog';

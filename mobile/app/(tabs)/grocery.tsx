@@ -2,13 +2,13 @@ import { Ionicons } from '../../lib/icons/Ionicons';
 import { router } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import {
-  Modal,
   Pressable,
   ScrollView,
   Text,
   TextInput,
   View,
 } from 'react-native';
+import { Modal } from '../../components/BackAwareModal';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { GroceryEmptyState } from '../../components/grocery/GroceryEmptyState';

@@ -1,5 +1,6 @@
 import { Ionicons } from '../../lib/icons/Ionicons';
-import { Modal, Pressable, Text, TextInput, View } from 'react-native';
+import { Pressable, Text, TextInput, View } from 'react-native';
+import { Modal } from '../BackAwareModal';
 import { SMART_SHOP_COPY } from '../../config/smartShop';
 import { THEME } from '../../config/appConfig';
 

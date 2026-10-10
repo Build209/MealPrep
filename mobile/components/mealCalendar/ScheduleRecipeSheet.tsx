@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Modal } from '../BackAwareModal';
 import { MEAL_CALENDAR } from '../../config/mealCalendar';
 import { SEAMLESS_FLOW_COPY } from '../../config/seamlessFlow';
 import { useApp } from '../../context/AppContext';

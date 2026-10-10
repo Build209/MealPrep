@@ -1,4 +1,5 @@
-import { Modal, Pressable, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
+import { Modal } from './BackAwareModal';
 
 interface ConfirmDialogProps {
   visible: boolean;

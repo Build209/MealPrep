@@ -3,7 +3,6 @@ import * as ImagePicker from 'expo-image-picker';
 import { useEffect, useMemo, useRef, useState, type MutableRefObject } from 'react';
 import {
   ActivityIndicator,
-  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -11,6 +10,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { Modal } from '../BackAwareModal';
 import { SMART_SHOP_COPY } from '../../config/smartShop';
 import { THEME } from '../../config/appConfig';
 import { photoScanPlanBlockedMessage } from '../../lib/plans/photoScanPlanBlockedMessage';

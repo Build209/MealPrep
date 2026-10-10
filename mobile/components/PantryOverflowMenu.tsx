@@ -1,5 +1,6 @@
 import { Ionicons } from '../lib/icons/Ionicons';
-import { Modal, Pressable, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
+import { Modal } from './BackAwareModal';
 import { THEME } from '../config/appConfig';
 import { labelForPantryStorageLocation, PANTRY_STORAGE_LOCATIONS, type PantryStorageLocation } from '../config/pantryStorage';
 

@@ -1,4 +1,5 @@
-import { Image, Modal, Pressable, ScrollView, Text, View } from 'react-native';
+import { Image, Pressable, ScrollView, Text, View } from 'react-native';
+import { Modal } from '../BackAwareModal';
 import { PLUS_UPGRADE_COPY } from '../../config/pricing';
 import { PlusUpgradeOptions } from './PlusUpgradeOptions';
 

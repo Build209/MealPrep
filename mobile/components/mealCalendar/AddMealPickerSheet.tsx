@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
-import { Modal, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { Modal } from '../BackAwareModal';
 import { MEAL_CALENDAR } from '../../config/mealCalendar';
 import { MEAL_SLOTS, type MealSlot, type Recipe } from '../../types/mealprep';
 import { formatMealPickerHeaderDate } from '../../lib/mealCalendar/formatScheduleDate';
