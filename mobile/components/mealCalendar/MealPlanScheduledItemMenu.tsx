@@ -1,4 +1,5 @@
-import { Modal, Pressable, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
+import { Modal } from '../BackAwareModal';
 import type { MealPlanItem } from '../../types/mealprep';
 import { buildLocalDayRange } from '../../lib/mealCalendar/dates';
 import { MEAL_CALENDAR } from '../../config/mealCalendar';

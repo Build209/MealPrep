@@ -1,6 +1,7 @@
 import { Ionicons } from '../../lib/icons/Ionicons';
 import { useEffect, useMemo, useState } from 'react';
-import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Modal } from '../BackAwareModal';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CookThisButton } from '../mealCalendar/CookThisButton';
 import { THEME } from '../../config/appConfig';

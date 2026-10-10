@@ -1,5 +1,6 @@
 import { Ionicons } from '../../lib/icons/Ionicons';
-import { Linking, Modal, Pressable, Text, View } from 'react-native';
+import { Linking, Pressable, Text, View } from 'react-native';
+import { Modal } from '../BackAwareModal';
 import { STORES_TAB_COPY } from '../../config/storesTab';
 import { THEME } from '../../config/appConfig';
 import { mapsDirectionsUrl } from '../../config/smartShop';

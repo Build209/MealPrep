@@ -1,4 +1,5 @@
-import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Modal } from '../BackAwareModal';
 import { useCallback, useMemo, useState } from 'react';
 import type { RecipesTabRow } from '../../config/recipesTabFilters';
 import {

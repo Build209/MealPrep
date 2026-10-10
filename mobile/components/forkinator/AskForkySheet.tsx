@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Image,
   KeyboardAvoidingView,
-  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -10,6 +9,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { Modal } from '../BackAwareModal';
 import { THEME } from '../../config/appConfig';
 import { ASK_FORKY_COPY, ASK_FORKY_LIMITS } from '../../config/askForky';
 import { useApp } from '../../context/AppContext';

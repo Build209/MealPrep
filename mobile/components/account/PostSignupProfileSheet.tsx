@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Modal, Pressable, ScrollView, Text, TextInput } from 'react-native';
+import { Pressable, ScrollView, Text, TextInput } from 'react-native';
+import { Modal } from '../BackAwareModal';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ACCOUNT_SHEET_COPY, HOUSEHOLD_SIZE_LIMITS } from '../../config/account';
 import { useApp } from '../../context/AppContext';

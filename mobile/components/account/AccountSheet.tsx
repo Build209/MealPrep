@@ -3,7 +3,6 @@ import { useState } from 'react';
 import {
   Alert,
   Linking,
-  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -12,6 +11,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { Modal } from '../BackAwareModal';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ACCOUNT_SHEET_COPY, HOUSEHOLD_SIZE_LIMITS, LEGAL_LINKS } from '../../config/account';
 import { APP_ROUTES } from '../../config/appRoutes';

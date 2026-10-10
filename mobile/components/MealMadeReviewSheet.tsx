@@ -1,4 +1,5 @@
-import { Modal, Pressable, ScrollView, Switch, Text, View } from 'react-native';
+import { Pressable, ScrollView, Switch, Text, View } from 'react-native';
+import { Modal } from './BackAwareModal';
 import { formatQuantityWithUnit } from '../lib/formatQuantity';
 import type { MealMadeReviewRow } from '../lib/mealPlan/pantryDeduction';
 import { THEME } from '../config/appConfig';

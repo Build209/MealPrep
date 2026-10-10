@@ -1,4 +1,5 @@
-import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Modal } from '../BackAwareModal';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '../../lib/icons/Ionicons';
 import { THEME } from '../../config/appConfig';

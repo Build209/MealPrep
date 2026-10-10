@@ -3,7 +3,6 @@ import { useApp } from '../../context/AppContext';
 import { recipeConflictsWithDietPrefs, recipeDietTagFromIngredientLines } from '../../lib/diet/conflicts';
 import { recipeDietSummaryForPrefs } from '../../lib/diet/summaryLine';
 import {
-  Modal,
   Pressable,
   ScrollView,
   Text,
@@ -11,6 +10,7 @@ import {
   View,
   Linking,
 } from 'react-native';
+import { Modal } from '../BackAwareModal';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RECIPE_IMPORT_COPY } from '../../config/recipeImport';
 import type { RecipeImportExtractedDto } from '../../lib/recipeImport/types';
