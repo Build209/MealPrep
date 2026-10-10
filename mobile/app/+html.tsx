@@ -18,6 +18,13 @@ function fontCss(): string {
   ].join('');
 }
 
+/**
+ * Pulling down at the top of a screen must not reload the app (Android Chrome's pull-to-refresh):
+ * a reload throws away a scan in progress, an open recipe and anything half typed. Screens that
+ * want a refresh have their own button. Found in live testing on an Android phone, 2026-10-10.
+ */
+const NO_PULL_TO_REFRESH_CSS = 'html,body{overscroll-behavior-y:contain}';
+
 export default function Root({ children }: { children: React.ReactNode }) {
   const { bodyAttributes, bodyNodes, htmlAttributes, headNodes } = useServerDocumentContext();
 
@@ -45,6 +52,7 @@ export default function Root({ children }: { children: React.ReactNode }) {
         <ScrollViewStyleReset />
         <link rel="preload" href={webAssetPath('/fonts/Figtree-Variable.woff2')} as="font" type="font/woff2" crossOrigin="anonymous" />
         <style dangerouslySetInnerHTML={{ __html: fontCss() }} />
+        <style dangerouslySetInnerHTML={{ __html: NO_PULL_TO_REFRESH_CSS }} />
         {headNodes}
       </head>
       <body suppressHydrationWarning {...bodyAttributes}>
