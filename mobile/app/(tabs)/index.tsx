@@ -29,6 +29,7 @@ import { RecipesFeedCardSkeleton } from '../../components/recipes/RecipesFeedCar
 import { RecipesUnifiedFeedCard } from '../../components/recipes/RecipesUnifiedFeedCard';
 import { RecipesTabFilterBar, RecipesTabFiltersEmptyState } from '../../components/RecipesTabFilterBar';
 import { useTutorialTarget } from '../../hooks/useTutorial';
+import { useStableRowOrder } from '../../lib/recipes/stableRowOrder';
 import { RECIPES_COPY } from '../../config/recipesCopy';
 import { THEME, isCreatorRecipesConfigured } from '../../config/appConfig';
 import { APP_ROUTES } from '../../config/appRoutes';
@@ -125,6 +126,8 @@ function RecipesFeedSectionLabel({ title, className }: { title: string; classNam
     </Text>
   );
 }
+
+const classicRowId = (row: RecipesTabRow): string => String(row.recipe.id);
 
 export default function HomeScreen() {
   const hydrated = useHydrated();
@@ -477,6 +480,15 @@ export default function HomeScreen() {
     userDietPrefs,
     rankTabRows,
   ]);
+
+  // While pantry matches are still coming in the grid used to re-sort itself under the reader.
+  // A recipe now keeps the place where it first appeared and new ones go underneath; another
+  // category or the refresh button starts a fresh order.
+  const steadyClassicRecipeRows = useStableRowOrder(
+    classicRecipeRows,
+    classicRowId,
+    `${selectedClassicCategory ?? 'all'}|${feedDiversitySeed}`,
+  );
 
   const browseVideoModels = useMemo(() => {
     if (!creatorFeedEnabled || searching) return [];
@@ -1300,7 +1312,7 @@ export default function HomeScreen() {
               <RecipesFeedCardSkeleton count={4} />
             ) : null}
             <View className="flex-row flex-wrap justify-between">
-              {classicRecipeRows.map((row) => (
+              {steadyClassicRecipeRows.map((row) => (
                 <RecipesUnifiedFeedCard
                   key={row.recipe.id}
                   grid
