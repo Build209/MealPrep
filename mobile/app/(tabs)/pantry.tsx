@@ -107,6 +107,20 @@ import {
 } from '../../config/pantryStaples';
 import { PantryAddStaplesLink } from '../../components/pantry/PantryAddStaplesLink';
 import { PantryStaplesInviteCard } from '../../components/pantry/PantryStaplesInviteCard';
+import { PantryShelves } from '../../components/pantry/PantryShelves';
+import { useTutorialState } from '../../hooks/useTutorial';
+import {
+  buildPantryShelves,
+  DEFAULT_PANTRY_VIEW_MODE,
+  isPantryViewMode,
+  pantryShelfSummary,
+  PANTRY_VIEW_MODE_STORAGE_KEY,
+  resolveShelfPlace,
+  SHELF_PLACES,
+  SHELF_VIEW_COPY,
+  type PantryShelf,
+  type PantryViewMode,
+} from '../../lib/pantry/shelfView';
 import { addDaysToIsoDate, todayIsoDate } from '../../lib/pantry/expiry';
 import { STAPLE_EXPIRY_QUICK_CHIPS } from '../../lib/pantry/stapleCatalog';
 
@@ -124,6 +138,11 @@ function readStoredPantryLocationFilter(): PantryStorageLocation | 'all' {
   if (saved === 'all') return 'all';
   if (saved && isPantryStorageLocation(saved)) return saved;
   return 'all';
+}
+
+function readStoredPantryViewMode(): PantryViewMode {
+  const saved = readJson<string | null>(PANTRY_VIEW_MODE_STORAGE_KEY, null);
+  return isPantryViewMode(saved) ? saved : DEFAULT_PANTRY_VIEW_MODE;
 }
 
 export default function PantryScreen() {
@@ -159,6 +178,15 @@ export default function PantryScreen() {
   const locationFilter: PantryStorageLocation | 'all' = hydrated
     ? (locationFilterOverride ?? readStoredPantryLocationFilter())
     : 'all';
+
+  /** Shelves (packages on shelves, one place at a time) or the plain list. Remembered on the device. */
+  const [viewModeOverride, setViewModeOverride] = useState<PantryViewMode | null>(null);
+  const viewMode: PantryViewMode = hydrated
+    ? (viewModeOverride ?? readStoredPantryViewMode())
+    : DEFAULT_PANTRY_VIEW_MODE;
+  /** Shelves view tucks the two scan cards behind the camera button; this opens them. */
+  const [scanPanelOpen, setScanPanelOpen] = useState(false);
+  const tutorial = useTutorialState();
 
   const [phase, setPhaseState] = useState<ScanPhase>('idle');
   /** Same value as `phase`, readable from a scan that started before the latest render. */
@@ -253,6 +281,8 @@ export default function PantryScreen() {
     setHighlightItemIds(new Set(ids));
     selectLocationFilter('all');
     setFilter('all');
+    // The highlight is drawn on list rows; this visit only, the saved view choice is untouched.
+    setViewModeOverride('list');
   }, []);
 
   const tryConsumeShelfScanRequest = useCallback(() => {
@@ -265,6 +295,7 @@ export default function PantryScreen() {
     const mode = consumeOpenPantryShelfScanRequest();
     if (!mode) return;
     if (phase !== 'idle') return;
+    setScanPanelOpen(true);
     setAutoOpenScanMode(mode);
   }, [phase]);
 
@@ -350,6 +381,22 @@ export default function PantryScreen() {
   function selectLocationFilter(next: PantryStorageLocation | 'all') {
     setLocationFilterOverride(next);
     writeJson(PANTRY_LOCATION_FILTER_STORAGE_KEY, next);
+  }
+
+  function selectViewMode(next: PantryViewMode) {
+    setViewModeOverride(next);
+    writeJson(PANTRY_VIEW_MODE_STORAGE_KEY, next);
+  }
+
+  const shelfPlace = resolveShelfPlace(locationFilter, pantry);
+  const shelves = useMemo(() => buildPantryShelves(pantry, shelfPlace), [pantry, shelfPlace]);
+  const shelfSummary = useMemo(() => pantryShelfSummary(pantry), [pantry]);
+
+  /** "See all" on a shelf: the same items as plain rows, in the list view. */
+  function openShelfInList(shelf: PantryShelf) {
+    selectLocationFilter(shelf.seeAll.location);
+    setFilter(shelf.seeAll.category);
+    setViewModeOverride('list');
   }
 
   const resortPreview = useMemo(() => previewResortFromDefaultPantry(pantry), [pantry]);
@@ -828,6 +875,7 @@ export default function PantryScreen() {
       aiBaselineRef.current = new Map();
       clearScanFailure();
       setSaveError(null);
+      setScanPanelOpen(false);
       setScanRecipeCount(recipeCount);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Could not save pantry items';
@@ -937,6 +985,8 @@ export default function PantryScreen() {
           location: inferredLocation,
           expiresOn: manualExpiresOn,
         });
+        // Shelves show one place at a time: go to where the new item landed so it is seen.
+        if (viewMode === 'shelves') selectLocationFilter(inferredLocation);
       }
       closeManualModal();
     } catch (error) {
@@ -1018,6 +1068,10 @@ export default function PantryScreen() {
 
   const showSetupHint = !visionReady && !demoMode;
   const scanControlsVisible = phase !== 'review';
+  const shelvesMode = viewMode === 'shelves';
+  /** With items on the shelves the scan cards fold behind the camera button, so the shelves start higher. */
+  const scanCardsFolded = shelvesMode && pantry.length > 0;
+  const scanCardsShown = scanControlsVisible && (!scanCardsFolded || scanPanelOpen || tutorial.active);
   const showStaplesInvite = pantry.length === 0 && !staplesInviteDismissed && phase !== 'review';
   /** "Plus" badge on the scan card: only for people the existing gate would not let scan (guest or free plan). */
   const scanAccessState = photoScanAccessState(photoScanAccess);
@@ -1038,19 +1092,40 @@ export default function PantryScreen() {
         <View className="gap-4">
           <View>
             <View className="flex-row items-center justify-between gap-2">
-              <Text className="flex-1 text-[28px] font-extrabold leading-9 text-ink" accessibilityRole="header">
-                Pantry
-              </Text>
-              {pantry.length > 0 ? (
-                <Pressable
-                  onPress={() => setOverflowOpen(true)}
-                  className="h-11 w-11 items-center justify-center rounded-full border border-border bg-card"
-                  accessibilityRole="button"
-                  accessibilityLabel={PANTRY_LIST_COPY.overflowMenuA11y}
-                >
-                  <Ionicons name="ellipsis-horizontal" size={22} color={THEME.ink} />
-                </Pressable>
-              ) : null}
+              <View className="min-w-0 flex-1">
+                <Text className="text-[28px] font-extrabold leading-8 text-ink" accessibilityRole="header">
+                  Pantry
+                </Text>
+                <Text className="mt-0.5 text-[13px] leading-[18px] text-muted">
+                  {pantry.length > 0
+                    ? SHELF_VIEW_COPY.summary(shelfSummary.total, shelfSummary.soon)
+                    : 'Track what you own — fewer duplicate buys'}
+                </Text>
+              </View>
+              <View
+                className="flex-row rounded-full bg-border/60 p-[3px]"
+                accessibilityRole="tablist"
+                accessibilityLabel={SHELF_VIEW_COPY.viewToggleA11y}
+              >
+                {(['shelves', 'list'] as const).map((mode) => {
+                  const active = viewMode === mode;
+                  return (
+                    <Pressable
+                      key={mode}
+                      onPress={() => selectViewMode(mode)}
+                      className={`h-[38px] items-center justify-center rounded-full px-3.5 ${active ? 'bg-primary' : ''}`}
+                      accessibilityRole="tab"
+                      accessibilityState={{ selected: active }}
+                    >
+                      <Text className={`text-[13px] ${active ? 'font-bold text-cream' : 'font-semibold text-ink'}`}>
+                        {SHELF_VIEW_COPY[mode]}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </View>
+            <View className="mt-3 flex-row items-center gap-2">
               <Pressable
                 onPress={openAddModal}
                 className="h-11 flex-row items-center gap-1.5 rounded-full bg-primary pl-3 pr-4"
@@ -1060,8 +1135,43 @@ export default function PantryScreen() {
                 <Ionicons name="add" size={20} color={THEME.brandCream} />
                 <Text className="text-[15px] font-bold text-cream">Add item</Text>
               </Pressable>
+              {scanCardsFolded && scanControlsVisible ? (
+                <Pressable
+                  onPress={() => setScanPanelOpen((open) => !open)}
+                  className={`h-11 min-w-0 flex-1 flex-row items-center gap-2 rounded-full border-[1.5px] border-tomato pl-1.5 pr-3 ${
+                    scanPanelOpen ? 'bg-tomato-light' : 'bg-card'
+                  }`}
+                  accessibilityRole="button"
+                  accessibilityState={{ expanded: scanPanelOpen }}
+                  accessibilityLabel={scanPanelOpen ? SHELF_VIEW_COPY.hideScanA11y : SHELF_VIEW_COPY.scanA11y}
+                >
+                  <View className="h-8 w-8 shrink-0 items-center justify-center rounded-full bg-tomato-light">
+                    <Ionicons name="camera-outline" size={18} color={THEME.tomatoDark} />
+                  </View>
+                  <Text className="min-w-0 flex-1 text-[15px] font-extrabold text-ink" numberOfLines={1}>
+                    {SHELF_VIEW_COPY.scanLabel}
+                  </Text>
+                  {showScanPlusBadge || freeScanBadge ? (
+                    <View className="shrink-0 rounded-[10px] bg-tomato px-2 py-0.5">
+                      <Text className="text-xs font-extrabold text-on-tomato">
+                        {freeScanBadge ?? PANTRY_SCAN_UI_COPY.scanCardPlusBadge}
+                      </Text>
+                    </View>
+                  ) : null}
+                  <Ionicons name={scanPanelOpen ? 'chevron-up' : 'chevron-down'} size={16} color={THEME.muted} />
+                </Pressable>
+              ) : null}
+              {pantry.length > 0 ? (
+                <Pressable
+                  onPress={() => setOverflowOpen(true)}
+                  className="ml-auto h-11 w-11 items-center justify-center rounded-full border border-border bg-card"
+                  accessibilityRole="button"
+                  accessibilityLabel={PANTRY_LIST_COPY.overflowMenuA11y}
+                >
+                  <Ionicons name="ellipsis-horizontal" size={22} color={THEME.ink} />
+                </Pressable>
+              ) : null}
             </View>
-            <Text className="mt-1 text-sm text-muted">Track what you own — fewer duplicate buys</Text>
             <PantryAddStaplesLink onPress={openPantryStaples} />
           </View>
 
@@ -1088,7 +1198,7 @@ export default function PantryScreen() {
             </View>
           ) : null}
 
-          {scanControlsVisible ? (
+          {scanCardsShown ? (
             <View className="gap-2">
               <PantryStorageScanButtons
                 disabled={!featureFlags.photoScan}
@@ -1261,15 +1371,38 @@ export default function PantryScreen() {
             </Card>
           ) : null}
 
-          <View className="gap-2">
-            <PantryStorageLocationFilterChips
-              selected={locationFilter}
-              onSelect={selectLocationFilter}
-              counts={locationFilterCounts}
-            />
+          {shelvesMode ? (
+            <View className="flex-row flex-wrap gap-2" accessibilityRole="tablist">
+              {SHELF_PLACES.map((place) => {
+                const active = shelfPlace === place;
+                return (
+                  <Pressable
+                    key={place}
+                    onPress={() => selectLocationFilter(place)}
+                    accessibilityRole="tab"
+                    accessibilityState={{ selected: active }}
+                    className={`min-h-[44px] items-center justify-center rounded-full border-[1.5px] px-3.5 ${
+                      active ? 'border-primary bg-primary' : 'border-border bg-card'
+                    }`}
+                  >
+                    <Text className={`text-sm font-bold ${active ? 'text-cream' : 'text-ink'}`}>
+                      {SHELF_VIEW_COPY.placeLabels[place]}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          ) : (
+            <View className="gap-2">
+              <PantryStorageLocationFilterChips
+                selected={locationFilter}
+                onSelect={selectLocationFilter}
+                counts={locationFilterCounts}
+              />
 
-            <CategoryChips selected={filter} onSelect={setFilter} />
-          </View>
+              <CategoryChips selected={filter} onSelect={setFilter} />
+            </View>
+          )}
 
           {actionError ? <Text className="text-xs font-semibold text-danger">{actionError}</Text> : null}
 
@@ -1279,6 +1412,13 @@ export default function PantryScreen() {
             </View>
           ) : pantry.length === 0 ? (
             <TabEmptyState tab="pantry" className="mt-0" />
+          ) : shelvesMode ? (
+            <PantryShelves
+              shelves={shelves}
+              emptyMessage={SHELF_VIEW_COPY.emptyPlace(SHELF_VIEW_COPY.placeLabels[shelfPlace])}
+              onPressItem={openEditModal}
+              onSeeAll={openShelfInList}
+            />
           ) : (
             <PantryFilteredItemList
               items={pantry}
