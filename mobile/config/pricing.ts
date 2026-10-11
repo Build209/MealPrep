@@ -37,7 +37,8 @@ export const PLUS_UPGRADE_COPY = {
   screenTitle: 'Pick a plan',
   tierChoiceLabel: 'Choose a plan',
   intervalChoiceLabel: 'Pay monthly or yearly',
-  intervalLabels: { year: 'Pay yearly', month: 'Pay monthly' },
+  payYearly: 'Pay yearly',
+  payMonthly: 'Pay monthly',
   /** Lead-in to the free plan's own limits. New wording: compliance to confirm. */
   freePlanLead: 'Free stays free:',
   close: 'Close',

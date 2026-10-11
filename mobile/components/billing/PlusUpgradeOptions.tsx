@@ -13,6 +13,12 @@ import { BillingError, startPlanCheckout } from '../../lib/billing/client';
 import { flushUsageLog, logUsageEvent } from '../../lib/usage/usageLog';
 import { tierPriceLabel, tierRenewalDisclosure, tierSubscribeLabel } from '../../lib/billing/pricing';
 
+/** The switch's two labels. Kept as plain strings in the copy so the wording checks can read every line. */
+const INTERVAL_LABELS: Record<BillingInterval, string> = {
+  year: PLUS_UPGRADE_COPY.payYearly,
+  month: PLUS_UPGRADE_COPY.payMonthly,
+};
+
 type Props = {
   /** Shows a "Not now" link that calls this. */
   onNotNow?: () => void;
@@ -104,13 +110,13 @@ export function PlusUpgradeOptions({ onNotNow }: Props) {
               disabled={busy}
               accessibilityRole="radio"
               accessibilityState={{ selected, disabled: busy }}
-              accessibilityLabel={PLUS_UPGRADE_COPY.intervalLabels[option]}
+              accessibilityLabel={INTERVAL_LABELS[option]}
               className={`min-h-[48px] flex-1 items-center justify-center rounded-[14px] border-2 px-3 ${
                 selected ? 'border-primary bg-primary' : 'border-border bg-card'
               }`}
             >
               <Text className={`text-base font-extrabold ${selected ? 'text-on-primary' : 'text-ink'}`}>
-                {PLUS_UPGRADE_COPY.intervalLabels[option]}
+                {INTERVAL_LABELS[option]}
               </Text>
             </Pressable>
           );
