@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { ASK_FORKY_COPY, ASK_FORKY_LIMITS as APP_LIMITS } from '../config/askForky.ts';
-import { buildAskForkyBody } from '../lib/forky/askForkyRequest.ts';
+import { buildAskForkyBody, recentlyCookedTitles } from '../lib/forky/askForkyRequest.ts';
 import {
   ASK_FORKY_DEFAULT_CAPS,
   ASK_FORKY_DEFAULT_MODEL,
@@ -182,6 +182,78 @@ const privacy = read('public/privacy.html');
 assert.match(privacy, /Ask Forky/);
 assert.match(privacy, /Anthropic/);
 assert.match(read('../.github/workflows/deploy-function.yml'), /- ask-forky/);
+
+// --- Household profile (learning step 4): a few facts so answers fit, and nothing health-coded.
+const profileContext = { pantry: [], recipes: [] };
+assert.equal('household' in buildAskForkyBody('q', [], profileContext), false, 'left out when there is nothing to say');
+assert.equal(
+  'household' in buildAskForkyBody('q', [], { ...profileContext, household: { householdSize: 0, usualItems: [' '], cookedRecently: [] } }),
+  false,
+);
+const withHousehold = buildAskForkyBody('q', [], {
+  ...profileContext,
+  household: {
+    householdSize: 4,
+    usualItems: Array.from({ length: 20 }, (_, i) => `Item ${i}`),
+    cookedRecently: Array.from({ length: 9 }, (_, i) => `Meal ${i}`),
+  },
+});
+assert.equal(withHousehold.household?.size, 4);
+assert.equal(withHousehold.household?.usualItems?.length, APP_LIMITS.usualItems);
+assert.equal(withHousehold.household?.cookedRecently?.length, APP_LIMITS.cookedRecently);
+assert.deepEqual(Object.keys(withHousehold.household ?? {}).sort(), ['cookedRecently', 'size', 'usualItems']);
+// Meals made in the last 30 days, newest first, no repeats, nothing from the future or unmade.
+const cookedNow = new Date('2026-10-11T12:00:00Z');
+assert.deepEqual(
+  recentlyCookedTitles(
+    [
+      { title: 'Chili', made: true, madeAt: '2026-10-01T00:00:00Z' },
+      { title: 'Tacos', made: true, madeAt: '2026-10-09T00:00:00Z' },
+      { title: 'tacos', made: true, madeAt: '2026-10-03T00:00:00Z' },
+      { title: 'Old stew', made: true, madeAt: '2026-08-01T00:00:00Z' },
+      { title: 'Planned pasta', made: false, madeAt: null },
+      { title: 'Time travel', made: true, madeAt: '2026-11-01T00:00:00Z' },
+    ],
+    cookedNow,
+  ),
+  ['Tacos', 'Chili'],
+);
+// The server bounds it again and drops anything it does not know.
+const householdRequest = parseForkyRequest({
+  question: 'q',
+  household: {
+    size: 4,
+    usualItems: ['Eggs', 'x'.repeat(200), 7, '', ...Array.from({ length: 30 }, () => 'Milk')],
+    cookedRecently: ['Tacos', null],
+    allergies: ['peanuts'],
+    diet: 'keto',
+    email: 'a@b.co',
+  },
+});
+assert.ok(householdRequest.ok);
+if (householdRequest.ok) {
+  const household = householdRequest.request.household;
+  assert.deepEqual(Object.keys(household ?? {}).sort(), ['cookedRecently', 'size', 'usualItems'], 'unknown keys never pass');
+  assert.equal(household?.usualItems?.length, ASK_FORKY_LIMITS.usualItems);
+  assert.equal(household?.usualItems?.[1].length, ASK_FORKY_LIMITS.usualItemChars);
+  assert.deepEqual(household?.cookedRecently, ['Tacos']);
+  const sent = forkyMessages(householdRequest.request).at(-1)?.content ?? '';
+  assert.match(sent, /"household":\{"size":4/);
+  assert.doesNotMatch(sent, /peanuts|keto|a@b\.co/);
+}
+for (const bad of [{ size: 99 }, { size: 'four' }, 'text', null, { usualItems: 'Eggs' }]) {
+  const parsedBad = parseForkyRequest({ question: 'q', household: bad });
+  assert.ok(parsedBad.ok && parsedBad.request.household === undefined, 'a bad household block is ignored, not an error');
+}
+assert.doesNotMatch(forkyMessages({ question: 'q', history: [], pantry: [], recipes: [] }).at(-1)?.content ?? '', /household/);
+assert.match(forkySystemPrompt('2026-10-11'), /household block/);
+assert.match(forkySystemPrompt('2026-10-11'), /do not draw conclusions about\s+'?\s*health|health, diet, money or family/);
+// The app never sends diet or allergy settings to the chat.
+const chatSheetSource = read('components/forkinator/AskForkySheet.tsx');
+assert.doesNotMatch(chatSheetSource, /dietaryNotes|userDietPrefs|allerg/i);
+const privacyFlat = privacy.replace(/\s+/g, ' ');
+assert.match(privacyFlat, /household size, the names of items you buy regularly, and the titles of meals you recently marked as made/);
+assert.match(privacyFlat, /do not send your name, email, photos, or your dietary and allergy settings/);
 
 // --- Model: Claude Haiku 5.5 (owner's decision, Oct 10). It rejects sampling settings and a prefilled
 // reply, and counts more tokens for the same text, so the request must stay free of those.
