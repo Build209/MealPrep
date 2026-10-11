@@ -41,7 +41,8 @@ assert.deepEqual(
 );
 assert.equal(TUTORIAL_STEPS[1].target, 'pantry-scan', 'the camera card is the first thing lit up');
 assert.equal(TUTORIAL_STEPS[2].sample, 'scan-review', 'the list step shows an example, nothing real is added');
-assert.match(TUTORIAL_STEPS[3].message, /Plus/, 'the receipt step says receipts come with Plus');
+assert.match(TUTORIAL_STEPS[3].message, /same monthly scans/, 'the receipt step says receipts use the same monthly scans');
+assert.doesNotMatch(TUTORIAL_STEPS[3].message, /Plus/, 'receipts are no longer paid-only');
 const last = TUTORIAL_STEPS[TUTORIAL_STEPS.length - 1];
 assert.equal(last.target, 'forky');
 assert.match(TUTORIAL_COPY.askForkyOn, /ask me/i, 'tells people they can ask Forky directly');

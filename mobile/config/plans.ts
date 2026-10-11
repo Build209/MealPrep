@@ -1,4 +1,5 @@
 import type { UserRole } from '../types/mealprep';
+import { TIER_LIMITS, TIER_NAMES, tierForProfile, type PaidTier } from './planTiers';
 
 /** Paid tiers; see `config/familyPlans.ts` for future `family` placeholder. */
 export const USER_PLANS = ['free', 'paid'] as const;
@@ -11,27 +12,32 @@ export const PLAN_LABELS: Record<UserPlan, string> = {
   paid: 'MealPlanatic Plus',
 };
 
+/** The name of the plan an account is on, down to the paid tier: "MealPlanatic Pro". */
+export function planLabel(plan: UserPlan, planTier: PaidTier | null | undefined): string {
+  return TIER_NAMES[tierForProfile(plan, planTier)];
+}
+
 export const PLANS_COPY = {
-  photoScanUpgradeTitle: 'Photo scanning is a Plus feature',
+  photoScanUpgradeTitle: 'More scans come with a paid plan',
   photoScanUpgradeBody:
-    'Upgrade to MealPlanatic Plus to scan pantry shelves, upload photos, and snap shelf tags in Smart Shop. Manual entry stays free.',
+    'A free account has a few scans each month. Upgrade to a paid plan for more scans of shelves and receipts, and shelf tags in Smart Shop. Manual entry stays free.',
   photoScanProfileLoading: 'Loading your plan… try again in a moment.',
   photoScanProfileLoadingTitle: 'One moment',
   /** Badge on the scan card for a free account that still has free scans. */
   freeScansLeftBadge: (remaining: number) => `${remaining} free`,
   freeScansLeftNote: (remaining: number) =>
     remaining === 1
-      ? 'You have 1 free scan left. After that, scanning is part of MealPlanatic Plus.'
-      : `You have ${remaining} free scans left. After that, scanning is part of MealPlanatic Plus.`,
-  freeScansUsedNote: 'That was your last free scan. Scanning is part of MealPlanatic Plus.',
+      ? 'You have 1 free scan left this month. A paid plan includes more.'
+      : `You have ${remaining} free scans left this month. A paid plan includes more.`,
+  freeScansUsedNote: 'That was your last free scan this month. They start again on the 1st, and a paid plan includes more.',
 } as const;
 
 /**
- * One-time free shelf scans for a free account, so a new user can try the scanner before paying.
- * The server enforces the real number (secret PANTRY_FREE_TOTAL_SCANS, default 3); this copy is
- * only used to show how many are left. Receipts and price tags are Plus only.
+ * Free scans a month for a free account: shelf, fridge and receipt photos share them. The server
+ * enforces the real number (supabase/functions/_shared/planTiers.ts); this is only used to show
+ * how many are left. Price tags are for paid plans only.
  */
-export const FREE_PHOTO_SCANS = 3;
+export const FREE_PHOTO_SCANS = TIER_LIMITS.free.scans;
 
 /** Admins always have Plus photo-scan access (same as paid). */
 export function hasPlusPhotoScanAccess(plan: UserPlan, role: UserRole): boolean {

@@ -1,5 +1,5 @@
 /**
- * Photo scan allowance: a monthly cap for Plus and one-time free shelf scans for free accounts.
+ * Photo scan allowance: a monthly number of scans for every plan, the free one included.
  * The server side is exercised in pantry-vision-handler-check; this covers the app side and
  * the migration. Run from mobile/: npm run test:pantry-vision
  */
@@ -25,7 +25,7 @@ assert.equal(freeScansRemaining(Number.NaN), 0);
 
 assert.equal(freeScansUsedFromServer({ isPlus: false, limit: 3, remaining: 2 }), 1);
 assert.equal(freeScansUsedFromServer({ isPlus: false, limit: 3, remaining: 0 }), 3);
-assert.equal(freeScansUsedFromServer({ isPlus: true, limit: 40, remaining: 39 }), null, 'Plus answers do not touch the free count');
+assert.equal(freeScansUsedFromServer({ isPlus: true, limit: 15, remaining: 14 }), null, 'paid answers do not touch the free count');
 assert.equal(freeScansUsedFromServer({ isPlus: true, limit: null, remaining: null }), null);
 assert.equal(freeScansUsedFromServer(undefined), null, 'an older function that sends no usage changes nothing');
 
@@ -38,7 +38,7 @@ const base: PhotoScanAccessInput = {
   role: 'member' as PhotoScanAccessInput['role'],
   profileReady: true,
 };
-assert.equal(photoScanAccessState(base), 'plan_blocked', 'free account, no free scans passed in: Plus only (receipts, price tags)');
+assert.equal(photoScanAccessState(base), 'plan_blocked', 'free account, no free scans passed in: paid plans only (price tags)');
 assert.equal(photoScanAccessState({ ...base, freeScansRemaining: 0 }), 'plan_blocked');
 assert.equal(photoScanAccessState({ ...base, freeScansRemaining: 2 }), 'allowed', 'free account with free scans left');
 assert.equal(photoScanAccessState({ ...base, plan: 'paid' }), 'allowed');
@@ -49,25 +49,30 @@ assert.equal(photoScanAccessState({ ...base, profileReady: false, freeScansRemai
 
 // --- Wording ---
 assert.equal(PLANS_COPY.freeScansLeftBadge(3), '3 free');
-assert.match(PLANS_COPY.freeScansLeftNote(1), /^You have 1 free scan left\./);
-assert.match(PLANS_COPY.freeScansLeftNote(2), /^You have 2 free scans left\./);
+assert.match(PLANS_COPY.freeScansLeftNote(1), /^You have 1 free scan left this month\./);
+assert.match(PLANS_COPY.freeScansLeftNote(2), /^You have 2 free scans left this month\./);
+assert.match(PLANS_COPY.freeScansUsedNote, /start again on the 1st/);
+// "Free" is only said about what is free (compliance rule 11): no wording promises a paid feature for nothing.
+for (const text of [PLANS_COPY.freeScansLeftNote(2), PLANS_COPY.freeScansUsedNote, PLANS_COPY.photoScanUpgradeBody]) {
+  assert.doesNotMatch(text, /free trial|free Plus|free month/i);
+}
 
 // --- Screen wiring ---
 const screen = read('app/(tabs)/pantry.tsx');
-// Receipts use the Plus-only gate everywhere; shelf scans use the gate that knows about free scans.
-assert.match(screen, /isReceipt \? plusOnlyScanAccess : photoScanAccess/);
-assert.equal((screen.match(/kind === 'receipt' \? plusOnlyScanAccess : photoScanAccess/g) ?? []).length, 2);
+// Receipts and shelf scans share the month's scans, so both use the gate that knows about free scans.
+assert.doesNotMatch(screen, /\? plusOnlyScanAccess : photoScanAccess/, 'no scan on Pantry is paid-only any more');
 const receiptCard = screen.slice(screen.indexOf('variant="receipt"'), screen.indexOf('<PantryScanTip />'));
-assert.match(receiptCard, /photoScanAccess=\{plusOnlyScanAccess\}/);
-assert.doesNotMatch(receiptCard, /badgeText=/, 'the receipt card never shows a free-scans badge');
-assert.match(screen, /badgeText=\{freeScanBadge\}/);
+assert.match(receiptCard, /photoScanAccess=\{photoScanAccess\}/);
+assert.match(receiptCard, /badgeText=\{freeScanBadge\}/, 'the receipt card shows the free scans left too');
+assert.equal((screen.match(/badgeText=\{freeScanBadge\}/g) ?? []).length, 2);
 assert.match(screen, /freeScans\.setUsed\(freeUsed\)/);
 
 const hook = read('hooks/useFreeScanAllowance.ts');
-assert.match(hook, /\.from\('photo_scan_usage'\)[\s\S]{0,160}\.eq\('period', 'free'\)/);
+// The count is read from this month's row, the same key the server counts in.
+assert.match(hook, /\.from\('photo_scan_usage'\)[\s\S]{0,160}\.eq\('period', usageMonth\(\)\)/);
 assert.match(hook, /remaining: enabled \? freeScansRemaining\(used\) : 0/);
 
-// Price-tag scanning in Smart Shop passes no free scans, so it stays Plus only.
+// Price-tag scanning in Smart Shop passes no free scans, so it stays for paid plans only.
 assert.doesNotMatch(read('components/smartShop/SmartShopAddPriceSheet.tsx'), /freeScansRemaining/);
 
 // --- Migration ---
@@ -87,6 +92,6 @@ assert.match(sql, /and scans < p_limit/, 'the claim is a single guarded update, 
 assert.doesNotMatch(sql, /drop table|truncate|delete from|alter table public\.(profiles|pantry_items)/i, 'additive only');
 
 // Privacy page says a count is kept.
-assert.ok(read('public/privacy.html').replace(/\s+/g, ' ').includes('We keep a count of how many scans'));
+assert.ok(read('public/privacy.html').replace(/\s+/g, ' ').includes('We keep a count of how many scans and recipe imports'));
 
 console.log('photo-scan-allowance-check: ok');

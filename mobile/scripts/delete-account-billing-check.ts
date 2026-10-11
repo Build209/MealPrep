@@ -242,25 +242,30 @@ function fakeStripe(state: {
   // --- Terms and privacy pages (compliance handoff 1, items 5 and 7) ---
   const terms = fs.readFileSync(path.join(mobileRoot, 'public/terms.html'), 'utf8').replace(/\s+/g, ' ');
   for (const phrase of [
-    'MealPlanatic Plus</h2>',
-    '$6.99 a month',
-    '$60 a year',
+    'Plans and prices</h2>',
+    '$4.99 a month',
+    '$53.88 a year',
+    '$8.99 a month',
+    '$93.84 a year',
+    '$20 a month',
+    '$192 a year',
     'renews automatically',
     'Manage subscription',
     'Cancelling stops future charges',
     'We do not give refunds for part of a period',
     'at least 7 days and no more than 30 days',
-    'Deleting your account cancels Plus',
-    'at least 18 to buy Plus',
+    'Deleting your account cancels your paid plan straight away',
+    'Time left in a period you already paid for is not refunded',
+    'You must be 18 or older to use MealPlanatic',
     'MealPlanatic is operated by',
     'governed by the laws of the State of California',
-    '40 shelf or receipt scans',
-    '3 shelf scans in total',
+    '15 scans, 5 recipe imports and 15 Ask Forky questions a month',
+    '3 scans, 2 recipe imports and 5 Ask Forky questions a month',
   ]) {
     assert.ok(terms.includes(phrase), `terms.html should say: ${phrase}`);
   }
   assert.doesNotMatch(terms, /\[[^\]]*(legal|entity|name|city)[^\]]*\]/i, 'no unfilled blanks on the public terms page');
-  assert.doesNotMatch(terms, /\$4\.99|\$39\b/, 'old prices must not appear');
+  assert.doesNotMatch(terms, /\$6\.99|\$60\b|\$39\b/, 'old prices must not appear');
 
   const privacy = fs.readFileSync(path.join(mobileRoot, 'public/privacy.html'), 'utf8').replace(/\s+/g, ' ');
   assert.ok(privacy.includes('<strong>Stripe</strong>'), 'privacy.html names Stripe as the payment provider');

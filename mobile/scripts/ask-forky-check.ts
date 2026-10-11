@@ -5,15 +5,13 @@ import { fileURLToPath } from 'node:url';
 import { ASK_FORKY_COPY, ASK_FORKY_LIMITS as APP_LIMITS } from '../config/askForky.ts';
 import { buildAskForkyBody, recentlyCookedTitles } from '../lib/forky/askForkyRequest.ts';
 import {
-  ASK_FORKY_DEFAULT_CAPS,
   ASK_FORKY_DEFAULT_MODEL,
   ASK_FORKY_LIMITS,
   FORKY_REPLY_TOOL,
   forkyMessages,
+  forkyAllowance,
   forkySystemPrompt,
-  forkyUsagePeriod,
   needsSafetyNote,
-  parseCap,
   parseForkyRequest,
   readForkyReply,
 } from '../supabase/functions/_shared/askForkyText.ts';
@@ -125,18 +123,25 @@ assert.equal(needsSafetyNote('dinner idea', 'Contains gluten.', false), true);
 assert.equal(needsSafetyNote('dinner idea', 'Try tacos.', true), true);
 assert.equal(needsSafetyNote('dinner idea', 'Try tacos.', false), false);
 
-// --- Allowance: Plus by calendar month, free accounts one lifetime bucket.
-assert.deepEqual(forkyUsagePeriod('paid', new Date('2026-10-09T20:00:00Z')), { period: '2026-10', isPlus: true });
-assert.deepEqual(forkyUsagePeriod('free', new Date('2026-10-09T20:00:00Z')), { period: 'free', isPlus: false });
-assert.deepEqual(forkyUsagePeriod(null, new Date()), { period: 'free', isPlus: false });
-// An admin on the free plan gets the Plus allowance, so testing does not stop at two questions.
-assert.deepEqual(forkyUsagePeriod('free', new Date('2026-10-09T20:00:00Z'), true), { period: '2026-10', isPlus: true });
-assert.equal(parseCap('50', 200), 50);
-assert.equal(parseCap('0', 5), 0);
-assert.equal(parseCap('', 200), 200);
-assert.equal(parseCap('-3', 200), 200);
-assert.equal(parseCap('abc', 200), 200);
-assert.deepEqual(ASK_FORKY_DEFAULT_CAPS, { plusPerMonth: 200, freeTotal: 2 });
+// --- Allowance: every tier has a monthly number of questions, the free one included.
+const oct9 = new Date('2026-10-09T20:00:00Z');
+assert.deepEqual(forkyAllowance('free', null, oct9), { period: '2026-10', limit: 5, tier: 'free', isPlus: false });
+assert.deepEqual(forkyAllowance(null, undefined, oct9), { period: '2026-10', limit: 5, tier: 'free', isPlus: false });
+assert.deepEqual(forkyAllowance('paid', 'plus', oct9), { period: '2026-10', limit: 15, tier: 'plus', isPlus: true });
+assert.deepEqual(forkyAllowance('paid', 'pro', oct9), { period: '2026-10', limit: 30, tier: 'pro', isPlus: true });
+assert.deepEqual(forkyAllowance('paid', 'family', oct9), { period: '2026-10', limit: 60, tier: 'family', isPlus: true });
+// A paid account whose tier cannot be read (column not there yet) gets Plus, never more.
+assert.equal(forkyAllowance('paid', null, oct9).limit, 15);
+assert.equal(forkyAllowance('paid', 'platinum', oct9).tier, 'plus');
+// A tier written on a free account means nothing.
+assert.equal(forkyAllowance('free', 'family', oct9).limit, 5);
+// The free questions come back next month: the row is keyed by month.
+assert.equal(forkyAllowance('free', null, new Date('2026-11-01T00:00:00Z')).period, '2026-11');
+// An admin gets the largest allowance, so testing does not stop early.
+assert.deepEqual(forkyAllowance('free', null, oct9, true), { period: '2026-10', limit: 60, tier: 'family', isPlus: true });
+// The emergency brake can lower a limit, never raise it.
+assert.equal(forkyAllowance('free', null, oct9, false, '{"free":{"forkyQuestions":0}}').limit, 0);
+assert.equal(forkyAllowance('paid', 'plus', oct9, false, '{"plus":{"forkyQuestions":999}}').limit, 15);
 
 // --- Server function rules, checked in the source.
 const fn = read('supabase/functions/ask-forky/index.ts');

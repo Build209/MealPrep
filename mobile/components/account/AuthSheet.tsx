@@ -9,6 +9,7 @@ import {
   AUTH_MIN_PASSWORD_LENGTH,
   AUTH_RESET_COPY,
   AUTH_RESULT_COPY,
+  AUTH_SIGN_UP_NOTE,
   getAuthCardBlurb,
   isMagicLinkSignInEnabled,
   type AuthActionResult,
@@ -211,6 +212,9 @@ export function AuthSheet({ visible, onClose }: AuthSheetProps) {
                   placeholder={mode === 'sign-up' ? 'Password (min 6 chars)' : 'Password'}
                   accessibilityLabel="Password"
                 />
+                {mode === 'sign-up' ? (
+                  <Text className="mt-3 text-xs leading-4 text-muted">{AUTH_SIGN_UP_NOTE}</Text>
+                ) : null}
                 <Pressable
                   disabled={busy}
                   onPress={submitPassword}

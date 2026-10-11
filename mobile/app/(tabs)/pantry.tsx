@@ -347,7 +347,7 @@ export default function PantryScreen() {
     [authReady, demoMode, session],
   );
 
-  /** Plus-only gate: receipts and anything else a free account's free scans do not cover. */
+  /** The plan gate on its own, before this month's free scans are taken into account. */
   const plusOnlyScanAccess = useMemo(
     () => ({
       ...photoScanGate,
@@ -364,7 +364,7 @@ export default function PantryScreen() {
     enabled: !demoMode && Boolean(session) && profileReady && !isPlusForScans,
   });
 
-  /** Shelf-scan gate: Plus, or a free account that still has one-time free scans. */
+  /** Scan gate for shelves and receipts: a paid plan, or a free account with free scans left this month. */
   const photoScanAccess = useMemo(
     () => ({ ...plusOnlyScanAccess, freeScansRemaining: freeScans.remaining }),
     [freeScans.remaining, plusOnlyScanAccess],
@@ -472,7 +472,7 @@ export default function PantryScreen() {
       return;
     }
     const { access, session: scanSession } = await resolvePhotoScanAccess(
-      isReceipt ? plusOnlyScanAccess : photoScanAccess,
+      photoScanAccess,
       session,
     );
     if (access !== 'allowed') {
@@ -729,7 +729,7 @@ export default function PantryScreen() {
   ) {
     const detailTiles = kind === 'receipt' ? ('receipt' as const) : true;
     const { access } = await resolvePhotoScanAccess(
-      kind === 'receipt' ? plusOnlyScanAccess : photoScanAccess,
+      photoScanAccess,
       session,
     );
     if (access !== 'allowed') {
@@ -776,7 +776,7 @@ export default function PantryScreen() {
   async function handleNativeScan(source: 'camera' | 'library', kind: PantryScanKind = 'shelf') {
     const scanLocation = readLastPantryScanLocation();
     const { access } = await resolvePhotoScanAccess(
-      kind === 'receipt' ? plusOnlyScanAccess : photoScanAccess,
+      photoScanAccess,
       session,
     );
     if (access !== 'allowed') {
@@ -824,7 +824,7 @@ export default function PantryScreen() {
   async function handleQuickScan(receipt: boolean) {
     if (!featureFlags.photoScan) return;
     const kind: PantryScanKind = receipt ? 'receipt' : 'shelf';
-    const { access } = await resolvePhotoScanAccess(receipt ? plusOnlyScanAccess : photoScanAccess, session);
+    const { access } = await resolvePhotoScanAccess(photoScanAccess, session);
     if (access !== 'allowed') {
       setScanPanelOpen(true);
       if (!receipt) setAutoOpenScanMode('menu');
@@ -1147,7 +1147,7 @@ export default function PantryScreen() {
   /** Free account with free scans left: the shelf card says so instead of "Plus". */
   const freeScanBadge =
     !isPlusForScans && freeScans.remaining > 0 ? PLANS_COPY.freeScansLeftBadge(freeScans.remaining) : undefined;
-  const receiptAccessState = photoScanAccessState(plusOnlyScanAccess);
+  const receiptAccessState = photoScanAccessState(photoScanAccess);
   const showReceiptPlusBadge = receiptAccessState === 'guest_blocked' || receiptAccessState === 'plan_blocked';
 
   return (
@@ -1295,7 +1295,7 @@ export default function PantryScreen() {
                   shouldDeferPhotoScanForProfile(photoScanAccess)
                 }
                 photoScanGate={photoScanGate}
-                photoScanAccess={plusOnlyScanAccess}
+                photoScanAccess={photoScanAccess}
                 contextSession={session}
                 scanLocation={scanLocationHint}
                 onPrepareError={handleWebPrepareError}
@@ -1305,6 +1305,7 @@ export default function PantryScreen() {
                 onRequestNativeScan={(_location, source) => void handleNativeScan(source, 'receipt')}
                 onRequestSignIn={openAuthSheet}
                 showPlusBadge={showReceiptPlusBadge}
+                badgeText={freeScanBadge}
               />
 
               {featureFlags.photoScan ? <PantryScanTip /> : null}

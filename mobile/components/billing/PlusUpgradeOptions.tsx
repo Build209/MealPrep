@@ -1,11 +1,17 @@
 import { useEffect, useState } from 'react';
 import { Linking, Platform, Pressable, Text, View } from 'react-native';
 import { LEGAL_LINKS } from '../../config/account';
-import { PLUS_INTERVAL_ORDER, PLUS_UPGRADE_COPY, type BillingInterval } from '../../config/pricing';
+import { TIER_NAMES, TIER_SHORT_NAMES, tierLimitsLine, type PaidTier } from '../../config/planTiers';
+import {
+  PLAN_TIER_ORDER,
+  PLUS_INTERVAL_ORDER,
+  PLUS_UPGRADE_COPY,
+  type BillingInterval,
+} from '../../config/pricing';
 import { useApp } from '../../context/AppContext';
-import { BillingError, startPlusCheckout } from '../../lib/billing/client';
+import { BillingError, startPlanCheckout } from '../../lib/billing/client';
 import { flushUsageLog, logUsageEvent } from '../../lib/usage/usageLog';
-import { plusPriceLabel, plusRenewalDisclosure, plusSubscribeLabel } from '../../lib/billing/pricing';
+import { tierPriceLabel, tierRenewalDisclosure, tierSubscribeLabel } from '../../lib/billing/pricing';
 
 type Props = {
   /** Shows a "Not now" link that calls this. */
@@ -19,15 +25,18 @@ export function canBuyPlusHere(): boolean {
 
 /**
  * Plan choice, renewal terms and the buy button, laid out to the approved Plus mockup (D-2):
- * white option cards with a green ring on the chosen one, then the terms, then a tomato pill.
+ * a row of plan chips (Plus, Pro, Family) with that plan's monthly limits in words under it,
+ * white option cards with a green ring on the chosen period, then the terms, then a tomato pill.
  * Tomato is kept for buttons that start a purchase.
  *
  * Rules (California automatic renewal law, compliance handoff 1): the price, renewal period and
- * how to cancel sit directly above the button in normal-size text; nothing is pre-ticked beyond
- * the plan choice itself; no countdowns or pressure wording; the button states the price.
+ * how to cancel sit directly above the button in normal-size text; the monthly limits of the
+ * chosen plan are stated beside the price; nothing is pre-ticked beyond the plan choice itself;
+ * no countdowns, savings figures or pressure wording; the button states the price.
  */
 export function PlusUpgradeOptions({ onNotNow }: Props) {
   const { isGuest, demoMode, openAuthSheet } = useApp();
+  const [tier, setChosenTier] = useState<PaidTier>(PLAN_TIER_ORDER[0]);
   const [interval, setChosenInterval] = useState<BillingInterval>(PLUS_INTERVAL_ORDER[0]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -67,9 +76,9 @@ export function PlusUpgradeOptions({ onNotNow }: Props) {
     setError(null);
     try {
       // Sent straight away: the browser is about to leave for Stripe.
-      logUsageEvent('checkout_started', { plan: interval });
+      logUsageEvent('checkout_started', { plan: `${tier}_${interval}` });
       void flushUsageLog();
-      await startPlusCheckout(interval);
+      await startPlanCheckout(tier, interval);
       // On success the browser leaves for Stripe; keep the button disabled meanwhile.
     } catch (err) {
       setError(err instanceof BillingError ? err.message : PLUS_UPGRADE_COPY.genericError);
@@ -79,7 +88,41 @@ export function PlusUpgradeOptions({ onNotNow }: Props) {
 
   return (
     <View className="mt-3">
-      <View accessibilityRole="radiogroup" className="gap-2.5">
+      <View
+        accessibilityRole="radiogroup"
+        accessibilityLabel={PLUS_UPGRADE_COPY.tierChoiceLabel}
+        className="flex-row gap-2"
+      >
+        {PLAN_TIER_ORDER.map((option) => {
+          const selected = option === tier;
+          return (
+            <Pressable
+              key={option}
+              onPress={() => setChosenTier(option)}
+              disabled={busy}
+              accessibilityRole="radio"
+              accessibilityState={{ selected, disabled: busy }}
+              accessibilityLabel={`${TIER_NAMES[option]}: ${tierLimitsLine(option)}`}
+              className={`min-h-[44px] flex-1 items-center justify-center rounded-full border px-3 ${
+                selected ? 'border-primary bg-primary' : 'border-border bg-card'
+              }`}
+            >
+              <Text className={`text-base font-bold ${selected ? 'text-on-primary' : 'text-ink'}`}>
+                {TIER_SHORT_NAMES[option]}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+      <Text className="mt-3 text-sm leading-5 text-ink">
+        {TIER_NAMES[tier]}: {tierLimitsLine(tier)}.
+      </Text>
+
+      <View
+        accessibilityRole="radiogroup"
+        accessibilityLabel={PLUS_UPGRADE_COPY.intervalChoiceLabel}
+        className="mt-3 gap-2.5"
+      >
         {PLUS_INTERVAL_ORDER.map((option) => {
           const selected = option === interval;
           return (
@@ -89,7 +132,7 @@ export function PlusUpgradeOptions({ onNotNow }: Props) {
               disabled={busy}
               accessibilityRole="radio"
               accessibilityState={{ selected, disabled: busy }}
-              accessibilityLabel={plusPriceLabel(option)}
+              accessibilityLabel={tierPriceLabel(tier, option)}
               className={`min-h-[64px] flex-row items-center rounded-[18px] border-2 bg-card px-4 py-3 ${
                 selected ? 'border-primary' : 'border-border'
               }`}
@@ -101,14 +144,14 @@ export function PlusUpgradeOptions({ onNotNow }: Props) {
               >
                 {selected ? <View className="h-2.5 w-2.5 rounded-full bg-primary" /> : null}
               </View>
-              <Text className="text-[17px] font-extrabold text-ink">{plusPriceLabel(option)}</Text>
+              <Text className="text-[17px] font-extrabold text-ink">{tierPriceLabel(tier, option)}</Text>
             </Pressable>
           );
         })}
       </View>
 
       <Text className="mt-3 text-sm leading-5 text-ink">
-        {plusRenewalDisclosure(interval)}{' '}
+        {tierRenewalDisclosure(tier, interval)}{' '}
         <Text
           accessibilityRole="link"
           onPress={() => void Linking.openURL(LEGAL_LINKS.terms)}
@@ -128,7 +171,7 @@ export function PlusUpgradeOptions({ onNotNow }: Props) {
         }`}
       >
         <Text className="text-center text-[17px] font-extrabold text-on-tomato">
-          {busy ? PLUS_UPGRADE_COPY.starting : plusSubscribeLabel(interval)}
+          {busy ? PLUS_UPGRADE_COPY.starting : tierSubscribeLabel(tier, interval)}
         </Text>
       </Pressable>
 
