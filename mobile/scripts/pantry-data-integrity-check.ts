@@ -8,6 +8,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {
   diffPantryForServer,
+  groceryItemToPantryItem,
+  pantryNameFromGroceryName,
   reconcilePantryAfterServerLoad,
   replacePantryRowsById,
 } from '../lib/pantry/mergePantryStock';
@@ -93,6 +95,16 @@ const untickedRice = reverseGroceryCheckRestock(unticked, 'g1', ledger);
 assert.deepEqual(diffPantryForServer(unticked, untickedRice).updated.map((r) => r.quantity), [2]);
 assert.equal(reverseGroceryCheckRestock(untickedRice, 'g1', ledger), untickedRice, 'a second untick changes nothing');
 
+// --- A ticked grocery line reads like a thing you own, not a recipe step (testing T-18) ---
+assert.equal(pantryNameFromGroceryName('butter (for toasting buns)'), 'butter');
+assert.equal(pantryNameFromGroceryName('cooked white rice (cooled)'), 'cooked white rice');
+assert.equal(pantryNameFromGroceryName('Parmesan cheese (freshly grated for serving)'), 'Parmesan cheese');
+assert.equal(pantryNameFromGroceryName('garlic paste (or minced garlic)'), 'garlic paste');
+assert.equal(pantryNameFromGroceryName('flour tortillas (taco-sized), warmed'), 'flour tortillas, warmed');
+assert.equal(pantryNameFromGroceryName('  Olive oil  '), 'Olive oil');
+assert.equal(pantryNameFromGroceryName('(optional)'), '(optional)', 'never an empty name');
+assert.equal(groceryItemToPantryItem(groceryItem('g9', 'butter (for toasting buns)')).name, 'butter');
+
 // --- Wiring in the app context ---
 const context = fs.readFileSync(path.join(__dirname, '..', 'context/AppContext.tsx'), 'utf8').replace(/\r\n/g, '\n');
 const between = (from: string, to: string) => context.slice(context.indexOf(from), context.indexOf(to, context.indexOf(from)));
@@ -102,6 +114,7 @@ assert.match(restock, /diffPantryForServer\(pantrySnapshot, nextPantry\)/, 'tick
 assert.doesNotMatch(restock, /groceryItemsToPantryItems\(/, 'tick: no second, separately built set of rows');
 assert.doesNotMatch(restock, /setPantry\(reconciled\)/, 'tick: saving new rows does not put owned rows back to their old quantity');
 
+assert.match(restock, /catch \(error: unknown\) \{[\s\S]{0,500}syncPantryToSnapshot\(supabase, userId, nextPantry, pantrySnapshot\)\.catch\(\(\) => undefined\);\s*return;/, 'tick: a failed save also puts the server back');
 const toggles = between('const toggleGroceryItem = useCallback(', 'const markGroceryItemsBought = useCallback(');
 assert.equal((toggles.match(/syncPantryToSnapshot\(supabase, userId, pantry, reversed\)/g) ?? []).length, 2, 'untick (one item, and several) sends the reversal to the server');
 assert.doesNotMatch(toggles, /syncPantryToSnapshot\(supabase, userId, pantry, pantrySnapshot\)/, 'untick no longer compares the pantry with a copy of itself');
@@ -112,6 +125,7 @@ assert.doesNotMatch(clear, /setPantry\(|applyGroceryCheckRestockBatch|insertPant
 const scanSave = between('const savePantryScanReview = useCallback(', 'const addPantryStaples = useCallback(');
 assert.match(scanSave, /catch \(error: unknown\) \{[\s\S]{0,400}setPantry\(pantrySnapshot\);[\s\S]{0,900}throw error;/, 'scan save: a failed save puts the screen back');
 assert.match(scanSave, /syncPantryToSnapshot\(supabase, userId, savedPantry, pantrySnapshot\)/, 'scan save: Undo compares against the ids the server gave');
+assert.match(scanSave, /if \(savedInserts\.length > 0 \|\| updated\.length > 0\) \{/, 'scan save: quantity updates saved before a failure are undone too');
 assert.ok(scanSave.indexOf('await insertPantryItems(') < scanSave.indexOf('await updatePantryItem('), 'scan save: new rows first, in one request');
 
 const clearAll = between('const clearAllPantry = useCallback(', 'const savePantryScanReview = useCallback(');
