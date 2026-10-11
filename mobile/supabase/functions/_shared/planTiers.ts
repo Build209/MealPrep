@@ -38,6 +38,17 @@ export const TIER_NAMES: Record<PlanTier, string> = {
   family: 'MealPlanatic Family',
 };
 
+/**
+ * Published prices in cents (USD), the same numbers as the terms page and the buy screen.
+ * stripe-checkout refuses to open a page when the Stripe price behind a lookup key is a different
+ * amount, so the price said in the app can never differ from the price charged.
+ */
+export const TIER_PRICE_CENTS: Record<PaidTier, { month: number; year: number }> = {
+  plus: { month: 499, year: 5388 },
+  pro: { month: 899, year: 9384 },
+  family: { month: 2000, year: 19200 },
+};
+
 export function isPaidTier(value: unknown): value is PaidTier {
   return typeof value === 'string' && (PAID_TIERS as readonly string[]).includes(value);
 }

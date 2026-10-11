@@ -33,6 +33,12 @@ assert.deepEqual(server.TIER_LIMITS, {
   pro: { scans: 25, imports: 10, forkyQuestions: 30, priceTagScans: 200 },
   family: { scans: 50, imports: 25, forkyQuestions: 60, priceTagScans: 200 },
 });
+// The price the app states is the price checkout insists on.
+for (const tier of server.PAID_TIERS) {
+  assert.equal(TIER_PRICING[tier].month.unitAmount, server.TIER_PRICE_CENTS[tier].month, `${tier} monthly`);
+  assert.equal(TIER_PRICING[tier].year.unitAmount, server.TIER_PRICE_CENTS[tier].year, `${tier} yearly`);
+  assert.equal(TIER_PRICING[tier].month.currency, 'usd');
+}
 // The app shows exactly what the server enforces.
 assert.deepEqual(app.TIER_LIMITS, server.TIER_LIMITS);
 assert.deepEqual(app.TIER_NAMES, server.TIER_NAMES);
@@ -259,6 +265,14 @@ globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
   assert.match(webhook, /upsert\(\{ \.\.\.stored, plan_tier: row\.plan_tier \}/);
   assert.match(webhook, /isMissingPlanTierColumn\(upsertError\)/);
   assert.doesNotMatch(webhook, /from\('profiles'\)\s*\.update/);
+  // Checkout sells nothing at a price other than the published one, and no Pro or Family before
+  // the tier can be stored; the tier is written on the subscription itself.
+  const checkoutFn = read('supabase/functions/stripe-checkout/index.ts');
+  assert.match(checkoutFn, /price\.unit_amount !== TIER_PRICE_CENTS\[tier\]\[interval\]/);
+  assert.ok(checkoutFn.indexOf('TIER_PRICE_CENTS[tier][interval]') < checkoutFn.indexOf("'POST', '/checkout/sessions', {"), 'checked before a page is created');
+  assert.match(checkoutFn, /if \(tier !== 'plus'\) \{[\s\S]{0,200}select\('plan_tier'\)/);
+  assert.match(checkoutFn, /metadata: \{ supabase_user_id: userId, plan_tier: tier \}/);
+  assert.match(read('supabase/migrations/20261011180000_plan_tiers.sql'), /plan_tier = coalesce\(live_tier, 'plus'\)/, 'a tier never outlives its subscription');
 
   // --- Migration --------------------------------------------------------------------------------
   const sql = read('supabase/migrations/20261011180000_plan_tiers.sql');

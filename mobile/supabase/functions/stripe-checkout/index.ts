@@ -50,6 +50,7 @@ import {
   renewalDisclosure,
   TERMS_VERSION,
 } from '../_shared/billingText.ts';
+import { TIER_PRICE_CENTS } from '../_shared/planTiers.ts';
 import {
   hasLiveStripeSubscription,
   isUnknownStripeCustomer,
@@ -98,6 +99,17 @@ Deno.serve(async (req) => {
   const lookupKey = lookupKeyFor(tier, interval);
 
   try {
+    // Pro and Family need somewhere to keep the tier. Until the plan_tiers migration is applied
+    // the listener could only unlock Plus, so those two are not sold: nobody pays for more than
+    // they would get.
+    if (tier !== 'plus') {
+      const { error: tierColumnError } = await admin.from('billing_subscriptions').select('plan_tier').limit(1);
+      if (tierColumnError) {
+        console.error('stripe-checkout: plan_tier is not readable; apply 20261011180000_plan_tiers.sql before selling', tier);
+        return jsonResponse({ error: 'This plan is not available right now.', code: 'PRICE_NOT_FOUND' }, 503);
+      }
+    }
+
     const existing = await findBillingRow(admin, userId);
     if (existing && isLiveSubscriptionStatus(existing.status)) {
       return jsonResponse(
@@ -173,6 +185,16 @@ Deno.serve(async (req) => {
       console.error('stripe-checkout: no active price for lookup key', lookupKey);
       return jsonResponse({ error: 'This plan is not available right now.', code: 'PRICE_NOT_FOUND' }, 503);
     }
+    // The app and the terms state a price. If Stripe would charge anything else, sell nothing.
+    if (price.currency.toLowerCase() !== 'usd' || price.unit_amount !== TIER_PRICE_CENTS[tier][interval]) {
+      console.error(
+        'stripe-checkout: Stripe price differs from the published price',
+        lookupKey,
+        price.unit_amount,
+        price.currency,
+      );
+      return jsonResponse({ error: 'This plan is not available right now.', code: 'PRICE_NOT_FOUND' }, 503);
+    }
 
     // A page already open for this plan is handed back; any other open page is closed first,
     // so there is never more than one page this customer could pay on.
@@ -228,7 +250,9 @@ Deno.serve(async (req) => {
         },
         subscription_data: {
           billing_mode: { type: 'flexible' },
-          metadata: { supabase_user_id: userId },
+          // The tier travels with the subscription itself, so it is still known if the price
+          // later loses its lookup key (a price change moves the key to the new price).
+          metadata: { supabase_user_id: userId, plan_tier: tier },
         },
       },
       idempotencyKey: `mp-checkout-${userId}-${price.id}-${minuteBucket}`,

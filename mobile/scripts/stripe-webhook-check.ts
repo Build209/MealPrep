@@ -148,6 +148,30 @@ function testSubscriptionMapping(): void {
     });
     assert.equal(row?.plan_tier, tier, String(lookupKey));
   }
+  // A price whose key was moved to a newer price: the tier written at checkout still stands.
+  const movedKey = (planTier: unknown) =>
+    subscriptionRowFromStripe({
+      id: 'sub_m',
+      customer: 'cus_m',
+      status: 'active',
+      metadata: { plan_tier: planTier },
+      items: { data: [{ price: { id: 'price_old', lookup_key: null, recurring: { interval: 'year' } } }] },
+    })?.plan_tier;
+  assert.equal(movedKey('family'), 'family');
+  assert.equal(movedKey('pro'), 'pro');
+  assert.equal(movedKey('platinum'), null, 'metadata is only believed when it names a real tier');
+  assert.equal(movedKey(undefined), null);
+  // The price's own key wins over metadata.
+  assert.equal(
+    subscriptionRowFromStripe({
+      id: 'sub_k',
+      customer: 'cus_k',
+      status: 'active',
+      metadata: { plan_tier: 'family' },
+      items: { data: [{ price: { id: 'price_k', lookup_key: 'plus_monthly', recurring: { interval: 'month' } } }] },
+    })?.plan_tier,
+    'plus',
+  );
 
   // A user id that is not a UUID is never trusted.
   const badUser = subscriptionRowFromStripe({

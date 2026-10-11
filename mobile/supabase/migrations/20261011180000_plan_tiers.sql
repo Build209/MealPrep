@@ -3,8 +3,8 @@
 -- profiles.plan stays the paid/free switch that every screen and function already reads.
 -- profiles.plan_tier says WHICH paid tier: 'plus', 'pro' or 'family'. It only means something
 -- while plan = 'paid', and it is derived the same way plan is: from the live Stripe subscription
--- (stripe-webhook stores the tier it reads from the price's lookup key), or kept as it is for an
--- account an admin has comped. Nothing but recompute_user_plan() and an admin may change it.
+-- (stripe-webhook stores the tier it reads from the price's lookup key). An account an admin has
+-- comped is Plus. Nothing but recompute_user_plan() and an admin may change it.
 --
 -- The monthly limits per tier are not in the database: they live in
 -- supabase/functions/_shared/planTiers.ts and are printed in the terms.
@@ -81,8 +81,8 @@ revoke all on function public.enforce_profile_plan_change() from public, anon, a
 
 -- 3. The one place that derives plan and plan_tier ------------------------------------------
 -- plan:      'paid' when comped or a live subscription exists, otherwise 'free' (unchanged).
--- plan_tier: the highest tier among live subscriptions; with none, a comped account keeps the
---            tier it has (an admin may have set it) and everyone else goes back to 'plus'.
+-- plan_tier: the highest tier among live subscriptions; with none it is 'plus'. A comp is
+--            therefore always Plus, and a tier never outlives the subscription that paid for it.
 
 create or replace function public.recompute_user_plan(p_user_id uuid)
 returns public.user_plan
@@ -112,11 +112,7 @@ begin
         when p.plan_comp or live_tier is not null then 'paid'::public.user_plan
         else 'free'::public.user_plan
       end,
-      plan_tier = case
-        when live_tier is not null then live_tier
-        when p.plan_comp then p.plan_tier
-        else 'plus'
-      end
+      plan_tier = coalesce(live_tier, 'plus')
   where p.id = p_user_id
   returning p.plan into applied;
 
