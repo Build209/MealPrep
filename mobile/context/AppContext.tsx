@@ -30,6 +30,12 @@ import {
 import { DEFAULT_FEATURE_FLAGS, MOCK_PANTRY, MOCK_RECIPES, profileForRole } from '../data/mockData';
 import { getAuthRedirectUrl } from '../lib/authRedirect';
 import {
+  AUTH_MAGIC_LINK_COPY,
+  AUTH_RESULT_COPY,
+  authErrorMessage,
+  type AuthActionResult,
+} from '../config/authConfig';
+import {
   addGroceryDismissals,
   clearGroceryDismissals,
   groceryDismissalKey,
@@ -372,9 +378,9 @@ interface AppContextValue {
   profile: UserProfile;
   isAdmin: boolean;
   setDemoRole: (role: UserRole) => void;
-  signInWithPassword: (email: string, password: string) => Promise<void>;
-  signUpWithPassword: (email: string, password: string, name: string) => Promise<void>;
-  signInWithMagicLink: (email: string) => Promise<void>;
+  signInWithPassword: (email: string, password: string) => Promise<AuthActionResult>;
+  signUpWithPassword: (email: string, password: string, name: string) => Promise<AuthActionResult>;
+  signInWithMagicLink: (email: string) => Promise<AuthActionResult>;
   signOut: () => Promise<void>;
   pantry: PantryItem[];
   recipes: Recipe[];
@@ -735,7 +741,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           ...nextPantry.filter((row) => !insertIds.has(row.id)),
         ];
       }
+      // Each part of the guest kitchen is forgotten as soon as it is saved to the account. If a
+      // later step fails, the next load must not add the already-saved pantry to the account again.
+      writeGuestPantry([]);
       nextGrocery = await replaceGroceryList(supabase, userId, groceryListForServerSync(nextGrocery));
+      writeGuestGrocery([]);
 
       for (const guestRecipe of guestKitchen.recipes) {
         const recipeApiId = parseRecipeApiNumericId(guestRecipe.id);
@@ -1291,49 +1301,66 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signInWithPassword = useCallback(
-    async (email: string, password: string) => {
-      if (!supabase) return;
+    async (email: string, password: string): Promise<AuthActionResult> => {
+      if (!supabase) return { ok: false, error: AUTH_RESULT_COPY.unavailable };
       setAuthError(null);
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) setAuthError(error.message);
+      try {
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) return { ok: false, error: authErrorMessage(error.message) };
+        return { ok: true };
+      } catch (error: unknown) {
+        return { ok: false, error: authErrorMessage(error instanceof Error ? error.message : '') };
+      }
     },
     [supabase],
   );
 
   const signUpWithPassword = useCallback(
-    async (email: string, password: string, name: string) => {
-      if (!supabase) return;
+    async (email: string, password: string, name: string): Promise<AuthActionResult> => {
+      if (!supabase) return { ok: false, error: AUTH_RESULT_COPY.unavailable };
       setAuthError(null);
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: getAuthRedirectUrl(),
-          data: { name: name.trim() || email.split('@')[0] },
-        },
-      });
-      if (error) {
-        setAuthError(error.message);
-        return;
-      }
-      if (data.session?.user) {
-        setShowPostSignupSetup(true);
-      } else if (email.trim()) {
-        markAwaitingProfileSetup(email.trim());
+      try {
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: getAuthRedirectUrl(),
+            data: { name: name.trim() || email.split('@')[0] },
+          },
+        });
+        if (error) return { ok: false, error: authErrorMessage(error.message) };
+        if (data.session?.user) {
+          setShowPostSignupSetup(true);
+          return { ok: true };
+        }
+        // No session: either the address must be confirmed by email first, or (the server's way
+        // of not revealing it) the address already has an account, shown by an empty identity list.
+        if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+          return { ok: false, error: AUTH_RESULT_COPY.alreadyRegistered };
+        }
+        if (email.trim()) markAwaitingProfileSetup(email.trim());
+        return { ok: true, notice: AUTH_RESULT_COPY.confirmEmail };
+      } catch (error: unknown) {
+        return { ok: false, error: authErrorMessage(error instanceof Error ? error.message : '') };
       }
     },
     [supabase],
   );
 
   const signInWithMagicLink = useCallback(
-    async (email: string) => {
-      if (!supabase) return;
+    async (email: string): Promise<AuthActionResult> => {
+      if (!supabase) return { ok: false, error: AUTH_RESULT_COPY.unavailable };
       setAuthError(null);
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: { emailRedirectTo: getAuthRedirectUrl() },
-      });
-      if (error) setAuthError(error.message);
+      try {
+        const { error } = await supabase.auth.signInWithOtp({
+          email,
+          options: { emailRedirectTo: getAuthRedirectUrl() },
+        });
+        if (error) return { ok: false, error: authErrorMessage(error.message) };
+        return { ok: true, notice: AUTH_MAGIC_LINK_COPY.successMessage };
+      } catch (error: unknown) {
+        return { ok: false, error: authErrorMessage(error instanceof Error ? error.message : '') };
+      }
     },
     [supabase],
   );
