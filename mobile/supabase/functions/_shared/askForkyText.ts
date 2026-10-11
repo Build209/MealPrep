@@ -13,13 +13,19 @@ export const ASK_FORKY_LIMITS = {
   recipes: 8,
   recipeTitleChars: 90,
   answerChars: 900,
-  maxOutputTokens: 500,
+  // Claude Haiku 5.5 counts about 30% more tokens for the same text than Haiku 4.5 did.
+  maxOutputTokens: 700,
 } as const;
 
 /** Monthly allowance for Plus, and a one-time allowance for free accounts. */
 export const ASK_FORKY_DEFAULT_CAPS = { plusPerMonth: 200, freeTotal: 2 } as const;
 
-export const ASK_FORKY_DEFAULT_MODEL = 'claude-haiku-4-5';
+/**
+ * Claude Haiku 5.5. The request forces the forky_reply tool, so the model answers with the tool call
+ * and no thinking block. It must not send temperature, top_p, top_k or a prefilled assistant turn:
+ * this model rejects them.
+ */
+export const ASK_FORKY_DEFAULT_MODEL = 'claude-haiku-5-5';
 
 export interface ForkyTurn {
   role: 'user' | 'forky';
