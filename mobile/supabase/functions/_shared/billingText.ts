@@ -1,24 +1,35 @@
 // Pure billing helpers shared by stripe-checkout and stripe-portal.
 // No network, database or Deno APIs here, so they can be unit-tested with tsx.
 
+import { isPaidTier, priceLookupKey, TIER_NAMES, type PaidTier } from './planTiers.ts';
+
 /**
  * Version of the renewal wording shown at checkout. Stored with each consent record so we can
  * prove what the customer agreed to. Bump it whenever the wording below changes.
  */
-export const DISCLOSURE_VERSION = '2026-10-08.1';
+export const DISCLOSURE_VERSION = '2026-10-11.1';
 
 /** Version of the Terms of Use the customer accepts at checkout (the date printed on the page). */
-export const TERMS_VERSION = '2026-10-09';
+export const TERMS_VERSION = '2026-10-11';
 
 export type BillingInterval = 'month' | 'year';
 
-export const PRICE_LOOKUP_KEYS: Record<BillingInterval, string> = {
-  month: 'plus_monthly',
-  year: 'plus_yearly',
-};
+/** Lookup key of the Stripe price for a tier and period: plus_monthly, pro_yearly, family_monthly, ... */
+export function lookupKeyFor(tier: PaidTier, interval: BillingInterval): string {
+  return priceLookupKey(tier, interval);
+}
 
 export function parseBillingInterval(value: unknown): BillingInterval | null {
   return value === 'month' || value === 'year' ? value : null;
+}
+
+/**
+ * The tier being bought. A request that names no tier is Plus (app versions from before tiers
+ * send only the period); anything else that is not a paid tier is refused.
+ */
+export function parseCheckoutTier(value: unknown): PaidTier | null {
+  if (value === undefined || value === null) return 'plus';
+  return isPaidTier(value) ? value : null;
 }
 
 /** 699 + 'usd' -> "$6.99"; 6000 -> "$60". Only USD is sold today; other currencies print the code. */
@@ -37,11 +48,16 @@ function periodWords(interval: BillingInterval): { a: string; every: string } {
  * renewal period and how to cancel must be clear where the customer agrees).
  * Built from the real Stripe price so the words can never disagree with the charge.
  */
-export function renewalDisclosure(unitAmount: number, currency: string, interval: BillingInterval): string {
+export function renewalDisclosure(
+  unitAmount: number,
+  currency: string,
+  interval: BillingInterval,
+  tier: PaidTier = 'plus',
+): string {
   const price = formatPrice(unitAmount, currency);
   const period = periodWords(interval);
   return (
-    `MealPlanatic Plus is ${price} ${period.a}. It renews automatically ${period.every} until you cancel. ` +
+    `${TIER_NAMES[tier]} is ${price} ${period.a}. It renews automatically ${period.every} until you cancel. ` +
     'Cancel any time in Account, Manage subscription.'
   );
 }
@@ -52,11 +68,12 @@ export function consentCheckboxText(
   currency: string,
   interval: BillingInterval,
   termsUrl: string,
+  tier: PaidTier = 'plus',
 ): string {
   const price = formatPrice(unitAmount, currency);
   const period = periodWords(interval);
   return (
-    `I agree that MealPlanatic Plus renews automatically at ${price} ${period.every} until I cancel, ` +
+    `I agree that ${TIER_NAMES[tier]} renews automatically at ${price} ${period.every} until I cancel, ` +
     `and I accept the [Terms of Use](${termsUrl}).`
   );
 }

@@ -1,6 +1,8 @@
 // Pure helpers that turn Stripe objects into the rows stripe-webhook stores.
 // No network or database access here so they can be unit-tested.
 
+import { tierFromLookupKey, type PaidTier } from '../_shared/planTiers.ts';
+
 /** Stripe subscription statuses that keep MealPlanatic Plus on. Mirrors recompute_user_plan(). */
 export const PLUS_ACTIVE_STATUSES = ['active', 'trialing', 'past_due'] as const;
 
@@ -52,6 +54,12 @@ export interface SubscriptionRow {
   stripe_subscription_id: string;
   status: string;
   price_id: string | null;
+  /**
+   * Which tier the subscribed price belongs to, from the price's lookup key (plus_monthly,
+   * pro_yearly, ...). Null when the price has no lookup key we know: stored as null and treated
+   * as Plus, the smallest paid tier, so an unknown price never unlocks more than Plus.
+   */
+  plan_tier: PaidTier | null;
   billing_interval: string | null;
   current_period_end: string | null;
   cancel_at_period_end: boolean;
@@ -94,6 +102,7 @@ export function subscriptionRowFromStripe(subscription: unknown): SubscriptionRo
     stripe_subscription_id: subscriptionId,
     status,
     price_id: price ? asNonEmptyString(price.id) : null,
+    plan_tier: price ? tierFromLookupKey(price.lookup_key) : null,
     billing_interval: recurring ? asNonEmptyString(recurring.interval) : null,
     current_period_end:
       unixToIso(sub.current_period_end) ?? unixToIso(firstItem?.current_period_end) ?? null,

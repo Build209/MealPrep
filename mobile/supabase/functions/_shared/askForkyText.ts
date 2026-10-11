@@ -1,6 +1,8 @@
 // Pure helpers for the ask-forky function: input limits, the prompt, and reading the reply.
 // No network, database or Deno APIs here, so they can be unit-tested with tsx.
 
+import { tierForProfile, tierLimits, usageMonth, type PlanTier } from './planTiers.ts';
+
 /** Bump when the instructions below change, so logged usage can be tied to a prompt version. */
 export const ASK_FORKY_PROMPT_VERSION = '2026-10-11.1';
 
@@ -20,8 +22,7 @@ export const ASK_FORKY_LIMITS = {
   maxOutputTokens: 700,
 } as const;
 
-/** Monthly allowance for Plus, and a one-time allowance for free accounts. */
-export const ASK_FORKY_DEFAULT_CAPS = { plusPerMonth: 200, freeTotal: 2 } as const;
+// Monthly question limits per tier live in ./planTiers.ts (they are printed in the terms).
 
 /**
  * Claude Haiku 5.5. The request forces the forky_reply tool, so the model answers with the tool call
@@ -303,21 +304,23 @@ export function readForkyReply(apiResponse: unknown, request: ForkyRequest): For
 }
 
 /**
- * Which allowance a message counts against: the calendar month for Plus, one lifetime bucket for
- * free. An admin account counts as Plus, so the owner can keep testing after the free questions.
+ * Which allowance a question counts against, and how big it is: every tier has a monthly number
+ * of questions (the free one included), counted in the calendar month's row. An admin account
+ * gets the largest allowance, so the owner can keep testing.
+ * `isPlus` means "on a paid tier" (kept for app versions that only know that flag).
  */
-export function forkyUsagePeriod(
+export function forkyAllowance(
   plan: string | null | undefined,
+  planTier: string | null | undefined,
   now: Date,
   isAdmin = false,
-): { period: string; isPlus: boolean } {
-  if (plan === 'paid' || isAdmin) {
-    return { period: now.toISOString().slice(0, 7), isPlus: true };
-  }
-  return { period: 'free', isPlus: false };
-}
-
-export function parseCap(raw: string | null | undefined, fallback: number): number {
-  const value = Number.parseInt((raw ?? '').trim(), 10);
-  return Number.isFinite(value) && value >= 0 && value <= 100_000 ? value : fallback;
+  overrideJson?: string | null,
+): { period: string; limit: number; tier: PlanTier; isPlus: boolean } {
+  const tier: PlanTier = isAdmin ? 'family' : tierForProfile(plan, planTier);
+  return {
+    period: usageMonth(now),
+    limit: tierLimits(tier, overrideJson).forkyQuestions,
+    tier,
+    isPlus: tier !== 'free',
+  };
 }

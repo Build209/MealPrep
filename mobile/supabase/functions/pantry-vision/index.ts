@@ -1,6 +1,6 @@
 // Pantry shelf vision.
 // Deploy: Actions -> "Deploy Supabase function" -> pantry-vision (deploys what is on main).
-// The file is still self-contained, so it can also be pasted into the dashboard editor.
+// It imports ../_shared/planTiers.ts, so it can no longer be pasted into the dashboard editor.
 //
 // Settings: leave "Verify JWT" ENABLED (default). Anonymous calls are rejected at the gateway;
 // this handler reads the user id from the JWT for rate limiting.
@@ -18,16 +18,23 @@
 //     crop in its own call and merges the results: about four extra calls for that photo.
 //     "auto" does it only when the first pass already found PANTRY_THOROUGH_MIN_ITEMS or more.
 //   PANTRY_THOROUGH_MIN_ITEMS = items in the first pass that mark a photo as busy (default 20)
-//   PANTRY_PLUS_MONTHLY_SCANS = shelf + receipt scans a month for a Plus account (default 40)
-//   PANTRY_PLUS_MONTHLY_TAG_SCANS = shelf price-tag scans a month for a Plus account (default 200)
-//   PANTRY_FREE_TOTAL_SCANS = one-time shelf scans for a free account (default 3; 0 = Plus only)
+//   PLAN_LIMITS_OVERRIDE = JSON that can only LOWER a tier's monthly limits in an emergency, for
+//     example {"free":{"scans":0}}. See _shared/planTiers.ts. The older PANTRY_PLUS_MONTHLY_SCANS,
+//     PANTRY_PLUS_MONTHLY_TAG_SCANS and PANTRY_FREE_TOTAL_SCANS secrets are no longer read.
 //
-// Requires SQL migration 20261010040000_photo_scan_usage.sql for the allowances above. Until it is
-// applied, Plus accounts scan without a cap (and a warning is logged) and free accounts get no
-// free scans. Admin accounts are never capped.
+// Monthly limits per tier (free, Plus, Pro, Family) are in _shared/planTiers.ts and are the numbers
+// printed in the terms. Shelf, fridge and receipt photos share one pool; price tags are counted
+// apart and are for paid tiers only. Every allowance, the free one included, starts again on the 1st.
+//
+// Requires SQL migrations 20261010040000_photo_scan_usage.sql (the counter) and
+// 20261011180000_plan_tiers.sql (profiles.plan_tier). Without the counter, paying accounts scan
+// without a cap (and a warning is logged) and free accounts get no free scans. Without plan_tier,
+// every paying account is treated as Plus. Admin accounts are never capped.
 //
 // One log line per scan ("pantry-vision: scan ...") carries photo size, token counts and timing.
 // It never contains the user id, the photo or the item names.
+
+import { tierForProfile, tierLimits, usageMonth, type PlanTier } from '../_shared/planTiers.ts';
 
 // BEGIN GEMINI_ORCHESTRATION (keep in sync with geminiOrchestration.ts — npm run test:pantry-vision-gemini)
 /** @sync mobile/config/geminiConfig.ts */
@@ -417,7 +424,7 @@ type GeminiModelAttemptDebug = {
   message?: string;
 };
 
-type ScanTier = 'admin' | 'plus' | 'free';
+type ScanTier = 'admin' | PlanTier;
 
 /** The account's plan, read with the service key. Null when it cannot be read (treated as no access). */
 async function loadScanTier(userId: string): Promise<ScanTier | null> {
@@ -428,15 +435,19 @@ async function loadScanTier(userId: string): Promise<ScanTier | null> {
     return null;
   }
 
-  const url = `${supabaseUrl}/rest/v1/profiles?id=eq.${encodeURIComponent(userId)}&select=plan,role`;
-  let response: Response;
-  try {
-    response = await fetch(url, {
+  const readProfile = (columns: string) =>
+    fetch(`${supabaseUrl}/rest/v1/profiles?id=eq.${encodeURIComponent(userId)}&select=${columns}`, {
       headers: {
         apikey: serviceKey,
         Authorization: `Bearer ${serviceKey}`,
       },
     });
+  let response: Response;
+  try {
+    response = await readProfile('plan,role,plan_tier');
+    // Deployed before the plan_tiers migration: the column is not there yet. Read without it;
+    // a paying account is then treated as Plus.
+    if (response.status === 400) response = await readProfile('plan,role');
   } catch (error) {
     console.warn('pantry-vision: plan lookup network error', error);
     return null;
@@ -448,27 +459,18 @@ async function loadScanTier(userId: string): Promise<ScanTier | null> {
   }
 
   try {
-    const rows = (await response.json()) as Array<{ plan?: string; role?: string }>;
+    const rows = (await response.json()) as Array<{ plan?: string; role?: string; plan_tier?: string | null }>;
     const row = rows[0];
     if (!row) return null;
     if (row.role === 'admin') return 'admin';
-    return row.plan === 'paid' ? 'plus' : 'free';
+    return tierForProfile(row.plan, row.plan_tier);
   } catch (error) {
     console.warn('pantry-vision: plan lookup parse error', error);
     return null;
   }
 }
 
-// --- Scan allowance (monthly cap for Plus, one-time free scans) ---
-
-const SCAN_LIMIT_DEFAULTS = { plusMonthly: 40, plusMonthlyTags: 200, freeTotal: 3 } as const;
-
-function parseScanLimit(raw: string | undefined, fallback: number): number {
-  const text = (raw ?? '').trim();
-  if (!text) return fallback;
-  const parsed = Number.parseInt(text, 10);
-  return Number.isFinite(parsed) && parsed >= 0 && parsed <= 100_000 ? parsed : fallback;
-}
+// --- Scan allowance (a monthly limit for every tier, the free one included) ---
 
 type ScanAllowance = {
   /** Row key in photo_scan_usage, or null when this scan is not counted (admin). */
@@ -476,21 +478,24 @@ type ScanAllowance = {
   limit: number;
 };
 
-/** Which bucket a scan counts against, and how big the bucket is. */
+/**
+ * Which bucket a scan counts against, and how big the bucket is.
+ * Shelf, fridge and receipt photos share the month's row ('2026-10'); price tags have their own
+ * ('2026-10|tag'). A free account that upgrades mid-month keeps the scans it already used, so
+ * switching plans never refills the month.
+ */
 function scanAllowanceFor(
   tier: ScanTier,
   action: VisionAction,
   now: Date,
-  env: { plusMonthly?: string; plusMonthlyTags?: string; freeTotal?: string } = {},
+  overrideJson?: string,
 ): ScanAllowance {
   if (tier === 'admin') return { period: null, limit: Number.POSITIVE_INFINITY };
-  if (tier === 'free') {
-    return { period: 'free', limit: parseScanLimit(env.freeTotal, SCAN_LIMIT_DEFAULTS.freeTotal) };
-  }
-  const month = now.toISOString().slice(0, 7);
+  const limits = tierLimits(tier, overrideJson);
+  const month = usageMonth(now);
   return action === 'price-tag'
-    ? { period: `${month}|tag`, limit: parseScanLimit(env.plusMonthlyTags, SCAN_LIMIT_DEFAULTS.plusMonthlyTags) }
-    : { period: month, limit: parseScanLimit(env.plusMonthly, SCAN_LIMIT_DEFAULTS.plusMonthly) };
+    ? { period: `${month}|tag`, limit: limits.priceTagScans }
+    : { period: month, limit: limits.scans };
 }
 
 async function callScanRpc(name: string, args: Record<string, unknown>): Promise<Response | null> {
@@ -625,28 +630,38 @@ async function finishScanRequest(userId: string, key: string, result: SharedScan
 
 function scanLimitResponse(tier: ScanTier, allowance: ScanAllowance, action: VisionAction): Response {
   if (tier === 'free') {
+    // PLAN_REQUIRED makes the app show the paid plans. Price tags are never part of the free plan.
     const error =
-      allowance.limit > 0
-        ? `You have used your ${allowance.limit} free photo scans. Scanning is part of MealPlanatic Plus.`
-        : 'Photo scanning requires MealPlanatic Plus.';
-    return jsonResponse({ error, code: 'PLAN_REQUIRED', usage: { remaining: 0, limit: allowance.limit, isPlus: false } }, 403);
+      allowance.limit > 0 && action !== 'price-tag'
+        ? `You have used your ${allowance.limit} free scans for this month. They reset on the 1st. A paid plan includes more.`
+        : action === 'price-tag'
+          ? 'Price-tag scanning is part of the paid plans.'
+          : 'Photo scanning is part of the paid plans.';
+    return jsonResponse(
+      { error, code: 'PLAN_REQUIRED', usage: { remaining: 0, limit: allowance.limit, isPlus: false, tier } },
+      403,
+    );
   }
   const what = action === 'price-tag' ? 'price-tag scans' : 'photo scans';
   return jsonResponse(
     {
       error: `You have used all ${allowance.limit} ${what} for this month. They reset on the 1st.`,
       code: 'SCAN_LIMIT_REACHED',
-      usage: { remaining: 0, limit: allowance.limit, isPlus: true },
+      usage: { remaining: 0, limit: allowance.limit, isPlus: true, tier },
     },
     429,
   );
 }
 
-/** What the app is told about the allowance after a scan. Admin scans are not capped. */
+/**
+ * What the app is told about the allowance after a scan. Admin scans are not capped.
+ * `isPlus` means "on a paid tier" (kept for app versions that only know that flag).
+ */
 function usageForResponse(tier: ScanTier, allowance: ScanAllowance, remaining: number) {
   const capped = allowance.period != null && Number.isFinite(remaining);
   return {
     isPlus: tier !== 'free',
+    tier,
     limit: capped ? allowance.limit : null,
     remaining: capped ? remaining : null,
   };
@@ -1844,7 +1859,7 @@ Deno.serve(async (req) => {
   if (!tier) {
     return jsonResponse(
       {
-        error: 'Photo scanning requires MealPlanatic Plus.',
+        error: 'Could not check your plan. Please try again.',
         code: 'PLAN_REQUIRED',
       },
       403,
@@ -1881,16 +1896,15 @@ Deno.serve(async (req) => {
     const contentHash = imageResult.imageHash || (await sha256Hex(imageResult.bytes));
     const cacheKey = `${PANTRY_VISION_CACHE_VERSION}|${imageResult.action}|${imageResult.scanLocation}|${contentHash}|t${imageResult.tiles.length}`;
 
-    // Free accounts get a few shelf scans to try the app. Receipts and price tags are Plus only.
-    if (tier === 'free' && imageResult.action !== 'pantry') {
-      return jsonResponse({ error: 'Photo scanning requires MealPlanatic Plus.', code: 'PLAN_REQUIRED' }, 403);
-    }
-    const allowance = scanAllowanceFor(tier, imageResult.action, new Date(), {
-      plusMonthly: Deno.env.get('PANTRY_PLUS_MONTHLY_SCANS') ?? undefined,
-      plusMonthlyTags: Deno.env.get('PANTRY_PLUS_MONTHLY_TAG_SCANS') ?? undefined,
-      freeTotal: Deno.env.get('PANTRY_FREE_TOTAL_SCANS') ?? undefined,
-    });
-    if (tier === 'free' && allowance.limit <= 0) {
+    // Every tier has a monthly pool of shelf, fridge and receipt scans. Price tags are for paid
+    // tiers only (a free account's limit for them is 0).
+    const allowance = scanAllowanceFor(
+      tier,
+      imageResult.action,
+      new Date(),
+      Deno.env.get('PLAN_LIMITS_OVERRIDE') ?? undefined,
+    );
+    if (allowance.limit <= 0) {
       return scanLimitResponse(tier, allowance, imageResult.action);
     }
 
@@ -1904,7 +1918,7 @@ Deno.serve(async (req) => {
       if (claim.state === 'claimed') return { counted: allowance.period != null, remaining: claim.remaining };
       if (claim.state === 'used-up') return scanLimitResponse(tier, allowance, imageResult.action);
       if (tier === 'free') {
-        return jsonResponse({ error: 'Photo scanning requires MealPlanatic Plus.', code: 'PLAN_REQUIRED' }, 403);
+        return jsonResponse({ error: 'Photo scanning is part of the paid plans.', code: 'PLAN_REQUIRED' }, 403);
       }
       return { counted: false, remaining: Number.POSITIVE_INFINITY };
     };

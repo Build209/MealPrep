@@ -220,7 +220,7 @@ function AccountSheetBody({ onClose }: { onClose: () => void }) {
               <Text className="mt-1 text-xs font-bold uppercase text-emerald">{ROLE_LABELS[profile.role]}</Text>
             </View>
 
-            <AccountPlanSection plan={profile.plan} />
+            <AccountPlanSection plan={profile.plan} planTier={profile.planTier} />
 
             {signedIn ? (
               <View className="mt-4 rounded-2xl border border-border bg-card px-4 py-3">

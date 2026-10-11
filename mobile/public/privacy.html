@@ -93,7 +93,7 @@
       <li>
         <strong>Usage log (signed-in accounts):</strong> a record of actions you take in the app, such as opening
         it, saving a scan, ticking a grocery item, marking a meal as made, opening or closing one of Forky's tips,
-        or starting a Plus purchase. Each entry holds the name of the action, the time, whether you used the web or
+        or starting a purchase. Each entry holds the name of the action, the time, whether you used the web or
         a phone app, and at most a number or a short label (for example which tip, or how many items). It does not
         hold item or recipe names, what you type to Forky, photos, or your location. We use it to see which
         features help, to make Forky's tips less repetitive, and to show you your own activity. We do not use it for
@@ -110,8 +110,9 @@
       <li>Find stores and compare prices near your saved ZIP, including Kroger deal data when available.</li>
       <li>
         Run <strong>AI photo scanning</strong>: images you choose to scan are sent to <strong>Google Gemini</strong> (via
-        our Supabase Edge Function) to detect pantry items or read shelf tags. We keep a count of how many scans your
-        account has used and their size, to apply plan limits; the count holds nothing from the photos.
+        our Supabase Edge Function) to detect pantry items or read shelf tags. We keep a count of how many scans and
+        recipe imports your account has used each month, and the size of the scans, to apply plan limits; the counts
+        hold nothing from the photos, links or recipes.
         So that a scan sent twice by a dropped connection is read only once, the list of items found by a scan is
         held on our server for up to one hour, then deleted.
       </li>
@@ -189,7 +190,7 @@
       what you have, the name of an ingredient. We do not send it your name, email or account details.
     </p>
     <p>
-      Payments for MealPlanatic Plus are handled by <strong>Stripe</strong>. We do not see or store your full card
+      Payments for paid plans are handled by <strong>Stripe</strong>. We do not see or store your full card
       number. We keep a record of your subscription, its price and dates.
     </p>
 
@@ -201,7 +202,7 @@
       profile photo tied to your account.
     </p>
     <p>
-      Deleting your account also cancels MealPlanatic Plus. We keep billing records (your subscription, its price and
+      Deleting your account also cancels your paid plan. We keep billing records (your subscription, its price and
       dates, and the renewal terms you agreed to) for as long as tax and consumer law require, even after you delete
       your account. They are no longer linked to your profile.
     </p>

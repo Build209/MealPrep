@@ -3,7 +3,8 @@
 // Deploy: Actions -> "Deploy Supabase function" -> stripe-webhook (gateway JWT verification OFF:
 // Stripe cannot send a Supabase token; the Stripe signature is the authentication).
 //
-// Requires SQL migration: 20261009020000_billing_subscriptions.sql
+// Requires SQL migrations: 20261009020000_billing_subscriptions.sql and, for tiers,
+// 20261011180000_plan_tiers.sql (without it every subscription unlocks Plus).
 //
 // Secrets (Supabase dashboard -> Edge Functions -> Secrets):
 //   STRIPE_SECRET_KEY      restricted or secret key; used only to re-read subscriptions
@@ -87,6 +88,11 @@ async function recordEvent(admin: Admin, eventId: string, type: string): Promise
   if (error) throw error;
 }
 
+/** PostgREST (PGRST204) or Postgres (42703) saying the plan_tier column does not exist. */
+function isMissingPlanTierColumn(error: { code?: string; message?: string }): boolean {
+  return (error.code === 'PGRST204' || error.code === '42703') && /plan_tier/.test(error.message ?? '');
+}
+
 /** True while the account still exists. Deleted accounts keep their billing rows, unlinked. */
 async function profileExists(admin: Admin, userId: string): Promise<boolean> {
   const { data, error } = await admin.from('profiles').select('id').eq('id', userId).maybeSingle();
@@ -124,20 +130,29 @@ async function syncSubscription(
     return { applied: false, userId };
   }
 
-  const { error: upsertError } = await admin.from('billing_subscriptions').upsert(
-    {
-      user_id: userId,
-      stripe_customer_id: row.stripe_customer_id,
-      stripe_subscription_id: row.stripe_subscription_id,
-      status: row.status,
-      price_id: row.price_id,
-      billing_interval: row.billing_interval,
-      current_period_end: row.current_period_end,
-      cancel_at_period_end: row.cancel_at_period_end,
-      updated_at: new Date().toISOString(),
-    },
-    { onConflict: 'stripe_customer_id' },
-  );
+  const stored = {
+    user_id: userId,
+    stripe_customer_id: row.stripe_customer_id,
+    stripe_subscription_id: row.stripe_subscription_id,
+    status: row.status,
+    price_id: row.price_id,
+    billing_interval: row.billing_interval,
+    current_period_end: row.current_period_end,
+    cancel_at_period_end: row.cancel_at_period_end,
+    updated_at: new Date().toISOString(),
+  };
+  let { error: upsertError } = await admin
+    .from('billing_subscriptions')
+    .upsert({ ...stored, plan_tier: row.plan_tier }, { onConflict: 'stripe_customer_id' });
+  if (upsertError && isMissingPlanTierColumn(upsertError)) {
+    // Deployed before the plan_tiers migration: store the subscription without the tier, so
+    // a payment is never lost over a missing column. The account gets Plus until the migration
+    // is applied and the next event for this subscription arrives.
+    console.error('stripe-webhook: billing_subscriptions.plan_tier is missing; apply 20261011180000_plan_tiers.sql');
+    ({ error: upsertError } = await admin
+      .from('billing_subscriptions')
+      .upsert(stored, { onConflict: 'stripe_customer_id' }));
+  }
   if (upsertError) throw upsertError;
 
   if (userId) {

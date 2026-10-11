@@ -1,7 +1,7 @@
-// Start a MealPlanatic Plus subscription: returns the URL of a Stripe-hosted Checkout page.
+// Start a MealPlanatic subscription (Plus, Pro or Family): returns the URL of a Stripe-hosted Checkout page.
 //
 // Deploy: Actions -> "Deploy Supabase function" -> stripe-checkout (gateway JWT verification ON).
-// Requires SQL migration: 20261009020000_billing_subscriptions.sql
+// Requires SQL migrations: 20261009020000_billing_subscriptions.sql, 20261011180000_plan_tiers.sql
 //
 // Secrets (Supabase dashboard -> Edge Functions -> Secrets):
 //   STRIPE_SECRET_KEY  Stripe secret or restricted key (test key while testing)
@@ -9,11 +9,14 @@
 // Provided by the platform: SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY.
 //
 // Stripe setup this relies on:
-//   - Prices with lookup keys `plus_monthly` and `plus_yearly` (so test and live need no code change).
+//   - One active price per tier and period, with lookup keys plus_monthly, plus_yearly,
+//     pro_monthly, pro_yearly, family_monthly, family_yearly (so test and live need no code
+//     change). A tier whose price is missing answers PRICE_NOT_FOUND and cannot be bought.
 //   - A Terms of Service URL in Stripe's public business details; the required consent box
 //     cannot be shown without it.
 //
-// Request:  POST { "interval": "month" | "year" }   (signed-in user)
+// Request:  POST { "interval": "month" | "year", "tier"?: "plus" | "pro" | "family" }   (signed-in user;
+//           no tier means Plus)
 // Response: 200 { "url": "https://checkout.stripe.com/..." }
 //           409 { code: "ALREADY_SUBSCRIBED" } when the user already has a live subscription
 //
@@ -40,9 +43,10 @@ import {
   consentCheckboxText,
   DISCLOSURE_VERSION,
   isLiveSubscriptionStatus,
+  lookupKeyFor,
   normalizeAppUrl,
   parseBillingInterval,
-  PRICE_LOOKUP_KEYS,
+  parseCheckoutTier,
   renewalDisclosure,
   TERMS_VERSION,
 } from '../_shared/billingText.ts';
@@ -77,9 +81,9 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: 'Billing is not set up yet.', code: 'NOT_CONFIGURED' }, 503);
   }
 
-  let body: { interval?: unknown } = {};
+  let body: { interval?: unknown; tier?: unknown } = {};
   try {
-    body = (await req.json()) as { interval?: unknown };
+    body = (await req.json()) as { interval?: unknown; tier?: unknown };
   } catch {
     return jsonResponse({ error: 'Invalid JSON body', code: 'BAD_REQUEST' }, 400);
   }
@@ -87,12 +91,17 @@ Deno.serve(async (req) => {
   if (!interval) {
     return jsonResponse({ error: 'Choose a monthly or yearly plan.', code: 'BAD_REQUEST' }, 400);
   }
+  const tier = parseCheckoutTier(body.tier);
+  if (!tier) {
+    return jsonResponse({ error: 'Choose Plus, Pro or Family.', code: 'BAD_REQUEST' }, 400);
+  }
+  const lookupKey = lookupKeyFor(tier, interval);
 
   try {
     const existing = await findBillingRow(admin, userId);
     if (existing && isLiveSubscriptionStatus(existing.status)) {
       return jsonResponse(
-        { error: 'You already have MealPlanatic Plus. Use Manage subscription to make changes.', code: 'ALREADY_SUBSCRIBED' },
+        { error: 'You already have a MealPlanatic plan. Use Manage subscription to make changes.', code: 'ALREADY_SUBSCRIBED' },
         409,
       );
     }
@@ -112,7 +121,7 @@ Deno.serve(async (req) => {
         );
         if (hasLiveStripeSubscription(subscriptions.data ?? [])) {
           return jsonResponse(
-            { error: 'You already have MealPlanatic Plus. Use Manage subscription to make changes.', code: 'ALREADY_SUBSCRIBED' },
+            { error: 'You already have a MealPlanatic plan. Use Manage subscription to make changes.', code: 'ALREADY_SUBSCRIBED' },
             409,
           );
         }
@@ -157,11 +166,11 @@ Deno.serve(async (req) => {
     }
 
     const prices = await stripeRequest<{ data: StripePrice[] }>(stripeSecretKey, 'GET', '/prices', {
-      form: { lookup_keys: [PRICE_LOOKUP_KEYS[interval]], active: true, limit: 1 },
+      form: { lookup_keys: [lookupKey], active: true, limit: 1 },
     });
     const price = prices.data[0];
     if (!price || price.unit_amount === null || price.recurring?.interval !== interval) {
-      console.error('stripe-checkout: no active price for lookup key', PRICE_LOOKUP_KEYS[interval]);
+      console.error('stripe-checkout: no active price for lookup key', lookupKey);
       return jsonResponse({ error: 'This plan is not available right now.', code: 'PRICE_NOT_FOUND' }, 503);
     }
 
@@ -180,7 +189,7 @@ Deno.serve(async (req) => {
         });
         if (hasLiveStripeSubscription(recheck.data ?? [])) {
           return jsonResponse(
-            { error: 'You already have MealPlanatic Plus. Use Manage subscription to make changes.', code: 'ALREADY_SUBSCRIBED' },
+            { error: 'You already have a MealPlanatic plan. Use Manage subscription to make changes.', code: 'ALREADY_SUBSCRIBED' },
             409,
           );
         }
@@ -204,15 +213,16 @@ Deno.serve(async (req) => {
         cancel_url: urls.cancel,
         consent_collection: { terms_of_service: 'required' },
         custom_text: {
-          submit: { message: renewalDisclosure(price.unit_amount, price.currency, interval) },
+          submit: { message: renewalDisclosure(price.unit_amount, price.currency, interval, tier) },
           terms_of_service_acceptance: {
-            message: consentCheckboxText(price.unit_amount, price.currency, interval, urls.terms),
+            message: consentCheckboxText(price.unit_amount, price.currency, interval, urls.terms, tier),
           },
         },
         metadata: {
           supabase_user_id: userId,
           price_id: price.id,
           billing_interval: interval,
+          plan_tier: tier,
           terms_version: TERMS_VERSION,
           disclosure_version: DISCLOSURE_VERSION,
         },
