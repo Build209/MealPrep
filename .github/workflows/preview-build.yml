@@ -1,0 +1,47 @@
+name: Preview build (redesign)
+
+# Builds the web app from a redesign branch and stores the built files on the
+# `preview-build` branch so the design session can open them and take screenshots.
+# It does NOT deploy anything: the live site only ever comes from `main` (pages.yml).
+on:
+  push:
+    branches: ["redesign/**"]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: preview-build
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+      - name: Build Expo web app
+        working-directory: mobile
+        env:
+          EXPO_PUBLIC_SUPABASE_URL: https://okkwapgyadpaifpmkcex.supabase.co
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: sb_publishable_PCMqSfDjdX6J55lc97km1g_I7U5n-pD
+        run: |
+          npm ci
+          npm run export:web
+      - name: Store the build on the preview-build branch
+        working-directory: mobile/dist
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git init -q -b preview-build
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -q -m "Preview build of ${GITHUB_SHA} (${GITHUB_REF_NAME})"
+          git push -f "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" preview-build

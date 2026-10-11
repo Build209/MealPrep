@@ -106,7 +106,7 @@ assert.ok(tapHeights.every((h) => h >= 44), `tap targets: ${tapHeights.join(', '
 // Approved colours (design D-2): tomato only on the button that starts the purchase.
 assert.match(options, /bg-tomato[^`]*`[\s\S]{0,200}plusSubscribeLabel\(interval\)/);
 assert.equal((options.match(/bg-tomato/g) ?? []).length, 1);
-assert.match(read('config/theme.colors.json'), /"tomato": "#C9431F"/);
+assert.match(read('config/theme.colors.json'), /"tomato": "#D9301A"/);
 
 // The full Plus screen: one benefit line, the options, and a close button that is always there.
 assert.match(sheet, /PLUS_UPGRADE_COPY\.benefit/);

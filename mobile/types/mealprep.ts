@@ -266,4 +266,7 @@ export interface ThemeTokens {
   warning: string;
   warningLight: string;
   onWarning: string;
+  /** Brand yellow: the top bar of every screen (sticker aisle look). */
+  banana: string;
+  onBanana: string;
 }

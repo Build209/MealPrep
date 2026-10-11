@@ -7,9 +7,10 @@ module.exports = {
   theme: {
     extend: {
       colors: tailwindThemeColors(),
-      // Approved design (D-2): Figtree everywhere, softer card corners.
+      // Sticker aisle look: Atkinson Hyperlegible Next for everything read, Bagel Fat One for titles and stickers.
       fontFamily: {
-        sans: ['Figtree', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],
+        sans: ['Atkinson Hyperlegible Next', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],
+        display: ['Bagel Fat One', 'Atkinson Hyperlegible Next', 'system-ui', 'sans-serif'],
       },
       borderRadius: { '2xl': '18px', '3xl': '24px' },
     },

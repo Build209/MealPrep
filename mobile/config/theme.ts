@@ -30,6 +30,8 @@ export const THEME: ThemeTokens = {
   warning: themeColors.warning,
   warningLight: themeColors.warningLight,
   onWarning: themeColors.onWarning,
+  banana: themeColors.banana,
+  onBanana: themeColors.onBanana,
 };
 
 /** Tailwind / NativeWind color map (semantic tokens from theme.colors.json). */
@@ -64,5 +66,7 @@ export function tailwindThemeColors(): Record<string, string> {
     warning: c.warning,
     'warning-light': c.warningLight,
     'on-warning': c.onWarning,
+    banana: c.banana,
+    'on-banana': c.onBanana,
   };
 }

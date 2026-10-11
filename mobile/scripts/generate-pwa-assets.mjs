@@ -22,7 +22,7 @@ const themeColors = JSON.parse(
 );
 
 const THEME = {
-  primaryDark: themeColors.primaryDark,
+  banana: themeColors.banana,
   paper: themeColors.paper,
   brandCream: themeColors.brandCream,
 };
@@ -66,7 +66,7 @@ function writeManifest() {
     scope: webPath('/'),
     display: 'standalone',
     orientation: 'portrait',
-    theme_color: THEME.primaryDark,
+    theme_color: THEME.banana,
     background_color: THEME.paper,
     share_target: {
       action: webPath('/?import=1'),
