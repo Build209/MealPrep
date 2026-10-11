@@ -385,6 +385,8 @@ interface AppContextValue {
   maintenanceActive: boolean;
   summary: MealPrepSummary;
   analytics: UserAnalytics;
+  /** False while a signed-in account's real totals are still loading (`analytics` holds sample figures until then). */
+  analyticsLoaded: boolean;
   toggleMealPlanKitchenRecipe: (recipeId: string) => Promise<void>;
   toggleMealPlanDiscoveryRecipe: (item: RecipeDiscoveryListItem) => Promise<void>;
   removeMealPlanItem: (id: string) => Promise<void>;
@@ -3218,6 +3220,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       maintenanceActive,
       summary,
       analytics,
+      analyticsLoaded: demoMode || liveAnalytics != null,
       toggleMealPlanKitchenRecipe,
       toggleMealPlanDiscoveryRecipe,
       removeMealPlanItem,
@@ -3322,6 +3325,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       savePantryScanReview,
       addPantryStaples,
       analytics,
+      liveAnalytics,
       authError,
       kitchenError,
       clearKitchenError,

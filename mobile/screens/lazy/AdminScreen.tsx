@@ -32,6 +32,7 @@ export default function AdminScreen() {
     setUserPreference,
     seedPantry,
     analytics,
+    analyticsLoaded,
     session,
   } = useApp();
 
@@ -74,11 +75,18 @@ export default function AdminScreen() {
         </Card>
       ) : null}
 
-      <Card className="mt-4" title="Seed test pantry" subtitle="Reset demo inventory">
-        <Pressable onPress={seedPantry} className="mt-2 rounded-xl border border-border bg-card px-4 py-3">
-          <Text className="text-center font-bold text-slate">Load sample pantry items</Text>
-        </Pressable>
-      </Card>
+      {/* Demo only: on a real account this added sample rows to the admin's own pantry in one tap. */}
+      {demoMode ? (
+        <Card className="mt-4" title="Seed test pantry" subtitle="Adds sample items to the demo pantry">
+          <Pressable
+            onPress={seedPantry}
+            accessibilityRole="button"
+            className="mt-2 rounded-xl border border-border bg-card px-4 py-3"
+          >
+            <Text className="text-center font-bold text-slate">Load sample pantry items</Text>
+          </Pressable>
+        </Card>
+      ) : null}
 
       {!demoMode ? <AdminUserPlanCard /> : null}
 
@@ -121,11 +129,16 @@ export default function AdminScreen() {
         title="Platform analytics"
         subtitle={demoMode ? 'Basic counts (demo)' : 'Aggregate totals only — no per-user data'}
       >
-        <Text className="mt-2 text-sm text-muted">Users: {analytics.userCount} ({analytics.adminCount} admin)</Text>
-        <Text className="text-sm text-muted">Pantry items (all users): {analytics.pantryItems}</Text>
-        <Text className="text-sm text-muted">Recipes (all rows): {analytics.recipes}</Text>
-        <Text className="text-sm text-muted">Open grocery lines (all users): {analytics.groceryOpen}</Text>
-        <Text className="text-sm text-muted">Last active: {new Date(analytics.lastActiveAt).toLocaleString()}</Text>
+        {analyticsLoaded ? (
+          <>
+            <Text className="mt-2 text-sm text-muted">Users: {analytics.userCount} ({analytics.adminCount} admin)</Text>
+            <Text className="text-sm text-muted">Pantry items (all users): {analytics.pantryItems}</Text>
+            <Text className="text-sm text-muted">Recipes (all rows): {analytics.recipes}</Text>
+            <Text className="text-sm text-muted">Open grocery lines (all users): {analytics.groceryOpen}</Text>
+          </>
+        ) : (
+          <Text className="mt-2 text-sm text-muted">Loading…</Text>
+        )}
       </Card>
     </ScrollView>
   );
