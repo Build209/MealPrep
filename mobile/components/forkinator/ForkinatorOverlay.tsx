@@ -865,10 +865,8 @@ export function ForkinatorOverlay() {
       scannerPromptVisible: scannerPromptVisibleRef.current,
     });
     // A tap always means "I want to ask": open the chat, and still clear whatever bubble was up.
-    if (askForkyAvailable) {
-      logUsageEvent('ask_forky_opened');
-      setAskForkyOpen(true);
-    }
+    if (askForkyAvailable) setAskForkyOpen(true);
+    if (askForkyAvailable) logUsageEvent('ask_forky_opened');
     if (action === 'dismissGreetingPrompt') {
       logUsageEvent('forky_prompt_dismissed', { prompt: 'greeting' });
       setGreetingPromptVisible(false);
