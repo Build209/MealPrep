@@ -5,7 +5,8 @@
 //
 // Secrets (Supabase dashboard -> Edge Functions -> Secrets):
 //   ANTHROPIC_API_KEY         Anthropic API key. Set a monthly spend limit on it in the Anthropic console.
-//   FORKY_MODEL               optional: model id (default claude-haiku-4-5). Change here, no redeploy of the app.
+//   FORKY_MODEL               optional: model id (default claude-haiku-5-5). A value set here wins over the
+//                             default in the code, so remove or update it when the default changes.
 //   FORKY_PLUS_MONTHLY_LIMIT  optional: messages a month for Plus (default 200)
 //   FORKY_FREE_TOTAL_LIMIT    optional: one-time messages for a free account (default 2; 0 = Plus only)
 // Provided by the platform: SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY.
@@ -178,7 +179,7 @@ Deno.serve(async (req) => {
     }
 
     const apiJson = (await apiResponse.json().catch(() => null)) as
-      | { usage?: { input_tokens?: number; output_tokens?: number }; error?: { type?: string } }
+      | { usage?: { input_tokens?: number; output_tokens?: number }; error?: { type?: string }; stop_reason?: string }
       | null;
     const inputTokens = apiJson?.usage?.input_tokens ?? 0;
     const outputTokens = apiJson?.usage?.output_tokens ?? 0;
@@ -194,7 +195,8 @@ Deno.serve(async (req) => {
     if (!reply) {
       // We were billed for the tokens, so log them, but give the user their message back.
       await settle(inputTokens, outputTokens, true);
-      console.error('ask-forky: unreadable model reply');
+      // Stop reason only (for example max_tokens or refusal): never the question or the answer.
+      console.error('ask-forky: unreadable model reply', model, apiJson?.stop_reason ?? '');
       return jsonResponse({ error: 'Forky could not answer. Please try again.', code: 'UPSTREAM_ERROR' }, 502);
     }
 
