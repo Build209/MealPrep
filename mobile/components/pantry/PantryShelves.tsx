@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { Pressable, ScrollView, Text, View, type ViewStyle } from 'react-native';
+import { Pressable, ScrollView, Text, useWindowDimensions, View, type ViewStyle } from 'react-native';
 import { THEME } from '../../config/appConfig';
 import {
   PACKAGE_LABEL_BOX,
@@ -9,6 +9,7 @@ import {
   type ShelfTile,
 } from '../../lib/pantry/shelfView';
 import type { PantryItem } from '../../types/mealprep';
+import { Sticker } from '../ui/Sticker';
 
 /** The package drawing is laid out on a 76 x 100 grid, as in the mockup. */
 const TILE_W = 76;
@@ -16,7 +17,11 @@ const TILE_H = 100;
 /** Matches the screen's `px-5`, so shelves can run edge to edge and still line up with the page. */
 const PAGE_GUTTER = 20;
 
-const SHELF_BOARD = '#E4D9BC';
+/** Each package stands in a column this wide; the column's name tag hangs under the board. */
+const COLUMN_W = 96;
+const COLUMN_GAP = 8;
+/** Content never grows past the app's phone-width column. */
+const MAX_PAGE_W = 512;
 const KRAFT = '#E2D8BD';
 const KRAFT_EDGE = '#CDBF98';
 const WHITE_PACK = '#F6F7F2';
@@ -147,42 +152,16 @@ const PackageTile = memo(function PackageTile({
           overflow: 'hidden',
         }}
       >
-        <Text
-          numberOfLines={2}
-          style={{ fontSize: 10, lineHeight: 11, fontWeight: '700', color: '#FFFFFF', textAlign: 'center' }}
-        >
-          {tile.item.name}
-        </Text>
-        {tile.sizeLabel ? (
-          <Text
-            numberOfLines={1}
-            style={{ marginTop: 2, fontSize: 9, lineHeight: 10, fontWeight: '600', color: '#FFFFFF', textAlign: 'center' }}
-          >
-            {tile.sizeLabel}
-          </Text>
-        ) : null}
+        {/* The name is on the shelf-edge tag under the board, where it can be read in full. */}
       </View>
       {tile.quantityBadge ? (
-        <View
-          style={{
-            position: 'absolute',
-            top: 4,
-            left: 0,
-            minWidth: 22,
-            height: 20,
-            paddingHorizontal: 5,
-            alignItems: 'center',
-            justifyContent: 'center',
-            borderWidth: 1.5,
-            borderColor: THEME.primary,
-            borderRadius: 999,
-            backgroundColor: '#FFFFFF',
-          }}
-        >
-          <Text style={{ fontSize: 11, lineHeight: 14, fontWeight: '800', color: THEME.primary }}>
-            {tile.quantityBadge}
-          </Text>
-        </View>
+        <Sticker
+          label={tile.quantityBadge}
+          tone="ink"
+          size="sm"
+          tilt={8}
+          style={{ position: 'absolute', top: -2, left: -6 }}
+        />
       ) : null}
       {tile.daysBadge ? (
         <View
@@ -196,15 +175,52 @@ const PackageTile = memo(function PackageTile({
             alignItems: 'center',
             justifyContent: 'center',
             borderRadius: 999,
-            backgroundColor: '#E9B23B',
+            backgroundColor: THEME.warning,
           }}
         >
-          <Text style={{ fontSize: 11, lineHeight: 14, fontWeight: '800', color: '#1B2A20' }}>{tile.daysBadge}</Text>
+          <Text style={{ fontSize: 12, lineHeight: 14, fontWeight: '800', color: THEME.onWarning }}>{tile.daysBadge}</Text>
         </View>
       ) : null}
     </Pressable>
   );
 });
+
+/** The name tag that hangs from the shelf edge under a package, like a price tag in a store. */
+function ShelfTag({ tile, onPress }: { tile: ShelfTile; onPress: (item: PantryItem) => void }) {
+  return (
+    <Pressable
+      onPress={() => onPress(tile.item)}
+      aria-hidden
+      tabIndex={-1}
+      style={({ pressed }) => ({
+        width: COLUMN_W,
+        minHeight: 44,
+        paddingHorizontal: 5,
+        paddingTop: 5,
+        paddingBottom: 7,
+        borderBottomLeftRadius: 9,
+        borderBottomRightRadius: 9,
+        backgroundColor: THEME.banana,
+        opacity: pressed ? 0.8 : 1,
+      })}
+    >
+      <Text
+        numberOfLines={3}
+        style={{ fontSize: 13, lineHeight: 15, fontWeight: '700', color: THEME.onBanana, textAlign: 'center' }}
+      >
+        {tile.item.name}
+      </Text>
+      {tile.sizeLabel ? (
+        <Text
+          numberOfLines={1}
+          style={{ marginTop: 1, fontSize: 13, lineHeight: 15, color: THEME.onBanana, textAlign: 'center' }}
+        >
+          {tile.sizeLabel}
+        </Text>
+      ) : null}
+    </Pressable>
+  );
+}
 
 function ShelfRow({
   shelf,
@@ -215,60 +231,72 @@ function ShelfRow({
   onPressItem: (item: PantryItem) => void;
   onSeeAll: (shelf: PantryShelf) => void;
 }) {
+  const { width } = useWindowDimensions();
+  // A short shelf still gets a board that reaches the right edge of the screen.
+  const boardMinWidth = Math.min(width, MAX_PAGE_W) - PAGE_GUTTER;
   return (
-    <View>
+    <View className="mb-3">
       <View className="min-h-[44px] flex-row items-center gap-2">
-        <Text className="text-[15px] font-extrabold leading-5 text-ink" accessibilityRole="header">
+        <Text className="text-[17px] font-extrabold leading-[22px] text-ink" accessibilityRole="header">
           {shelf.name}
         </Text>
-        <Text className="text-[13px] leading-[18px] text-muted">{shelf.count}</Text>
+        <Text className="text-sm leading-5 text-muted">{shelf.count}</Text>
         <Pressable
           onPress={() => onSeeAll(shelf)}
           accessibilityRole="button"
           accessibilityLabel={`${SHELF_VIEW_COPY.seeAll}: ${shelf.name}`}
           className="ml-auto min-h-[44px] justify-center pl-4"
         >
-          <Text className="text-[13px] font-bold text-primary">{SHELF_VIEW_COPY.seeAll}</Text>
+          <Text className="text-sm font-bold text-primary">{SHELF_VIEW_COPY.seeAll}</Text>
         </Pressable>
       </View>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
         style={{ marginHorizontal: -PAGE_GUTTER }}
-        contentContainerStyle={{ paddingHorizontal: PAGE_GUTTER, gap: 10, alignItems: 'flex-end' }}
+        contentContainerStyle={{ paddingLeft: PAGE_GUTTER }}
       >
-        {shelf.tiles.map((tile) => (
-          <PackageTile key={tile.item.id} tile={tile} onPress={onPressItem} />
-        ))}
-        {shelf.moreCount > 0 ? (
-          <Pressable
-            onPress={() => onSeeAll(shelf)}
-            accessibilityRole="button"
-            accessibilityLabel={`${SHELF_VIEW_COPY.moreTile(shelf.moreCount)}: ${shelf.name}`}
-            style={{ width: TILE_W, height: TILE_H, paddingTop: 14, paddingHorizontal: 4 }}
-          >
-            <View
-              className="flex-1 items-center justify-center rounded-[10px] border-dashed border-muted"
-              style={{ borderWidth: 1.5 }}
-            >
-              <Text className="text-center text-[13px] font-bold text-primary">
-                {SHELF_VIEW_COPY.moreTile(shelf.moreCount)}
-              </Text>
-            </View>
-          </Pressable>
-        ) : null}
+        <View style={{ minWidth: boardMinWidth }}>
+          <View style={{ flexDirection: 'row', gap: COLUMN_GAP, alignItems: 'flex-end', paddingTop: 6 }}>
+            {shelf.tiles.map((tile) => (
+              <View key={tile.item.id} style={{ width: COLUMN_W, alignItems: 'center' }}>
+                <PackageTile tile={tile} onPress={onPressItem} />
+              </View>
+            ))}
+            {shelf.moreCount > 0 ? (
+              <Pressable
+                onPress={() => onSeeAll(shelf)}
+                accessibilityRole="button"
+                accessibilityLabel={`${SHELF_VIEW_COPY.moreTile(shelf.moreCount)}: ${shelf.name}`}
+                style={{ width: COLUMN_W, height: TILE_H, paddingTop: 14, paddingHorizontal: 8 }}
+              >
+                <View
+                  className="flex-1 items-center justify-center rounded-[10px] border-dashed border-muted"
+                  style={{ borderWidth: 1.5 }}
+                >
+                  <Text className="text-center text-sm font-bold text-primary">
+                    {SHELF_VIEW_COPY.moreTile(shelf.moreCount)}
+                  </Text>
+                </View>
+              </Pressable>
+            ) : null}
+          </View>
+          <View
+            style={{
+              height: 8,
+              marginLeft: -8,
+              borderTopLeftRadius: 4,
+              borderBottomLeftRadius: 4,
+              backgroundColor: THEME.ink,
+            }}
+          />
+          <View style={{ flexDirection: 'row', gap: COLUMN_GAP, alignItems: 'flex-start', paddingRight: PAGE_GUTTER }}>
+            {shelf.tiles.map((tile) => (
+              <ShelfTag key={tile.item.id} tile={tile} onPress={onPressItem} />
+            ))}
+          </View>
+        </View>
       </ScrollView>
-      <View
-        style={{
-          height: 7,
-          marginLeft: -8,
-          marginRight: -PAGE_GUTTER,
-          marginBottom: 4,
-          borderTopLeftRadius: 4,
-          borderBottomLeftRadius: 4,
-          backgroundColor: SHELF_BOARD,
-        }}
-      />
     </View>
   );
 }

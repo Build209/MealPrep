@@ -1,59 +1,56 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, Text, useWindowDimensions, View } from 'react-native';
+import { Image, Pressable, Text, View } from 'react-native';
 import { APP_ROUTES } from '../../config/appRoutes';
 import { RECIPES_COPY } from '../../config/recipesCopy';
 import { THEME } from '../../config/appConfig';
-import { Card } from '../Card';
+import { Ionicons } from '../../lib/icons/Ionicons';
 
-const NARROW_WIDTH = 420;
+const FORKY: number = require('../../assets/forkinator/forkinator-idea.png');
 
+/**
+ * Home with an empty pantry (sticker aisle look): the banana bar carries on down the screen,
+ * Forky asks for one photo, and one tomato button leads to the scanner on the Pantry tab.
+ * This is the only tomato button on the screen.
+ */
 export function HomePantryCta() {
-  const { description, buttonLabel } = RECIPES_COPY.homePantryPrompt;
-  const { width } = useWindowDimensions();
-  const stackButton = width < NARROW_WIDTH;
+  const { heading, description, buttonLabel } = RECIPES_COPY.homePantryPrompt;
   const [pressed, setPressed] = useState(false);
 
   const buttonStyle = {
-    backgroundColor: pressed ? THEME.primaryDark : THEME.primary,
+    backgroundColor: pressed ? THEME.tomatoDark : THEME.tomato,
     transform: [{ scale: pressed ? 0.96 : 1 }],
   };
 
-  if (stackButton) {
-    return (
-      <Card className="mt-4">
-        <Text className="text-sm text-muted">{description}</Text>
-        <Pressable
-          onPress={() => router.push(APP_ROUTES.pantry)}
-          onPressIn={() => setPressed(true)}
-          onPressOut={() => setPressed(false)}
-          accessibilityRole="button"
-          accessibilityLabel={buttonLabel}
-          className="mt-3 min-h-[44px] items-center justify-center rounded-full px-4"
-          style={buttonStyle}
-        >
-          <Text className="text-sm font-bold text-on-primary">{buttonLabel}</Text>
-        </Pressable>
-      </Card>
-    );
-  }
-
   return (
-    <Card className="mt-4">
-      <View className="flex-row items-center gap-3">
-        <Text className="min-w-0 flex-1 text-sm text-muted">{description}</Text>
-        <Pressable
-          onPress={() => router.push(APP_ROUTES.pantry)}
-          onPressIn={() => setPressed(true)}
-          onPressOut={() => setPressed(false)}
-          accessibilityRole="button"
-          accessibilityLabel={buttonLabel}
-          className="min-h-[44px] shrink-0 items-center justify-center rounded-full px-4"
-          style={buttonStyle}
-        >
-          <Text className="text-sm font-bold text-on-primary">{buttonLabel}</Text>
-        </Pressable>
+    <View className="-mx-5 bg-banana px-5 pb-6">
+      <View className="flex-row items-end gap-3">
+        <Image
+          source={FORKY}
+          resizeMode="contain"
+          accessible={false}
+          accessibilityIgnoresInvertColors
+          style={{ width: 66, height: 168, transform: [{ rotate: '-7deg' }] }}
+        />
+        <View className="min-w-0 flex-1 pb-3">
+          <Text accessibilityRole="header" className="font-display text-[30px] leading-[31px] text-on-banana">
+            {heading}
+          </Text>
+          <Text className="mt-2 text-base leading-6 text-on-banana">{description}</Text>
+        </View>
       </View>
-    </Card>
+      <Pressable
+        onPress={() => router.push(APP_ROUTES.pantry)}
+        onPressIn={() => setPressed(true)}
+        onPressOut={() => setPressed(false)}
+        accessibilityRole="button"
+        accessibilityLabel={buttonLabel}
+        className="mt-3 min-h-[60px] flex-row items-center justify-center gap-2.5 rounded-2xl px-5"
+        style={buttonStyle}
+      >
+        <Ionicons name="camera-outline" size={24} color={THEME.onTomato} />
+        <Text className="text-lg font-extrabold text-on-tomato">{buttonLabel}</Text>
+      </Pressable>
+    </View>
   );
 }

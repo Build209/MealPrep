@@ -9,11 +9,13 @@ import { fileURLToPath } from 'node:url';
 import { APP_ROUTES } from '../config/appRoutes';
 import { RECIPES_COPY } from '../config/recipesCopy';
 
+// Redesign (owner, 2026-10-11): Forky asks for one photo.
+assert.equal(RECIPES_COPY.homePantryPrompt.heading, 'Show me your fridge.');
 assert.equal(
   RECIPES_COPY.homePantryPrompt.description,
-  "Add what's in your kitchen — recipes will match what you have, and your grocery list skips it.",
+  "Take one photo. I list what's in it, then show you what you can cook tonight.",
 );
-assert.equal(RECIPES_COPY.homePantryPrompt.buttonLabel, 'Go to Pantry');
+assert.equal(RECIPES_COPY.homePantryPrompt.buttonLabel, 'Scan my fridge');
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const mobileRoot = path.resolve(__dirname, '..');
@@ -31,7 +33,7 @@ assert.match(
 assert.match(ctaSource, /accessibilityRole="button"/);
 assert.match(ctaSource, /accessibilityLabel=\{buttonLabel\}/);
 assert.match(ctaSource, /useState\(false\)/, 'button should track pressed state for web feedback');
-assert.match(ctaSource, /THEME\.primaryDark/, 'button should darken while pressed');
+assert.match(ctaSource, /THEME\.tomatoDark/, 'button should darken while pressed');
 assert.match(ctaSource, /scale: pressed \? 0\.96/, 'button should scale while pressed');
 assert.ok(!ctaSource.includes('numberOfLines'), 'pantry description should wrap fully');
 
