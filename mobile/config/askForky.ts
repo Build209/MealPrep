@@ -4,6 +4,10 @@ export const ASK_FORKY_LIMITS = {
   historyTurns: 4,
   pantryItems: 60,
   recipes: 8,
+  /** Household profile (learning step 4): how many usual items and recently cooked meals are sent. */
+  usualItems: 8,
+  cookedRecently: 5,
+  cookedWithinDays: 30,
 } as const;
 
 export const ASK_FORKY_COPY = {

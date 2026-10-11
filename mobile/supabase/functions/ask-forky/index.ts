@@ -11,7 +11,8 @@
 // Provided by the platform: SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY.
 //
 // Request:  POST { question, history: [{role,text}], pantry: [{name,amount?,expiresOn?}],
-//                  recipes: [{id,title,have?,total?,missing?}] }   (signed-in user)
+//                  recipes: [{id,title,have?,total?,missing?}],
+//                  household?: {size?, usualItems?: string[], cookedRecently?: string[]} }   (signed-in user)
 // Response: 200 { answer, recipeIds, offTopic, safetyNote, remaining, limit, isPlus }
 //           401 UNAUTHENTICATED · 403 FEATURE_OFF · 429 LIMIT_REACHED · 400 BAD_REQUEST · 502 UPSTREAM_ERROR
 //

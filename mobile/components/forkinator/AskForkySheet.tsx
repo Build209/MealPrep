@@ -17,6 +17,8 @@ import { askForky, AskForkyError, type AskForkyContext, type AskForkyTurn } from
 import { canBuyPlusHere } from '../billing/PlusUpgradeOptions';
 import { PlusUpgradeSheet } from '../billing/PlusUpgradeSheet';
 import { logUsageEvent } from '../../lib/usage/usageLog';
+import { recentlyCookedTitles } from '../../lib/forky/askForkyRequest';
+import { readUsualItemHistory, topUsualItemNames } from '../../lib/usual/usualItems';
 
 type Props = {
   visible: boolean;
@@ -44,7 +46,7 @@ const FORKY: number = require('../../assets/forkinator/forkinator-idea.png');
  * - Recipe buttons only ever open recipes the app itself put on the shortlist.
  */
 export function AskForkySheet({ visible, onClose, onOpenRecipe, onHelpMePick }: Props) {
-  const { pantry, pantryRecipeMatchesRankedFiltered, isGuest, demoMode, openAuthSheet } = useApp();
+  const { pantry, pantryRecipeMatchesRankedFiltered, isGuest, demoMode, openAuthSheet, mealPlan, profile } = useApp();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [draft, setDraft] = useState('');
   const [busy, setBusy] = useState(false);
@@ -64,8 +66,15 @@ export function AskForkySheet({ visible, onClose, onOpenRecipe, onHelpMePick }: 
         expiresOn: item.expiresOn,
       })),
       recipes: pantryRecipeMatchesRankedFiltered.slice(0, ASK_FORKY_LIMITS.recipes),
+      // What the app has learned about this household, so answers fit (no diet or health details).
+      // Read when the chat opens, so it reflects what was bought and cooked up to now.
+      household: {
+        householdSize: profile.householdSize,
+        usualItems: visible ? topUsualItemNames(readUsualItemHistory(), ASK_FORKY_LIMITS.usualItems) : [],
+        cookedRecently: recentlyCookedTitles(mealPlan, new Date()),
+      },
     }),
-    [pantry, pantryRecipeMatchesRankedFiltered],
+    [mealPlan, pantry, pantryRecipeMatchesRankedFiltered, profile.householdSize, visible],
   );
 
   const recipeTitles = useMemo(() => {
