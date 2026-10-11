@@ -24,7 +24,10 @@ export async function fetchNearbyStoresFromSupabase(
 
   const cached = readCachedNearbyStores(rounded, radiusM);
   if (cached?.length) {
-    return { ok: true, stores: cached, fromCache: true };
+    // A fresh cache hit is a normal answer. `fromCache` is reserved for the stale copy served
+    // when the server could not be asked (below): the caller shows a "could not reach store
+    // search servers" notice for it, which was appearing on every revisit within the cache window.
+    return { ok: true, stores: cached };
   }
 
   if (options.cacheOnly) {
