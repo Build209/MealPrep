@@ -5,7 +5,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { AUTH_RESULT_COPY, authErrorMessage } from '../config/authConfig';
+import { AUTH_RESET_COPY, AUTH_RESULT_COPY, authErrorMessage, passwordResetLinkState } from '../config/authConfig';
 
 // --- Plain wording for the auth server's messages ---
 assert.equal(authErrorMessage('Invalid login credentials'), AUTH_RESULT_COPY.wrongCredentials);
@@ -52,5 +52,29 @@ assert.ok(
 const upgrade = read('components/billing/PlusUpgradeOptions.tsx');
 assert.match(upgrade, /window\.addEventListener\('pageshow', onPageShow\)/);
 assert.match(upgrade, /const onPageShow = \(\) => setBusy\(false\);/);
+
+// --- Forgot password ---
+assert.equal(passwordResetLinkState('#access_token=abc&expires_in=3600&refresh_token=def&token_type=bearer&type=recovery', ''), 'recovery');
+assert.equal(passwordResetLinkState('', '?type=recovery'), 'recovery');
+assert.equal(passwordResetLinkState('#error=access_denied&error_code=otp_expired&error_description=Email+link+is+invalid+or+has+expired', ''), 'expired');
+assert.equal(passwordResetLinkState('#access_token=abc&type=signup', ''), null, 'a sign-up confirmation link is not a reset link');
+assert.equal(passwordResetLinkState('#access_token=abc&type=recovery_other', ''), null);
+assert.equal(passwordResetLinkState('', '?checkout=success'), null);
+assert.equal(authErrorMessage('New password should be different from the old password.'), AUTH_RESET_COPY.samePassword);
+assert.equal(authErrorMessage('Auth session missing!'), AUTH_RESET_COPY.linkExpired);
+assert.doesNotMatch(AUTH_RESET_COPY.sent, /no account|not found|does not exist/i, 'the answer never reveals whether an address has an account');
+
+assert.match(sheet, /\{AUTH_RESET_COPY\.forgotLink\}/, 'the sign-in tab offers "Forgot password?"');
+assert.match(sheet, /void run\(\(\) => requestPasswordReset\(trimmedEmail\)\);/);
+const reset = context.slice(context.indexOf('const requestPasswordReset = useCallback('), context.indexOf('const signOut = useCallback('));
+assert.match(reset, /resetPasswordForEmail\(trimmed, \{\s*redirectTo: getAuthRedirectUrl\(\),\s*\}\)/, 'the link comes back to this app');
+assert.match(reset, /return \{ ok: true, notice: AUTH_RESET_COPY\.sent \};/);
+assert.match(reset, /supabase\.auth\.updateUser\(\{ password \}\)/);
+assert.match(context, /if \(event === 'PASSWORD_RECOVERY' && nextSession\?\.user\?\.id\) \{\s*setShowPasswordRecovery\(true\);/, 'opening a reset link shows the new-password sheet');
+const redirect = read('lib/authRedirect.ts');
+assert.match(redirect, /const OPENED_FROM_PASSWORD_RESET_LINK =/, 'the opening address is read once, before the auth client clears it');
+const resetSheet = read('components/account/PasswordResetSheet.tsx');
+assert.match(resetSheet, /if \(password !== confirm\) \{\s*setError\(AUTH_RESET_COPY\.mismatch\);/);
+assert.match(read('components/account/AccountOverlays.tsx'), /<PasswordResetSheet\s+visible=\{accountUi\.showPasswordRecovery\}/);
 
 console.log('auth-sheet-check: ok');
