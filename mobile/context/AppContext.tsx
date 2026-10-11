@@ -158,6 +158,7 @@ import {
   trackManualInsert,
 } from '../lib/pantry/manualPantryInsertLifecycle';
 import { syncPantryToSnapshot } from '../lib/pantry/syncPantrySnapshot';
+import { isPersistedRowUuid } from '../lib/pantry/persistIds';
 import { writeAccountPantryCache } from '../lib/pantry/writeAccountPantryCache';
 import { PANTRY_RESTOCK_COPY } from '../config/pantryRestock';
 import { PANTRY_SCAN_UI_COPY, writeLastPantryScanLocation } from '../config/pantryScan';
@@ -2813,10 +2814,26 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       if (!supabase || !userId) {
         throw new Error('Sign in to update pantry items.');
       }
+      if (!isPersistedRowUuid(item.id)) {
+        // Added while offline (or its first save is still on its way): the server has no row to
+        // update yet, and asking it to answered with a database error about the id. Keep the edit
+        // on this device; it is saved with the row.
+        const edited = { ...item, updatedAt: new Date().toISOString() };
+        setPantry((prev) => {
+          const next = prev.map((row) => (row.id === item.id ? edited : row));
+          writeAccountPantryCache(userId, next, { profile });
+          return next;
+        });
+        return;
+      }
       const saved = await updatePantryItem(supabase, userId, item);
-      setPantry((prev) => prev.map((row) => (row.id === saved.id ? saved : row)));
+      setPantry((prev) => {
+        const next = prev.map((row) => (row.id === saved.id ? saved : row));
+        writeAccountPantryCache(userId, next, { profile });
+        return next;
+      });
     },
-    [demoMode, isGuest, supabase, userId],
+    [demoMode, isGuest, profile, supabase, userId],
   );
 
   const deletePantryItemEntry = useCallback(

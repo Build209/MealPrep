@@ -117,4 +117,7 @@ assert.ok(scanSave.indexOf('await insertPantryItems(') < scanSave.indexOf('await
 const clearAll = between('const clearAllPantry = useCallback(', 'const savePantryScanReview = useCallback(');
 assert.match(clearAll, /writeAccountPantryCache\(userId, \[\], \{ profile \}\)/, 'clear all also empties the copy kept on the device');
 
+const update = between('const updatePantryItemEntry = useCallback(', 'const deletePantryItemEntry = useCallback(');
+assert.match(update, /if \(!isPersistedRowUuid\(item\.id\)\) \{/, 'editing a row the server does not have yet stays on the device instead of failing with a database error');
+
 console.log('pantry-data-integrity-check: ok');
