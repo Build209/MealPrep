@@ -48,4 +48,9 @@ assert.ok(
   'the guest pantry is forgotten once saved, before the next step can fail',
 );
 
+// --- Buy button is usable again after coming Back from Stripe ---
+const upgrade = read('components/billing/PlusUpgradeOptions.tsx');
+assert.match(upgrade, /window\.addEventListener\('pageshow', onPageShow\)/);
+assert.match(upgrade, /const onPageShow = \(\) => setBusy\(false\);/);
+
 console.log('auth-sheet-check: ok');

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Linking, Platform, Pressable, Text, View } from 'react-native';
 import { LEGAL_LINKS } from '../../config/account';
 import { PLUS_INTERVAL_ORDER, PLUS_UPGRADE_COPY, type BillingInterval } from '../../config/pricing';
@@ -30,6 +30,15 @@ export function PlusUpgradeOptions({ onNotNow }: Props) {
   const [interval, setChosenInterval] = useState<BillingInterval>(PLUS_INTERVAL_ORDER[0]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Coming back from Stripe with the browser's Back button can bring this page back exactly as it
+  // was left, button still switched off. Switch it on again so the purchase can be retried.
+  useEffect(() => {
+    if (Platform.OS !== 'web' || typeof window === 'undefined') return undefined;
+    const onPageShow = () => setBusy(false);
+    window.addEventListener('pageshow', onPageShow);
+    return () => window.removeEventListener('pageshow', onPageShow);
+  }, []);
 
   if (!canBuyPlusHere() || demoMode) return null;
 
