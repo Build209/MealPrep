@@ -1,6 +1,6 @@
 /**
- * Home catalog sections: pantry recipes open by default, creators collapsed; bubble rows always
- * rendered in section chrome.
+ * Home catalog sections: both folded by default, showing only the name and an arrow; their chip
+ * and avatar rows appear once a section is opened.
  * Run from mobile/: npm run test:home-collapsed-sections
  */
 import assert from 'node:assert/strict';
@@ -12,9 +12,9 @@ import { CREATOR_RECIPES_COPY } from '../config/creatorRecipes';
 import { defaultRecipesTabSectionExpanded } from '../lib/recipesTab/sectionExpanded';
 
 const defaults = defaultRecipesTabSectionExpanded();
-assert.equal(defaults.classic, true, 'pantry recipes open by default (redesign, 2026-10-11)');
+assert.equal(defaults.classic, false, 'recipes start folded: name and arrow only (owner, 2026-10-11)');
 assert.equal(defaults.creators, false, 'creators should default collapsed');
-assert.equal(RECIPES_TAB_SURFACE.defaultClassicExpanded, true);
+assert.equal(RECIPES_TAB_SURFACE.defaultClassicExpanded, false);
 assert.equal(RECIPES_TAB_SURFACE.defaultCreatorsExpanded, false);
 assert.equal(
   RECIPES_TAB_SURFACE_COPY.classicSectionTitle,
@@ -34,15 +34,11 @@ const sectionSource = fs.readFileSync(
   'utf8',
 );
 assert.match(sectionSource, /bubbleRow/, 'collapsible section should accept bubbleRow');
-assert.match(
-  sectionSource,
-  /\{bubbleRow \? <View/,
-  'bubble row should render outside expanded body',
-);
-assert.doesNotMatch(
-  sectionSource,
-  /\{expanded \? <View className="mt-2">\{bubbleRow/,
-  'bubble row must not be gated only on expanded',
+// A folded section is just its name and arrow; chips and avatars show once it is opened.
+assert.equal(
+  (sectionSource.match(/expanded && bubbleRow \? <View/g) ?? []).length,
+  2,
+  'the chip row, above or below the heading, shows only while the section is open',
 );
 assert.match(
   sectionSource,
