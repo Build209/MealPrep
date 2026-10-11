@@ -126,6 +126,7 @@ import { filterRecipesTabRowsForDietPrefs } from '../../lib/diet/filterRows';
 import { kitchenRecipesForPantryMatch } from '../../lib/recipeMatch/kitchenCatalogMerge';
 import { readGuestPantry } from '../../lib/guest/localKitchenStore';
 import { readJson } from '../../lib/storage';
+import { logUsageEvent } from '../../lib/usage/usageLog';
 import {
   FORKINATOR_AUTO_PROMPT_PRIORITY,
   shouldReplaceForkinatorAutoPrompt,
@@ -591,6 +592,23 @@ export function ForkinatorOverlay() {
   // While the first-time tour is open Forky's own clouds and bubbles stay out of its way.
   const tutorialActive = useTutorialState().active;
 
+  // Usage log: one "shown" per cloud that actually opened in front of the person.
+  const loggedShownPromptRef = useRef<ForkinatorAutoPromptKind | null>(null);
+  useEffect(() => {
+    if (!shownPrompt) {
+      loggedShownPromptRef.current = null;
+      return;
+    }
+    if (!cloudOpen || tutorialActive || loggedShownPromptRef.current === shownPrompt) return;
+    loggedShownPromptRef.current = shownPrompt;
+    logUsageEvent('forky_prompt_shown', { prompt: shownPrompt });
+  }, [cloudOpen, shownPrompt, tutorialActive]);
+  useEffect(() => {
+    if (forkInRoadPromptVisible && forkInRoadExpanded && !tutorialActive) {
+      logUsageEvent('forky_prompt_shown', { prompt: 'forkInRoad' });
+    }
+  }, [forkInRoadExpanded, forkInRoadPromptVisible, tutorialActive]);
+
   /** Think bubbles: Forky has something to say and its cloud is folded away. */
   const thinkDotsVisible =
     forkinatorUiReady &&
@@ -737,6 +755,7 @@ export function ForkinatorOverlay() {
   }, [columnInset, height, insets.bottom, insets.left, insets.right, insets.top, position, width]);
 
   const handleScannerCameraPress = useCallback(() => {
+    logUsageEvent('forky_prompt_tapped', { prompt: 'scanner', action: 'camera' });
     setScannerPromptVisible(false);
     markForkinatorScannerNudgeShown();
     if (!IS_WEB) {
@@ -755,6 +774,7 @@ export function ForkinatorOverlay() {
   }, [featureFlags.photoScan, photoScanAccess]);
 
   const handleAisleSortPress = useCallback(() => {
+    logUsageEvent('forky_prompt_tapped', { prompt: 'aisleSort' });
     setAisleSortPromptVisible(false);
     markForkinatorAisleSortUsed();
     writeGroceryCombinePreference(true);
@@ -766,11 +786,13 @@ export function ForkinatorOverlay() {
 
   const handleExpirationShowPress = useCallback(() => {
     const ids = expirationPromptItems.map((item) => item.id);
+    logUsageEvent('forky_prompt_tapped', { prompt: 'expiration' });
     setExpirationPromptVisible(false);
     openPantryExpiringHighlightFromForkinator(ids);
   }, [expirationPromptItems]);
 
   const handleRestockUndoPress = useCallback(() => {
+    logUsageEvent('forky_prompt_tapped', { prompt: 'restock', action: 'undo' });
     for (const target of restockUndoLines) {
       // FK3-6: remove exactly the row Forky added, by id (server id once saved). If a list
       // refresh dropped it from memory, removeGroceryItem still deletes it on the server.
@@ -792,6 +814,7 @@ export function ForkinatorOverlay() {
   }, [grocery, removeGroceryItem, restockUndoLines]);
 
   const handleForkInRoadHelpPress = useCallback(() => {
+    logUsageEvent('forky_prompt_tapped', { prompt: 'forkInRoad' });
     markForkInRoadPromptEngaged();
     setForkInRoadExpanded(false);
     setForkInRoadQuizVisible(true);
@@ -842,28 +865,37 @@ export function ForkinatorOverlay() {
       scannerPromptVisible: scannerPromptVisibleRef.current,
     });
     // A tap always means "I want to ask": open the chat, and still clear whatever bubble was up.
-    if (askForkyAvailable) setAskForkyOpen(true);
+    if (askForkyAvailable) {
+      logUsageEvent('ask_forky_opened');
+      setAskForkyOpen(true);
+    }
     if (action === 'dismissGreetingPrompt') {
+      logUsageEvent('forky_prompt_dismissed', { prompt: 'greeting' });
       setGreetingPromptVisible(false);
       return;
     }
     if (action === 'dismissExpirationPrompt') {
+      logUsageEvent('forky_prompt_dismissed', { prompt: 'expiration' });
       setExpirationPromptVisible(false);
       return;
     }
     if (action === 'dismissRestockPrompt') {
+      logUsageEvent('forky_prompt_dismissed', { prompt: 'restock' });
       setRestockPromptVisible(false);
       return;
     }
     if (action === 'collapseForkInRoadPrompt') {
+      logUsageEvent('forky_prompt_dismissed', { prompt: 'forkInRoad' });
       collapseForkInRoadPrompt();
       return;
     }
     if (action === 'dismissAisleSortPrompt') {
+      logUsageEvent('forky_prompt_dismissed', { prompt: 'aisleSort' });
       setAisleSortPromptVisible(false);
       return;
     }
     if (action === 'dismissScannerPrompt') {
+      logUsageEvent('forky_prompt_dismissed', { prompt: 'scanner' });
       setScannerPromptVisible(false);
       return;
     }
@@ -901,7 +933,10 @@ export function ForkinatorOverlay() {
           reduceMotion={reduceMotion}
           message={FORKINATOR_GREETING_MESSAGE}
           accessibilityLabel={FORKINATOR_GREETING_A11Y_LABEL}
-          onPress={() => setGreetingPromptVisible(false)}
+          onPress={() => {
+            logUsageEvent('forky_prompt_dismissed', { prompt: 'greeting' });
+            setGreetingPromptVisible(false);
+          }}
         />
       ) : null}
       {restockPromptLayout ? (
@@ -911,7 +946,10 @@ export function ForkinatorOverlay() {
           reduceMotion={reduceMotion}
           message={restockPromptMessage}
           accessibilityLabel={FORKINATOR_RESTOCK_PROMPT_A11Y_LABEL}
-          onPress={() => setRestockPromptVisible(false)}
+          onPress={() => {
+            logUsageEvent('forky_prompt_dismissed', { prompt: 'restock' });
+            setRestockPromptVisible(false);
+          }}
           actionButton={{
             label: FORKINATOR_RESTOCK_UNDO_BUTTON_LABEL,
             accessibilityLabel: FORKINATOR_RESTOCK_UNDO_BUTTON_A11Y_LABEL,
@@ -926,7 +964,10 @@ export function ForkinatorOverlay() {
           reduceMotion={reduceMotion}
           message={expirationExpirationMessage}
           accessibilityLabel={FORKINATOR_EXPIRATION_PROMPT_A11Y_LABEL}
-          onPress={() => setExpirationPromptVisible(false)}
+          onPress={() => {
+            logUsageEvent('forky_prompt_dismissed', { prompt: 'expiration' });
+            setExpirationPromptVisible(false);
+          }}
           actionButton={{
             label: FORKINATOR_EXPIRATION_SHOW_BUTTON_LABEL,
             accessibilityLabel: FORKINATOR_EXPIRATION_SHOW_BUTTON_A11Y_LABEL,
@@ -941,7 +982,10 @@ export function ForkinatorOverlay() {
           reduceMotion={reduceMotion}
           message={FORKINATOR_AISLE_SORT_MESSAGE}
           accessibilityLabel={FORKINATOR_AISLE_SORT_A11Y_LABEL}
-          onPress={() => setAisleSortPromptVisible(false)}
+          onPress={() => {
+            logUsageEvent('forky_prompt_dismissed', { prompt: 'aisleSort' });
+            setAisleSortPromptVisible(false);
+          }}
           actionButton={{
             label: FORKINATOR_AISLE_SORT_BUTTON_LABEL,
             accessibilityLabel: FORKINATOR_AISLE_SORT_BUTTON_A11Y_LABEL,
@@ -956,7 +1000,10 @@ export function ForkinatorOverlay() {
           reduceMotion={reduceMotion}
           message={FORKINATOR_FORK_IN_ROAD_MESSAGE}
           accessibilityLabel={FORKINATOR_FORK_IN_ROAD_A11Y_LABEL}
-          onPress={collapseForkInRoadPrompt}
+          onPress={() => {
+            logUsageEvent('forky_prompt_dismissed', { prompt: 'forkInRoad' });
+            collapseForkInRoadPrompt();
+          }}
           actionButton={{
             label: FORKINATOR_FORK_IN_ROAD_BUTTON_LABEL,
             accessibilityLabel: FORKINATOR_FORK_IN_ROAD_BUTTON_A11Y_LABEL,
@@ -972,6 +1019,7 @@ export function ForkinatorOverlay() {
           message={FORKINATOR_SCANNER_NUDGE_MESSAGE}
           accessibilityLabel={FORKINATOR_SCANNER_NUDGE_A11Y_LABEL}
           onPress={() => {
+            logUsageEvent('forky_prompt_tapped', { prompt: 'scanner' });
             setScannerPromptVisible(false);
             openPantryScannerFromForkinator();
           }}

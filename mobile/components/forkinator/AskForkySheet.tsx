@@ -16,6 +16,7 @@ import { useApp } from '../../context/AppContext';
 import { askForky, AskForkyError, type AskForkyContext, type AskForkyTurn } from '../../lib/forky/askForky';
 import { canBuyPlusHere } from '../billing/PlusUpgradeOptions';
 import { PlusUpgradeSheet } from '../billing/PlusUpgradeSheet';
+import { logUsageEvent } from '../../lib/usage/usageLog';
 
 type Props = {
   visible: boolean;
@@ -96,6 +97,7 @@ export function AskForkySheet({ visible, onClose, onOpenRecipe, onHelpMePick }: 
     setBusy(true);
     try {
       const reply = await askForky(question, history, context);
+      logUsageEvent('ask_forky_asked');
       setMessages((current) => [
         ...current,
         {

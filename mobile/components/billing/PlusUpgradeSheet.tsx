@@ -1,7 +1,9 @@
+import { useEffect } from 'react';
 import { Image, Pressable, ScrollView, Text, View } from 'react-native';
 import { Modal } from '../BackAwareModal';
 import { PLUS_UPGRADE_COPY } from '../../config/pricing';
 import { PlusUpgradeOptions } from './PlusUpgradeOptions';
+import { logUsageEvent } from '../../lib/usage/usageLog';
 
 type Props = {
   visible: boolean;
@@ -16,6 +18,10 @@ const FORKY = require('../../assets/forkinator/forkinator-full.png');
  * the renewal terms and the buy button. Closing is always one tap, top right or "Not now".
  */
 export function PlusUpgradeSheet({ visible, onClose }: Props) {
+  useEffect(() => {
+    if (visible) logUsageEvent('plus_offer_shown', { source: 'sheet' });
+  }, [visible]);
+
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
       <View className="flex-1 bg-primary">
