@@ -117,6 +117,7 @@ const sources = [
   'components/forkinator/AskForkySheet.tsx',
   'components/billing/PlusUpgradeOptions.tsx',
   'components/billing/PlusUpgradeSheet.tsx',
+  'components/grocery/UsualItemsCard.tsx',
   'lib/usage/usageLog.ts',
 ].map(read).join('\n');
 const sent = new Set([...sources.matchAll(/logUsageEvent\(\s*'([a-z_]+)'/g)].map((match) => match[1]));

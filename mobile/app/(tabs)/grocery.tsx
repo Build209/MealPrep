@@ -13,6 +13,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { GroceryEmptyState } from '../../components/grocery/GroceryEmptyState';
 import { GroceryItemSwipeRow } from '../../components/grocery/GroceryItemSwipeRow';
+import { UsualItemsCard } from '../../components/grocery/UsualItemsCard';
 import { CATEGORY_LABELS, THEME } from '../../config/appConfig';
 import { APP_ROUTES } from '../../config/appRoutes';
 import { GROCERY_COPY } from '../../config/grocery';
@@ -156,6 +157,8 @@ export default function GroceryScreen() {
     ],
   );
 
+  const groceryNames = useMemo(() => grocery.map((item) => item.name), [grocery]);
+
   function recipeLabelFor(item: (typeof grocery)[number]): string {
     return groceryRecipeSourceLabels(item.sourceRecipeIds, recipeNameById);
   }
@@ -267,6 +270,8 @@ export default function GroceryScreen() {
               {GROCERY_COPY.addItemField}
             </Text>
           </Pressable>
+
+          <UsualItemsCard groceryNames={groceryNames} onAdd={addManualGroceryItem} />
 
           <View className="mt-[14px] rounded-[18px] border border-border bg-card px-4 py-3.5">
             <View className="flex-row items-center gap-3">

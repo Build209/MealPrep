@@ -6,6 +6,18 @@ export const GROCERY_COPY = {
   addItem: 'Add item',
   /** Approved design: the pill field under the heading that opens the add-item sheet. */
   addItemField: 'Add an item',
+  /** "Your usuals": items bought regularly whose usual time has nearly come (learning step 2). */
+  usualsTitle: 'Your usuals',
+  usualsBlurb: 'You buy these regularly, and it is about time again.',
+  usualsEvery: (days: number) =>
+    days % 7 === 0 && days <= 56
+      ? days === 7
+        ? 'About every week'
+        : `About every ${days / 7} weeks`
+      : `About every ${days} days`,
+  usualsAdd: 'Add',
+  usualsAddA11y: (name: string) => `Add ${name} to your grocery list`,
+  usualsHideA11y: (name: string) => `Stop suggesting ${name}`,
   refresh: 'Refresh',
   clearCheckedItems: 'Clear checked items',
   clearCheckedTitle: 'Clear checked items',

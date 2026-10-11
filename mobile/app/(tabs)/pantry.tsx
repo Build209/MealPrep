@@ -77,6 +77,7 @@ import {
 } from '../../lib/pantry/openExpiringHighlightRequest';
 import { readJson, writeJson } from '../../lib/storage';
 import { logUsageEvent } from '../../lib/usage/usageLog';
+import { notePurchasedToday } from '../../lib/usual/usualItems';
 import { logPantryScanFailure } from '../../lib/pantryVision/scanLog';
 import { PantryImageQualityError } from '../../lib/pantryVision/prepareImageShared';
 import type { PantryScanReviewItem, PreparedPantryImage } from '../../lib/pantryVision/types';
@@ -902,6 +903,8 @@ export default function PantryScreen() {
         count: reviewItems.length,
       });
       if (reviewHasReceiptRef.current) {
+        // A receipt is a shopping trip: remember what was bought for "Your usuals".
+        notePurchasedToday(reviewItems.filter((item) => item.enabled));
         // What was bought is now in the pantry, so the matching grocery rows are done.
         const { groceryIdsBoughtOnReceipt } = await import('../../lib/pantryVision/reviewItems');
         const boughtIds = groceryIdsBoughtOnReceipt(reviewItems, grocery);

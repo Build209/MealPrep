@@ -196,6 +196,7 @@ import { mergeGuestSavedRecipesIntoAccount } from '../lib/savedRecipes/supabaseS
 import { readJson, removeStorageKey, writeJson } from '../lib/storage';
 import { groceryListJustCompleted } from '../lib/usage/usageEvents';
 import { logUsageEvent, setUsageLogAccount } from '../lib/usage/usageLog';
+import { notePurchasedToday, noteTickTakenBack, setUsualItemsOwner } from '../lib/usual/usualItems';
 import {
   readAccountKitchenCache,
   writeAccountKitchenCache,
@@ -649,6 +650,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const profileReady =
     demoMode || (authReady && (userId ? liveDataLoaded : guestKitchenHydrated));
   const ownerId = userId ?? (demoMode ? profile.id || 'demo-user' : GUEST_OWNER_ID);
+  // "Your usuals" keeps its purchase memory per kitchen on this device (lib/usual).
+  useEffect(() => {
+    setUsualItemsOwner(ownerId);
+  }, [ownerId]);
 
   const {
     libraryRecipes,
@@ -2349,7 +2354,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         return next;
       });
 
+      if (willUncheck && current) noteTickTakenBack(current.name);
       if (willCheck && current) {
+        notePurchasedToday([current]);
         logUsageEvent('grocery_item_checked');
         if (groceryListJustCompleted(grocery, [id])) {
           logUsageEvent('grocery_list_completed', { count: grocery.length });
@@ -2397,7 +2404,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         return next;
       });
 
+      if (!nextChecked) {
+        for (const item of toCheck) noteTickTakenBack(item.name);
+      }
       if (nextChecked) {
+        notePurchasedToday(toCheck);
         logUsageEvent('grocery_item_checked', { count: toCheck.length });
         if (groceryListJustCompleted(grocery, toCheck.map((item) => item.id))) {
           logUsageEvent('grocery_list_completed', { count: grocery.length });
