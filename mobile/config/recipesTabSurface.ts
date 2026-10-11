@@ -7,10 +7,10 @@ export const RECIPES_TAB_SURFACE = {
   sectionExpandedStorageKey: 'mealprep.recipesTab.sectionExpanded',
   surfaceEventsStoragePrefix: 'mealprep.recipesTab.surfaceEvents',
   /**
-   * The pantry recipes open by themselves (redesign, owner 2026-10-11): they are the reason to
-   * scan. Creators stay folded until asked for.
+   * Both Home sections start folded: just the name and an arrow (owner, 2026-10-11, 2:03 pm).
+   * Their chips and avatars show once the section is opened.
    */
-  defaultClassicExpanded: true,
+  defaultClassicExpanded: false,
   defaultCreatorsExpanded: false,
   explorationSwapProbability: 0.3,
   minLifetimeImpressionsForExploration: 3,

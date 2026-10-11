@@ -23,14 +23,14 @@ export function RecipesTabCollapsibleSection({
   bubbleRowAbove?: boolean;
   expanded: boolean;
   onToggle: () => void;
-  /** Horizontally scrollable chips/avatars; always visible, never gated on `expanded`. */
+  /** Horizontally scrollable chips/avatars; shown only while the section is open. */
   bubbleRow?: React.ReactNode;
   children?: React.ReactNode;
   loading?: boolean;
 }) {
   return (
     <View className="mt-4">
-      {bubbleRowAbove ? <>{bubbleRow ? <View className="mb-3">{bubbleRow}</View> : null}</> : null}
+      {bubbleRowAbove && expanded && bubbleRow ? <View className="mb-3">{bubbleRow}</View> : null}
       <View className="flex-row items-center justify-between">
         <Pressable
           onPress={onToggle}
@@ -52,7 +52,7 @@ export function RecipesTabCollapsibleSection({
         </Pressable>
         {headerAction ?? null}
       </View>
-      {bubbleRowAbove ? null : <>{bubbleRow ? <View className="mt-1">{bubbleRow}</View> : null}</>}
+      {!bubbleRowAbove && expanded && bubbleRow ? <View className="mt-1">{bubbleRow}</View> : null}
       {expanded && children ? <View className="mt-3">{children}</View> : null}
     </View>
   );
