@@ -7,7 +7,8 @@ import { getWebBasePath, webAssetPath } from '../lib/webBasePath';
  * Sticker aisle look: Atkinson Hyperlegible Next for everything read, Bagel Fat One for titles and
  * stickers. Both are served from our own site so no outside font service is called. App text has
  * no font of its own, so it takes the reading face; icons set their own icon font and are left
- * alone (the :not() below), as is anything else that names a font (the `font-display` class).
+ * alone (the :not() below), as is anything else that names a font, and the `font-display` class,
+ * which the rule would otherwise outrank.
  */
 const READING_FONT_FILE = '/fonts/AtkinsonHyperlegibleNext-Variable-Latin.ttf';
 const DISPLAY_FONT_FILE = '/fonts/BagelFatOne-Latin.ttf';
@@ -20,7 +21,7 @@ function fontCss(): string {
     `@font-face{font-family:'Atkinson Hyperlegible Next';src:url(${reading}) format('truetype');font-weight:200 800;font-style:normal;font-display:swap}`,
     `@font-face{font-family:'Bagel Fat One';src:url(${display}) format('truetype');font-weight:400;font-style:normal;font-display:swap}`,
     `html,body{font-family:${stack}}`,
-    `[dir]:not([class*="r-fontFamily-"]):not([style*="font-family"]),input,textarea,button{font-family:${stack}}`,
+    `[dir]:not([class*="r-fontFamily-"]):not([style*="font-family"]):not(.font-display),input,textarea,button{font-family:${stack}}`,
   ].join('');
 }
 
