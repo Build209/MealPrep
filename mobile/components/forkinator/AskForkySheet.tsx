@@ -14,6 +14,8 @@ import { THEME } from '../../config/appConfig';
 import { ASK_FORKY_COPY, ASK_FORKY_LIMITS } from '../../config/askForky';
 import { useApp } from '../../context/AppContext';
 import { askForky, AskForkyError, type AskForkyContext, type AskForkyTurn } from '../../lib/forky/askForky';
+import { askForkyQuestionsLeft, askForkyTier } from '../../lib/forky/askForkyAllowance';
+import { useAskForkyUsed } from '../../hooks/useAskForkyUsed';
 import { canBuyPlusHere } from '../billing/PlusUpgradeOptions';
 import { PlusUpgradeSheet } from '../billing/PlusUpgradeSheet';
 import { logUsageEvent } from '../../lib/usage/usageLog';
@@ -46,7 +48,17 @@ const FORKY: number = require('../../assets/forkinator/forkinator-idea.png');
  * - Recipe buttons only ever open recipes the app itself put on the shortlist.
  */
 export function AskForkySheet({ visible, onClose, onOpenRecipe, onHelpMePick }: Props) {
-  const { pantry, pantryRecipeMatchesRankedFiltered, isGuest, demoMode, openAuthSheet, mealPlan, profile } = useApp();
+  const {
+    pantry,
+    pantryRecipeMatchesRankedFiltered,
+    isGuest,
+    demoMode,
+    openAuthSheet,
+    mealPlan,
+    profile,
+    profileReady,
+    session,
+  } = useApp();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [draft, setDraft] = useState('');
   const [busy, setBusy] = useState(false);
@@ -90,6 +102,21 @@ export function AskForkySheet({ visible, onClose, onOpenRecipe, onHelpMePick }: 
   }, [messages, busy, visible]);
 
   const signedOut = isGuest && !demoMode;
+
+  // Say how many questions are left as soon as the chat opens. Before this the chat looked
+  // ready and only said "that's all for this month" after a question was typed and sent.
+  const forkyTier = askForkyTier(profile.plan, profile.planTier, profile.role);
+  const usedThisMonth = useAskForkyUsed({
+    userId: session?.user?.id ?? null,
+    enabled: visible && !signedOut && !demoMode && profileReady,
+  });
+  useEffect(() => {
+    const left = askForkyQuestionsLeft(forkyTier, usedThisMonth);
+    if (left === null) return;
+    setRemaining(left);
+    setLimitReached(left === 0 ? (forkyTier === 'free' ? 'free' : 'plus') : null);
+  }, [forkyTier, usedThisMonth]);
+
   const canSend = !busy && !limitReached && !signedOut && draft.trim().length > 0;
 
   async function send(text: string) {

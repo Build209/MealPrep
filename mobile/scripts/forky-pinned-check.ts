@@ -17,6 +17,7 @@ import {
   FORKINATOR_PINNED_LEFT_PX,
   FORKINATOR_PINNED_TOP_PX,
   FORKINATOR_PINNED_WIDTH_PX,
+  APP_TOP_BAR_HEIGHT_PX,
   forkinatorThinkDots,
   isForkinatorTabRoute,
   pinnedForkinatorPosition,
@@ -81,7 +82,7 @@ for (const [screenWidth, screenHeight] of [[360, 640], [390, 844], [1280, 800]] 
   assert.ok(tailCenter >= position.x && tailCenter <= position.x + FORKINATOR_PINNED_WIDTH_PX + 6, 'tail under Forky');
 }
 
-// --- Think bubbles sit by his feet, on the page just under the bar ---
+// --- Think bubbles sit beside him inside the bar, never over the page that scrolls under it ---
 const dots = forkinatorThinkDots(phone);
 assert.equal(dots.length, 2);
 assert.ok(dots[0].size < dots[1].size, 'bubbles grow away from him');
@@ -89,6 +90,7 @@ for (const dot of dots) {
   assert.ok(dot.left >= phone.x + FORKINATOR_PINNED_WIDTH_PX, 'beside him, not on top of him');
   assert.ok(dot.left + dot.size <= phone.x - 10 + FORKINATOR_PINNED_HIT_WIDTH_PX, 'inside his tap target');
   assert.ok(dot.top + dot.size <= FORKINATOR_PINNED_HIT_HEIGHT_PX + phone.y, 'inside his tap target');
+  assert.ok(dot.top + dot.size <= APP_TOP_BAR_HEIGHT_PX, 'inside the top bar, not over the page');
 }
 assert.ok(FORKINATOR_CLOUD_AUTO_COLLAPSE_MS >= 6000 && FORKINATOR_CLOUD_AUTO_COLLAPSE_MS <= 15000, 'long enough to read and tap a button');
 

@@ -1,17 +1,18 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Image, Pressable, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { APP_ROUTES } from '../../config/appRoutes';
 import { RECIPES_COPY } from '../../config/recipesCopy';
 import { THEME } from '../../config/appConfig';
 import { Ionicons } from '../../lib/icons/Ionicons';
 
-const FORKY: number = require('../../assets/forkinator/forkinator-idea.png');
-
 /**
  * Home with an empty pantry (sticker aisle look): the banana bar carries on down the screen,
  * Forky asks for one photo, and one tomato button leads to the scanner on the Pantry tab.
  * This is the only tomato button on the screen.
+ *
+ * Forky himself is not drawn here: he already stands in the top bar right above this card (and
+ * the first-time tour points at him there), so a second one made two Forkys on one screen.
  */
 export function HomePantryCta() {
   const { heading, description, buttonLabel } = RECIPES_COPY.homePantryPrompt;
@@ -24,20 +25,11 @@ export function HomePantryCta() {
 
   return (
     <View className="-mx-5 bg-banana px-5 pb-6">
-      <View className="flex-row items-end gap-3">
-        <Image
-          source={FORKY}
-          resizeMode="contain"
-          accessible={false}
-          accessibilityIgnoresInvertColors
-          style={{ width: 66, height: 168, transform: [{ rotate: '-7deg' }] }}
-        />
-        <View className="min-w-0 flex-1 pb-3">
-          <Text accessibilityRole="header" className="font-display text-[30px] leading-[31px] text-on-banana">
-            {heading}
-          </Text>
-          <Text className="mt-2 text-base leading-6 text-on-banana">{description}</Text>
-        </View>
+      <View className="pt-4">
+        <Text accessibilityRole="header" className="font-display text-[34px] leading-[35px] text-on-banana">
+          {heading}
+        </Text>
+        <Text className="mt-2 text-base leading-6 text-on-banana">{description}</Text>
       </View>
       <Pressable
         onPress={() => router.push(APP_ROUTES.pantry)}
