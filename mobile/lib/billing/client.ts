@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { SUPABASE_URL, isDemoMode } from '../../config/appConfig';
+import type { PaidTier } from '../../config/planTiers';
 import { PLUS_UPGRADE_COPY, type BillingInterval } from '../../config/pricing';
 import { getSupabase } from '../supabase';
 import { isStripeHostedUrl } from './checkoutReturn';
@@ -56,9 +57,9 @@ function leaveForStripe(url: string, name: 'stripe-checkout' | 'stripe-portal'):
   window.location.assign(url);
 }
 
-/** Starts a Plus purchase: asks our server for a Stripe Checkout page and goes there. */
-export async function startPlusCheckout(interval: BillingInterval): Promise<void> {
-  const url = await postBillingFunction('stripe-checkout', { interval });
+/** Starts a purchase of a paid plan: asks our server for a Stripe Checkout page and goes there. */
+export async function startPlanCheckout(tier: PaidTier, interval: BillingInterval): Promise<void> {
+  const url = await postBillingFunction('stripe-checkout', { interval, tier });
   leaveForStripe(url, 'stripe-checkout');
 }
 

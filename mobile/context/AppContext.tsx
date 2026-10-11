@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { isUserPlan, type UserPlan } from '../config/plans';
+import { DEFAULT_PAID_TIER, isPaidTier } from '../config/planTiers';
 import { useHydrated } from '../hooks/useHydrated';
 import { useHydrationGatedPersist } from '../hooks/useHydrationGatedPersist';
 import {
@@ -1482,10 +1483,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const refreshProfilePlan = useCallback(async (): Promise<UserPlan | null> => {
     if (!supabase || !userId) return null;
-    const { data, error } = await supabase.from('profiles').select('plan').eq('id', userId).maybeSingle();
-    const next = (data as { plan?: unknown } | null)?.plan;
+    // The whole row, not named columns: plan_tier does not exist until its migration is applied.
+    const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle();
+    const row = data as { plan?: unknown; plan_tier?: unknown } | null;
+    const next = row?.plan;
     if (error || typeof next !== 'string' || !isUserPlan(next)) return null;
-    setLiveProfile((prev) => (prev && prev.plan !== next ? { ...prev, plan: next } : prev));
+    const nextTier = isPaidTier(row?.plan_tier) ? row.plan_tier : DEFAULT_PAID_TIER;
+    setLiveProfile((prev) =>
+      prev && (prev.plan !== next || (prev.planTier ?? DEFAULT_PAID_TIER) !== nextTier)
+        ? { ...prev, plan: next, planTier: nextTier }
+        : prev,
+    );
     return next;
   }, [supabase, userId]);
 

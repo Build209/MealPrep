@@ -5,6 +5,7 @@ export type UserRole = (typeof USER_ROLES)[number];
 
 import type { UserPlan } from '../config/plans';
 export type { UserPlan } from '../config/plans';
+import type { PaidTier } from '../config/planTiers';
 
 import type { PantryStorageLocation } from '../config/pantryStorage';
 export type { PantryStorageLocation } from '../config/pantryStorage';
@@ -47,6 +48,8 @@ export interface UserProfile {
   name: string;
   role: UserRole;
   plan: UserPlan;
+  /** Which paid tier; only meaningful while `plan` is 'paid'. Absent on older rows: Plus. */
+  planTier?: PaidTier;
   photoUrl: string | null;
   householdSize: number;
   dietaryNotes: string;

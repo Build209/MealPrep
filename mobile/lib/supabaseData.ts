@@ -13,6 +13,7 @@ import { groceryListsEqual } from './grocery/fingerprint';
 import { isPersistedGroceryUuid } from './grocery/persistIds';
 import { recipeApiMasterSlug, recipeApiPersonalSlug } from './recipeDiscovery/slugs';
 import { DEFAULT_USER_PLAN, isUserPlan, type UserPlan } from '../config/plans';
+import { DEFAULT_PAID_TIER, isPaidTier } from '../config/planTiers';
 import type {
   FeatureFlagKey,
   FeatureFlags,
@@ -36,6 +37,7 @@ type ProfileRow = {
   name: string;
   role: UserRole;
   plan?: string | null;
+  plan_tier?: string | null;
   photo_url: string | null;
   avatar_path?: string | null;
   household_size: number;
@@ -163,6 +165,7 @@ export function mapProfile(row: ProfileRow): UserProfile {
     name: row.name,
     role: row.role,
     plan: row.plan && isUserPlan(row.plan) ? row.plan : DEFAULT_USER_PLAN,
+    planTier: isPaidTier(row.plan_tier) ? row.plan_tier : DEFAULT_PAID_TIER,
     photoUrl: row.photo_url,
     householdSize: row.household_size,
     dietaryNotes: row.dietary_notes ?? '',

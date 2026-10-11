@@ -97,13 +97,14 @@ function testSubscriptionMapping(): void {
     cancel_at_period_end: false,
     current_period_end: 1_800_000_000,
     metadata: { supabase_user_id: USER.toUpperCase() },
-    items: { data: [{ price: { id: 'price_month', recurring: { interval: 'month' } } }] },
+    items: { data: [{ price: { id: 'price_month', lookup_key: 'pro_monthly', recurring: { interval: 'month' } } }] },
   });
   assert.deepEqual(older, {
     stripe_customer_id: 'cus_1',
     stripe_subscription_id: 'sub_1',
     status: 'active',
     price_id: 'price_month',
+    plan_tier: 'pro',
     billing_interval: 'month',
     current_period_end: new Date(1_800_000_000 * 1000).toISOString(),
     cancel_at_period_end: false,
@@ -125,6 +126,52 @@ function testSubscriptionMapping(): void {
   assert.equal(newer?.billing_interval, 'year');
   assert.equal(newer?.cancel_at_period_end, true);
   assert.equal(newer?.metadata_user_id, null);
+  // A price with no lookup key we created (or none at all) names no tier: stored as null, treated as Plus.
+  assert.equal(newer?.plan_tier, null);
+  for (const [lookupKey, tier] of [
+    ['plus_monthly', 'plus'],
+    ['plus_yearly', 'plus'],
+    ['pro_yearly', 'pro'],
+    ['family_monthly', 'family'],
+    ['family_yearly', 'family'],
+    ['family', null],
+    ['family_weekly', null],
+    ['enterprise_monthly', null],
+    ['', null],
+    [42, null],
+  ] as const) {
+    const row = subscriptionRowFromStripe({
+      id: 'sub_t',
+      customer: 'cus_t',
+      status: 'active',
+      items: { data: [{ price: { id: 'price_t', lookup_key: lookupKey, recurring: { interval: 'month' } } }] },
+    });
+    assert.equal(row?.plan_tier, tier, String(lookupKey));
+  }
+  // A price whose key was moved to a newer price: the tier written at checkout still stands.
+  const movedKey = (planTier: unknown) =>
+    subscriptionRowFromStripe({
+      id: 'sub_m',
+      customer: 'cus_m',
+      status: 'active',
+      metadata: { plan_tier: planTier },
+      items: { data: [{ price: { id: 'price_old', lookup_key: null, recurring: { interval: 'year' } } }] },
+    })?.plan_tier;
+  assert.equal(movedKey('family'), 'family');
+  assert.equal(movedKey('pro'), 'pro');
+  assert.equal(movedKey('platinum'), null, 'metadata is only believed when it names a real tier');
+  assert.equal(movedKey(undefined), null);
+  // The price's own key wins over metadata.
+  assert.equal(
+    subscriptionRowFromStripe({
+      id: 'sub_k',
+      customer: 'cus_k',
+      status: 'active',
+      metadata: { plan_tier: 'family' },
+      items: { data: [{ price: { id: 'price_k', lookup_key: 'plus_monthly', recurring: { interval: 'month' } } }] },
+    })?.plan_tier,
+    'plus',
+  );
 
   // A user id that is not a UUID is never trusted.
   const badUser = subscriptionRowFromStripe({

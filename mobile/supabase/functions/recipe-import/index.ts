@@ -1,7 +1,11 @@
 // Recipe import — deploy folder recipe-import (Verify JWT ENABLED).
 //
 // Link (YouTube/web/TikTok oEmbed/IG/FB caption), photo scan, uploaded video, screenshots,
-// YouTube search fallback. Secrets: GEMINI_API_KEY, optional YOUTUBE_API_KEY, GEMINI_MODEL.
+// YouTube search fallback. Secrets: GEMINI_API_KEY, optional YOUTUBE_API_KEY, GEMINI_MODEL,
+// optional PLAN_LIMITS_OVERRIDE (see _shared/planTiers.ts).
+//
+// Every plan has a monthly number of imports (importAllowance.ts). Needs SQL migration
+// 20261011180000_plan_tiers.sql; without it imports run uncounted, as before.
 
 import {
   canonicalYouTubeWatchUrl,
@@ -12,6 +16,7 @@ import {
   urlHashKey,
 } from './urlClassification.ts';
 import { orderImportFallbackSteps, type ImportFallbackStep } from './fallbackChain.ts';
+import { claimImport, importCounts, importLimitBody, refundImport } from './importAllowance.ts';
 import { fetchTikTokOembed } from './tiktokOembed.ts';
 import { searchYoutubeRecipeVideo, type YoutubeSearchSuggestion } from './youtubeSearch.ts';
 import {
@@ -594,7 +599,49 @@ async function respondNotRecipeWithAutoYoutube(
   return jsonResponse({ error: notRecipe.message, code: 'NOT_RECIPE', fallbacks }, 422);
 }
 
+/**
+ * Wraps every import in the month's allowance: claim one, run the import, and give it back when
+ * no recipe was extracted for this request. The answer gains `usage` so the app can show what is
+ * left. Requests that are refused before any work (wrong method, signed out) pass straight through.
+ */
 Deno.serve(async (req) => {
+  const userId = req.method === 'POST' ? userIdFromJwt(req) : null;
+  if (!userId) return handleImportRequest(req);
+
+  const claim = await claimImport(userId, new Date(), Deno.env.get('PLAN_LIMITS_OVERRIDE'));
+  if (claim.state === 'used-up') {
+    return jsonResponse(importLimitBody(claim.tier, claim.limit), 429);
+  }
+
+  let response: Response;
+  try {
+    response = await handleImportRequest(req);
+  } catch (error) {
+    if (claim.state === 'claimed') await refundImport(userId, claim.period);
+    throw error;
+  }
+  if (claim.state !== 'claimed') return response;
+
+  let body: unknown = null;
+  try {
+    body = await response.clone().json();
+  } catch {
+    body = null;
+  }
+  if (!importCounts(response.status, body)) {
+    await refundImport(userId, claim.period);
+    return response;
+  }
+  return jsonResponse(
+    {
+      ...(body as Record<string, unknown>),
+      usage: { remaining: claim.remaining, limit: claim.limit, isPlus: claim.tier !== 'free', tier: claim.tier },
+    },
+    200,
+  );
+});
+
+async function handleImportRequest(req: Request): Promise<Response> {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
@@ -967,4 +1014,4 @@ Deno.serve(async (req) => {
     console.error('recipe-import error', error);
     return jsonResponse({ error: 'Import failed unexpectedly.', code: 'UPSTREAM_ERROR' }, 502);
   }
-});
+}

@@ -216,7 +216,7 @@ assert.match(screen, /category: manualCategory,\s*location: manualLocation,\s*ex
 assert.match(screen, /onPress=\{\(\) => void handleQuickScan\(false\)\}[\s\S]{0,700}\{SHELF_VIEW_COPY\.scanLabel\}/);
 assert.doesNotMatch(screen, /chevron-down/, 'no drop-down arrow on the Scan button');
 assert.match(screen, /freeScanBadge \?\? PANTRY_SCAN_UI_COPY\.scanCardPlusBadge/, 'it carries the same Plus or free-scans badge as the card');
-assert.match(screen, /receipt \? plusOnlyScanAccess : photoScanAccess/, 'the quick scan uses the same gates as the cards');
+assert.match(screen, /await resolvePhotoScanAccess\(photoScanAccess, session\);/, 'the quick scan uses the same gate as the cards');
 assert.match(screen, /if \(access !== 'allowed'\) \{\s*setScanPanelOpen\(true\);/, 'someone who may not scan gets the cards, which explain why');
 assert.match(screen, /onScanReceipt=\{/, 'the receipt scan stays reachable from the menu');
 assert.equal(SHELF_VIEW_COPY.scanLabel, 'Scan');

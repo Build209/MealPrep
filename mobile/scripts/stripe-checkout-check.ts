@@ -9,9 +9,10 @@ import {
   encodeStripeForm,
   formatPrice,
   isLiveSubscriptionStatus,
+  lookupKeyFor,
   normalizeAppUrl,
   parseBillingInterval,
-  PRICE_LOOKUP_KEYS,
+  parseCheckoutTier,
   renewalDisclosure,
   TERMS_VERSION,
 } from '../supabase/functions/_shared/billingText.ts';
@@ -32,23 +33,32 @@ assert.equal(formatPrice(499, 'USD'), '$4.99');
 assert.equal(formatPrice(550, 'cad'), '5.50 CAD');
 
 // Renewal wording carries the three things the law asks for: price, period, how to cancel.
-const monthly = renewalDisclosure(699, 'usd', 'month');
+const monthly = renewalDisclosure(499, 'usd', 'month');
 assert.equal(
   monthly,
-  'MealPlanatic Plus is $6.99 a month. It renews automatically every month until you cancel. ' +
+  'MealPlanatic Plus is $4.99 a month. It renews automatically every month until you cancel. ' +
     'Cancel any time in Account, Manage subscription.',
 );
-const yearly = renewalDisclosure(6000, 'usd', 'year');
-assert.match(yearly, /\$60 a year/);
+const yearly = renewalDisclosure(5388, 'usd', 'year');
+assert.match(yearly, /\$53\.88 a year/);
 assert.match(yearly, /renews automatically every year until you cancel/);
 assert.match(yearly, /Cancel any time in Account, Manage subscription/);
-for (const text of [monthly, yearly]) {
+// Each tier is named in its own wording, so the customer agrees to the plan they are buying.
+const proMonthly = renewalDisclosure(899, 'usd', 'month', 'pro');
+assert.match(proMonthly, /^MealPlanatic Pro is \$8\.99 a month\./);
+const familyYearly = renewalDisclosure(19200, 'usd', 'year', 'family');
+assert.match(familyYearly, /^MealPlanatic Family is \$192 a year\. It renews automatically every year until you cancel\./);
+for (const text of [monthly, yearly, proMonthly, familyYearly]) {
   assert.ok(text.length <= 1200, 'Stripe custom text limit');
   assert.doesNotMatch(text, /free|trial|hurry|only \d+ left|limited time/i, 'no pressure or "free" wording');
 }
 
-const box = consentCheckboxText(6000, 'usd', 'year', 'https://mealplanatic.app/terms.html');
-assert.match(box, /^I agree that MealPlanatic Plus renews automatically at \$60 every year until I cancel/);
+const box = consentCheckboxText(5388, 'usd', 'year', 'https://mealplanatic.app/terms.html');
+assert.match(box, /^I agree that MealPlanatic Plus renews automatically at \$53\.88 every year until I cancel/);
+assert.match(
+  consentCheckboxText(899, 'usd', 'month', 'https://mealplanatic.app/terms.html', 'pro'),
+  /^I agree that MealPlanatic Pro renews automatically at \$8\.99 every month until I cancel/,
+);
 assert.match(box, /\[Terms of Use\]\(https:\/\/mealplanatic\.app\/terms\.html\)/);
 
 assert.equal(parseBillingInterval('month'), 'month');
@@ -56,7 +66,19 @@ assert.equal(parseBillingInterval('year'), 'year');
 for (const bad of ['week', 'MONTH', '', null, undefined, 12, { interval: 'month' }]) {
   assert.equal(parseBillingInterval(bad), null);
 }
-assert.deepEqual(PRICE_LOOKUP_KEYS, { month: 'plus_monthly', year: 'plus_yearly' });
+// One Stripe price per tier and period, found by lookup key. Plus keeps the keys it always had.
+assert.equal(lookupKeyFor('plus', 'month'), 'plus_monthly');
+assert.equal(lookupKeyFor('plus', 'year'), 'plus_yearly');
+assert.equal(lookupKeyFor('pro', 'month'), 'pro_monthly');
+assert.equal(lookupKeyFor('family', 'year'), 'family_yearly');
+// A request with no tier is Plus (app versions from before tiers); a wrong tier is refused, never guessed.
+assert.equal(parseCheckoutTier(undefined), 'plus');
+assert.equal(parseCheckoutTier(null), 'plus');
+assert.equal(parseCheckoutTier('pro'), 'pro');
+assert.equal(parseCheckoutTier('family'), 'family');
+for (const bad of ['free', 'PRO', '', 'gold', 2, {}, ['pro']]) {
+  assert.equal(parseCheckoutTier(bad), null, String(bad));
+}
 assert.match(DISCLOSURE_VERSION, /^\d{4}-\d{2}-\d{2}\.\d+$/);
 assert.match(TERMS_VERSION, /^\d{4}-\d{2}-\d{2}$/);
 
@@ -160,7 +182,9 @@ for (const source of [checkout, portal, server]) {
 // Price ids, customer ids and return URLs never come from the request body.
 assert.doesNotMatch(checkout, /body\.(price|priceId|price_id|success_url|cancel_url|customer)/);
 assert.doesNotMatch(portal, /req\.json\(\)/, 'portal takes nothing from the request body');
-assert.match(checkout, /lookup_keys: \[PRICE_LOOKUP_KEYS\[interval\]\]/);
+assert.match(checkout, /const lookupKey = lookupKeyFor\(tier, interval\);/);
+assert.match(checkout, /lookup_keys: \[lookupKey\]/);
+assert.match(checkout, /plan_tier: tier,/, 'the tier bought is kept with the consent metadata');
 // The consent box is required and the disclosure sits by the pay button.
 assert.match(checkout, /consent_collection: \{ terms_of_service: 'required' \}/);
 assert.match(checkout, /submit: \{ message: renewalDisclosure\(/);

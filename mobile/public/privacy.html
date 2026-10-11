@@ -93,7 +93,7 @@
       <li>
         <strong>Usage log (signed-in accounts):</strong> a record of actions you take in the app, such as opening
         it, saving a scan, ticking a grocery item, marking a meal as made, opening or closing one of Forky's tips,
-        or starting a Plus purchase. Each entry holds the name of the action, the time, whether you used the web or
+        or starting a purchase. Each entry holds the name of the action, the time, whether you used the web or
         a phone app, and at most a number or a short label (for example which tip, or how many items). It does not
         hold item or recipe names, what you type to Forky, photos, or your location. We use it to see which
         features help, to make Forky's tips less repetitive, and to show you your own activity. We do not use it for
@@ -110,8 +110,9 @@
       <li>Find stores and compare prices near your saved ZIP, including Kroger deal data when available.</li>
       <li>
         Run <strong>AI photo scanning</strong>: images you choose to scan are sent to <strong>Google Gemini</strong> (via
-        our Supabase Edge Function) to detect pantry items or read shelf tags. We keep a count of how many scans your
-        account has used and their size, to apply plan limits; the count holds nothing from the photos.
+        our Supabase Edge Function) to detect pantry items or read shelf tags. We keep a count of how many scans and
+        recipe imports your account has used each month, and the size of the scans, to apply plan limits; the counts
+        hold nothing from the photos, links or recipes.
         So that a scan sent twice by a dropped connection is read only once, the list of items found by a scan is
         held on our server for up to one hour, then deleted.
       </li>
@@ -161,6 +162,10 @@
         photos for scanner improvement. When enabled, copies go to a separate private admin-only bucket used only for
         tuning recognition — not for advertising.
       </li>
+      <li>
+        <strong>Profile photo:</strong> if you add one, it is stored at a web address that is not listed anywhere
+        but can be opened by anyone who has that address. Remove or replace it in Account at any time.
+      </li>
     </ul>
 
     <h2>Service providers</h2>
@@ -172,7 +177,20 @@
       instructions to run the app.
     </p>
     <p>
-      Payments for MealPlanatic Plus are handled by <strong>Stripe</strong>. We do not see or store your full card
+      Recipe videos come from <strong>YouTube</strong>. MealPlanatic uses YouTube API Services to list each
+      creator's videos and to find a video when you import a recipe; our server makes those requests, and they
+      carry nothing about you. The preview pictures load from YouTube straight to your device, and tapping a video
+      opens it on YouTube, so YouTube (a Google service) receives a request from your device and may set cookies
+      or show ads there. Google's privacy policy is at
+      <a href="http://www.google.com/policies/privacy">google.com/policies/privacy</a>.
+    </p>
+    <p>
+      Classic recipes are loaded by your device directly from <strong>TheMealDB</strong>. It receives the request
+      from your device, including the recipe category or the words you search for and, when we match recipes to
+      what you have, the name of an ingredient. We do not send it your name, email or account details.
+    </p>
+    <p>
+      Payments for paid plans are handled by <strong>Stripe</strong>. We do not see or store your full card
       number. We keep a record of your subscription, its price and dates.
     </p>
 
@@ -180,11 +198,11 @@
     <p>
       You can delete your account in the app (<strong>avatar → Account → Delete account</strong>) or on the web at
       <a href="https://mealplanatic.app/delete-account">Account deletion page</a>. That removes your
-      profile, pantry, meal plans, grocery lists, saved stores, personal recipes, usage log, auth account, and private scan/avatar
-      files tied to your account.
+      profile, pantry, meal plans, grocery lists, saved stores, personal recipes, usage log, auth account, and the scan photos and
+      profile photo tied to your account.
     </p>
     <p>
-      Deleting your account also cancels MealPlanatic Plus. We keep billing records (your subscription, its price and
+      Deleting your account also cancels your paid plan. We keep billing records (your subscription, its price and
       dates, and the renewal terms you agreed to) for as long as tax and consumer law require, even after you delete
       your account. They are no longer linked to your profile.
     </p>
@@ -193,8 +211,11 @@
       account link.
     </p>
 
-    <h2>Children</h2>
-    <p>MealPlanatic is not directed at children under 13, and we do not knowingly collect their data.</p>
+    <h2>Age</h2>
+    <p>
+      MealPlanatic is for adults. It is not intended for anyone under 18, and we do not knowingly collect their data.
+      If you believe someone under 18 has an account, email us and we will delete it.
+    </p>
 
     <h2>Contact</h2>
     <p>

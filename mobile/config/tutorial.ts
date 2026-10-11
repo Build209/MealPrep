@@ -85,7 +85,7 @@ export const TUTORIAL_STEPS: readonly TutorialStep[] = [
     route: '/pantry',
     target: 'pantry-receipt',
     title: 'Keep it current',
-    message: 'After a shop, scan the receipt and I add what you bought. Receipt scans come with Plus.',
+    message: 'After a shop, scan the receipt and I add what you bought. Receipts use the same monthly scans as shelf photos.',
   },
   {
     id: 'recipes',

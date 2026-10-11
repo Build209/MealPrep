@@ -14,7 +14,7 @@ const FORKY = require('../../assets/forkinator/forkinator-full.png');
 
 /**
  * Full-screen Plus offer, to the approved mockup (design handoff D-2): green top with Forky and
- * a close button, then a cream panel with the heading, the one benefit line, the plan choice,
+ * a close button, then a cream panel with the heading, the benefit text, the plan choice,
  * the renewal terms and the buy button. Closing is always one tap, top right or "Not now".
  */
 export function PlusUpgradeSheet({ visible, onClose }: Props) {

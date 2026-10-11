@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { ACCOUNT_UPGRADE_COPY } from '../../config/account';
-import { PLAN_LABELS, type UserPlan } from '../../config/plans';
+import { planLabel, type UserPlan } from '../../config/plans';
+import { tierForProfile, tierLimitsLine, type PaidTier } from '../../config/planTiers';
 import { PLUS_UPGRADE_COPY } from '../../config/pricing';
 import { useApp } from '../../context/AppContext';
 import {
@@ -17,6 +18,8 @@ import { canBuyPlusHere, PlusUpgradeOptions } from '../billing/PlusUpgradeOption
 
 type Props = {
   plan: UserPlan;
+  /** Which paid tier; ignored while the plan is free. */
+  planTier?: PaidTier;
 };
 
 function formatDate(iso: string | null): string | null {
@@ -30,13 +33,13 @@ function formatDate(iso: string | null): string | null {
 export function subscriptionStatusLine(subscription: OwnSubscription): string | null {
   const date = formatDate(subscription.currentPeriodEnd);
   if (subscription.status === 'past_due') {
-    return 'Your last payment did not go through. Update your card in Manage subscription to keep Plus.';
+    return 'Your last payment did not go through. Update your card in Manage subscription to keep your plan.';
   }
   if (!date) return null;
-  return subscription.cancelAtPeriodEnd ? `Plus ends on ${date}. You will not be charged again.` : `Renews on ${date}.`;
+  return subscription.cancelAtPeriodEnd ? `Your plan ends on ${date}. You will not be charged again.` : `Renews on ${date}.`;
 }
 
-export function AccountPlanSection({ plan }: Props) {
+export function AccountPlanSection({ plan, planTier }: Props) {
   const { session, isGuest, demoMode } = useApp();
   const userId = session?.user.id ?? null;
   const isPaid = plan === 'paid';
@@ -77,7 +80,10 @@ export function AccountPlanSection({ plan }: Props) {
   return (
     <View className="rounded-2xl border border-border bg-card px-4 py-3">
       <Text className="text-xs font-bold uppercase text-muted">Plan</Text>
-      <Text className="mt-1 text-base font-bold text-ink">{PLAN_LABELS[plan]}</Text>
+      <Text className="mt-1 text-base font-bold text-ink">{planLabel(plan, planTier)}</Text>
+      <Text className="mt-1 text-sm leading-5 text-ink">
+        {`Includes ${tierLimitsLine(tierForProfile(plan, planTier))}.`}
+      </Text>
       <Text className="mt-2 text-sm leading-5 text-muted">
         {isPaid
           ? hasLiveSubscription || !canBuyPlusHere() || isGuest

@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
+import { usageMonth } from '../config/planTiers';
 import { freeScansRemaining } from '../lib/pantry/freeScanAllowance';
 import { getSupabase } from '../lib/supabase';
 
 /**
- * How many one-time free shelf scans a signed-in free account has left.
- * Reads the account's own row in `photo_scan_usage` (row-level security allows only that).
+ * How many of this month's free scans a signed-in free account has left.
+ * Reads the account's own row for the month in `photo_scan_usage` (row-level security allows only that).
  * Returns 0 while loading or if the count cannot be read, so nothing is promised that the
  * server would refuse.
  */
@@ -35,7 +36,7 @@ export function useFreeScanAllowance(input: { userId: string | null; enabled: bo
           .from('photo_scan_usage')
           .select('scans')
           .eq('user_id', userId)
-          .eq('period', 'free')
+          .eq('period', usageMonth())
           .maybeSingle();
         if (cancelled) return;
         if (error) {

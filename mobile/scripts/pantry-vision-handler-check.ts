@@ -31,7 +31,9 @@ const geminiCalls: GeminiCall[] = [];
 let geminiReplies: Array<() => Response> = [];
 /** When set, answers every model call from the request itself (calls can arrive in any order). */
 let geminiRouter: ((call: GeminiCall) => Response) | null = null;
-let planRow: { plan: string; role?: string } | null = { plan: 'paid' };
+let planRow: { plan: string; role?: string; plan_tier?: string } | null = { plan: 'paid' };
+/** False = the plan_tier column is not there yet (function deployed before its migration). */
+let planTierColumnExists = true;
 const usageRows = new Map<string, { scans: number; inputTokens: number; outputTokens: number }>();
 let usageTableExists = true;
 const scanRequests = new Map<string, { status: 'running' | 'done'; result: unknown }>();
@@ -80,6 +82,9 @@ const realFetch = globalThis.fetch;
 globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
   const url = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
   if (url.startsWith('https://project.supabase.test/rest/v1/profiles')) {
+    if (url.includes('plan_tier') && !planTierColumnExists) {
+      return new Response(JSON.stringify({ code: '42703', message: 'column profiles.plan_tier does not exist' }), { status: 400 });
+    }
     return new Response(JSON.stringify(planRow ? [planRow] : []), { status: 200 });
   }
   if (url.startsWith('https://project.supabase.test/rest/v1/rpc/')) {
@@ -190,9 +195,8 @@ function reset(): void {
   usageTableExists = true;
   requestTableExists = true;
   beginPolls = 0;
-  delete env.PANTRY_PLUS_MONTHLY_SCANS;
-  delete env.PANTRY_PLUS_MONTHLY_TAG_SCANS;
-  delete env.PANTRY_FREE_TOTAL_SCANS;
+  delete env.PLAN_LIMITS_OVERRIDE;
+  planTierColumnExists = true;
   delete env.PANTRY_THOROUGH_SCAN;
   delete env.PANTRY_THOROUGH_MIN_ITEMS;
   delete env.PANTRY_VERIFY_PASS;
@@ -563,56 +567,101 @@ function reset(): void {
   assert.equal(geminiCalls.length, 2);
   assert.equal(result.json.items[0].name, 'rice');
 
-  // Receipts are Plus only: a free account's free scans do not cover them.
-  reset();
-  planRow = { plan: 'free' };
-  result = await scan({ action: 'receipt', imageBase64: PHOTO, mimeType: 'image/jpeg', imageHash: 'hash-34' });
-  assert.equal(result.status, 403);
-  assert.equal(result.json.code, 'PLAN_REQUIRED');
-  assert.equal(geminiCalls.length, 0);
-
-  // --- 16. Allowances: 3 free scans once, a monthly cap for Plus ---
-  // Free account: three shelf scans, then the Plus offer. Each answer says how many are left.
+  // --- 16. Allowances: every tier has a monthly pool of shelf and receipt scans ---
+  // Free account: three scans a month, receipts included, then the paid plans are offered.
+  // Each answer says how many are left.
   reset();
   planRow = { plan: 'free' };
   fixedUser = 9001;
-  geminiRouter = () => geminiItems(['corn'])();
+  geminiRouter = (call) =>
+    /images of ONE receipt/.test(String(partsOf(call).at(-1)!.text))
+      ? receiptAnswer([receiptLine('rice', 1, 'bag')])()
+      : geminiItems(['corn'])();
   const freeLeft: Array<number | null> = [];
-  for (const hash of ['free-1', 'free-2', 'free-3']) {
-    result = await scan({ imageBase64: PHOTO, mimeType: 'image/jpeg', imageHash: hash });
-    assert.equal(result.status, 200);
-    assert.deepEqual({ isPlus: result.json.usage.isPlus, limit: result.json.usage.limit }, { isPlus: false, limit: 3 });
+  for (const [hash, action] of [['free-1', 'pantry'], ['free-2', 'receipt'], ['free-3', 'pantry']] as const) {
+    result = await scan({ action, imageBase64: PHOTO, mimeType: 'image/jpeg', imageHash: hash });
+    assert.equal(result.status, 200, `${action} scan on a free account`);
+    assert.deepEqual(
+      { isPlus: result.json.usage.isPlus, tier: result.json.usage.tier, limit: result.json.usage.limit },
+      { isPlus: false, tier: 'free', limit: 3 },
+    );
     freeLeft.push(result.json.usage.remaining);
   }
   assert.deepEqual(freeLeft, [2, 1, 0]);
   result = await scan({ imageBase64: PHOTO, mimeType: 'image/jpeg', imageHash: 'free-4' });
   assert.equal(result.status, 403);
   assert.equal(result.json.code, 'PLAN_REQUIRED');
-  assert.match(result.json.error, /used your 3 free photo scans/);
+  assert.match(result.json.error, /used your 3 free scans for this month\. They reset on the 1st\./);
   assert.equal(geminiCalls.length, 3, 'the fourth photo never reaches the model');
-  assert.equal(usageRows.get(`${userIdFor(9001)}|free`)!.scans, 3);
-  // Free scans do not come back next month: the row is keyed 'free', not by month.
-  assert.ok(!usageRows.has(`${userIdFor(9001)}|${MONTH}`));
-  // Price tags stay Plus only.
+  // The free scans are counted in the month's row, so they come back on the 1st.
+  assert.equal(usageRows.get(`${userIdFor(9001)}|${MONTH}`)!.scans, 3);
+  assert.ok(!usageRows.has(`${userIdFor(9001)}|free`), 'the old lifetime row is no longer used');
+  // Price tags are for paid plans only, and are refused without a model call.
   result = await scan({ action: 'price-tag', imageBase64: PHOTO, mimeType: 'image/jpeg' });
   assert.equal(result.status, 403);
+  assert.equal(result.json.code, 'PLAN_REQUIRED');
+  assert.match(result.json.error, /Price-tag scanning is part of the paid plans/);
+  assert.equal(geminiCalls.length, 3);
 
-  // Free scans switched off by secret: Plus only, as before.
+  // The emergency brake can switch free scans off (it can only lower a limit).
   reset();
   planRow = { plan: 'free' };
-  env.PANTRY_FREE_TOTAL_SCANS = '0';
+  fixedUser = 9301;
+  env.PLAN_LIMITS_OVERRIDE = '{"free":{"scans":0}}';
   result = await scan({ imageBase64: PHOTO, mimeType: 'image/jpeg', imageHash: 'free-off' });
   assert.equal(result.status, 403);
-  assert.equal(result.json.error, 'Photo scanning requires MealPlanatic Plus.');
+  assert.equal(result.json.error, 'Photo scanning is part of the paid plans.');
   assert.equal(geminiCalls.length, 0);
+  // ...and cannot raise one: a free account still stops at 3.
+  reset();
+  planRow = { plan: 'free' };
+  fixedUser = 9302;
+  env.PLAN_LIMITS_OVERRIDE = '{"free":{"scans":500}}';
+  geminiRouter = () => geminiItems(['corn'])();
+  result = await scan({ imageBase64: PHOTO, mimeType: 'image/jpeg', imageHash: 'free-raise' });
+  assert.equal(result.json.usage.limit, 3);
+
+  // Each paid tier gets its own number: Plus 15, Pro 25, Family 50.
+  for (const [planTier, limit] of [['plus', 15], ['pro', 25], ['family', 50]] as const) {
+    reset();
+    planRow = { plan: 'paid', plan_tier: planTier };
+    fixedUser = 9310 + limit;
+    geminiRouter = () => geminiItems(['corn'])();
+    result = await scan({ imageBase64: PHOTO, mimeType: 'image/jpeg', imageHash: `tier-${planTier}` });
+    assert.deepEqual(result.json.usage, { isPlus: true, tier: planTier, limit, remaining: limit - 1 });
+  }
+  // A paid account with no tier on file, an unknown tier, or no plan_tier column yet is Plus: never more.
+  for (const row of [{ plan: 'paid' }, { plan: 'paid', plan_tier: 'platinum' }]) {
+    reset();
+    planRow = row;
+    fixedUser = row.plan_tier ? 9371 : 9372;
+    geminiRouter = () => geminiItems(['corn'])();
+    result = await scan({ imageBase64: PHOTO, mimeType: 'image/jpeg', imageHash: `tier-fallback-${row.plan_tier ?? 'none'}` });
+    assert.equal(result.json.usage.limit, 15);
+  }
+  reset();
+  planTierColumnExists = false;
+  planRow = { plan: 'paid' };
+  fixedUser = 9373;
+  geminiRouter = () => geminiItems(['corn'])();
+  result = await scan({ imageBase64: PHOTO, mimeType: 'image/jpeg', imageHash: 'tier-nocolumn' });
+  assert.equal(result.status, 200, 'the scanner still works before the plan_tiers migration');
+  assert.deepEqual(result.json.usage, { isPlus: true, tier: 'plus', limit: 15, remaining: 14 });
+  // A tier written on a free account means nothing.
+  reset();
+  planRow = { plan: 'free', plan_tier: 'family' };
+  fixedUser = 9374;
+  geminiRouter = () => geminiItems(['corn'])();
+  result = await scan({ imageBase64: PHOTO, mimeType: 'image/jpeg', imageHash: 'tier-free-family' });
+  assert.equal(result.json.usage.limit, 3);
 
   // Plus account: shelf and receipt scans share one monthly allowance.
   reset();
-  env.PANTRY_PLUS_MONTHLY_SCANS = '2';
+  env.PLAN_LIMITS_OVERRIDE = '{"plus":{"scans":2}}';
   fixedUser = 9002;
   geminiRouter = () => geminiItems(['corn'])();
   result = await scan({ imageBase64: PHOTO, mimeType: 'image/jpeg', imageHash: 'plus-1' });
-  assert.deepEqual(result.json.usage, { isPlus: true, limit: 2, remaining: 1 });
+  assert.deepEqual(result.json.usage, { isPlus: true, tier: 'plus', limit: 2, remaining: 1 });
   result = await scan({ action: 'receipt', imageBase64: PHOTO, mimeType: 'image/jpeg', imageHash: 'plus-2' });
   assert.equal(result.json.usage.remaining, 0);
   result = await scan({ imageBase64: PHOTO, mimeType: 'image/jpeg', imageHash: 'plus-3' });
@@ -631,12 +680,11 @@ function reset(): void {
     geminiJson({ candidates: [{ finishReason: 'STOP', content: { parts: [{ text: JSON.stringify({ itemName: 'milk', price: 3.49 }) }] } }] });
   result = await scan({ action: 'price-tag', imageBase64: PHOTO, mimeType: 'image/jpeg' });
   assert.equal(result.status, 200);
-  assert.deepEqual(result.json.usage, { isPlus: true, limit: 200, remaining: 199 });
+  assert.deepEqual(result.json.usage, { isPlus: true, tier: 'plus', limit: 200, remaining: 199 });
   assert.equal(usageRows.get(`${userIdFor(9002)}|${MONTH}|tag`)!.scans, 1);
 
   // A scan that fails is given back.
   reset();
-  env.PANTRY_PLUS_MONTHLY_SCANS = '5';
   fixedUser = 9003;
   geminiRouter = () => geminiJson({ error: { message: 'bad request' } }, 400);
   result = await scan({ imageBase64: PHOTO, mimeType: 'image/jpeg', imageHash: 'fail-1' });
@@ -646,14 +694,14 @@ function reset(): void {
   // Admin accounts are never capped or counted.
   reset();
   planRow = { plan: 'free', role: 'admin' };
-  env.PANTRY_PLUS_MONTHLY_SCANS = '1';
+  env.PLAN_LIMITS_OVERRIDE = '{"plus":{"scans":1},"free":{"scans":1}}';
   fixedUser = 9004;
   geminiRouter = () => geminiItems(['corn'])();
   for (const hash of ['admin-1', 'admin-2', 'admin-3']) {
     result = await scan({ imageBase64: PHOTO, mimeType: 'image/jpeg', imageHash: hash });
     assert.equal(result.status, 200);
   }
-  assert.deepEqual(result.json.usage, { isPlus: true, limit: null, remaining: null });
+  assert.deepEqual(result.json.usage, { isPlus: true, tier: 'admin', limit: null, remaining: null });
   assert.ok(![...usageRows.keys()].some((key) => key.startsWith(userIdFor(9004))));
 
   // The usage table is not there yet (function deployed before the migration):
@@ -664,7 +712,7 @@ function reset(): void {
   geminiRouter = () => geminiItems(['corn'])();
   result = await scan({ imageBase64: PHOTO, mimeType: 'image/jpeg', imageHash: 'nomig-1' });
   assert.equal(result.status, 200);
-  assert.deepEqual(result.json.usage, { isPlus: true, limit: null, remaining: null });
+  assert.deepEqual(result.json.usage, { isPlus: true, tier: 'plus', limit: null, remaining: null });
   planRow = { plan: 'free' };
   fixedUser = 9006;
   result = await scan({ imageBase64: PHOTO, mimeType: 'image/jpeg', imageHash: 'nomig-2' });
@@ -700,7 +748,7 @@ function reset(): void {
   assert.equal(geminiCalls.length, 1, 'the model is called once for the two requests');
   assert.deepEqual(replayResult.json.items, firstResult.json.items);
   assert.equal(replayResult.json.shared, true);
-  assert.equal(usageRows.get(`${userIdFor(9101)}|free`)?.scans, 1, 'one free scan is used, not two');
+  assert.equal(usageRows.get(`${userIdFor(9101)}|${MONTH}`)?.scans, 1, 'one free scan is used, not two');
   assert.deepEqual(replayResult.json.usage, firstResult.json.usage, 'the repeat reports the same scans left');
   assert.ok(logLines.some((line) => line.startsWith('pantry-vision: scan shared items=2')));
   assert.equal(logLines.filter((line) => line.startsWith('pantry-vision: scan ok')).length, 1);
@@ -709,7 +757,7 @@ function reset(): void {
   const late = await scan({ imageBase64: PHOTO, mimeType: 'image/jpeg', imageHash: 'replay-1' });
   assert.equal(late.status, 200);
   assert.equal(geminiCalls.length, 1);
-  assert.equal(usageRows.get(`${userIdFor(9101)}|free`)?.scans, 1);
+  assert.equal(usageRows.get(`${userIdFor(9101)}|${MONTH}`)?.scans, 1);
 
   // Another account sending the same photo is not tied to the first account's request.
   fixedUser = 9103;
@@ -739,7 +787,7 @@ function reset(): void {
   reset();
   planRow = { plan: 'free' };
   fixedUser = 9104;
-  env.PANTRY_FREE_TOTAL_SCANS = '1';
+  env.PLAN_LIMITS_OVERRIDE = '{"free":{"scans":1}}';
   geminiRouter = () => geminiItems(['Oats'])();
   assert.equal((await scan({ imageBase64: PHOTO, mimeType: 'image/jpeg', imageHash: 'refuse-1' })).status, 200);
   const refused = await scan({ imageBase64: PHOTO, mimeType: 'image/jpeg', imageHash: 'refuse-2' });
@@ -767,7 +815,7 @@ function reset(): void {
   assert.equal(refusedScan.json.code, 'SCAN_UNAVAILABLE');
   assert.doesNotMatch(String(refusedScan.json.error), /credit|prepay|Google|Gemini/i, 'no billing detail reaches the app');
   assert.equal(geminiCalls.length, 1, 'the other models are not tried: the same account answers for all of them');
-  assert.equal(usageRows.get(`${userIdFor(9201)}|free`)?.scans ?? 0, 0, 'the free scan is given back');
+  assert.equal(usageRows.get(`${userIdFor(9201)}|${MONTH}`)?.scans ?? 0, 0, 'the free scan is given back');
   assert.ok(logLines.some((line) => line.includes('ALERT scanner unavailable')), 'one fixed line to search the log for');
   assert.equal([...scanRequests.keys()].some((key) => key.includes('billing-1')), false);
   // An ordinary upstream failure is still the old answer.

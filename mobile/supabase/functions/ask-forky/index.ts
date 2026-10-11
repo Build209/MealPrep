@@ -7,14 +7,15 @@
 //   ANTHROPIC_API_KEY         Anthropic API key. Set a monthly spend limit on it in the Anthropic console.
 //   FORKY_MODEL               optional: model id (default claude-haiku-5-5). A value set here wins over the
 //                             default in the code, so remove or update it when the default changes.
-//   FORKY_PLUS_MONTHLY_LIMIT  optional: messages a month for Plus (default 200)
-//   FORKY_FREE_TOTAL_LIMIT    optional: one-time messages for a free account (default 2; 0 = Plus only)
+//   PLAN_LIMITS_OVERRIDE      optional: JSON that can only LOWER a tier's monthly limits, for example
+//                             {"free":{"forkyQuestions":0}}. See _shared/planTiers.ts. The older
+//                             FORKY_PLUS_MONTHLY_LIMIT and FORKY_FREE_TOTAL_LIMIT are no longer read.
 // Provided by the platform: SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY.
 //
 // Request:  POST { question, history: [{role,text}], pantry: [{name,amount?,expiresOn?}],
 //                  recipes: [{id,title,have?,total?,missing?}],
 //                  household?: {size?, usualItems?: string[], cookedRecently?: string[]} }   (signed-in user)
-// Response: 200 { answer, recipeIds, offTopic, safetyNote, remaining, limit, isPlus }
+// Response: 200 { answer, recipeIds, offTopic, safetyNote, remaining, limit, isPlus, tier }
 //           401 UNAUTHENTICATED · 403 FEATURE_OFF · 429 LIMIT_REACHED · 400 BAD_REQUEST · 502 UPSTREAM_ERROR
 //
 // Rules this function keeps:
@@ -28,14 +29,12 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1';
 import {
-  ASK_FORKY_DEFAULT_CAPS,
   ASK_FORKY_DEFAULT_MODEL,
   ASK_FORKY_LIMITS,
   FORKY_REPLY_TOOL,
   forkyMessages,
+  forkyAllowance,
   forkySystemPrompt,
-  forkyUsagePeriod,
-  parseCap,
   parseForkyRequest,
   readForkyReply,
 } from '../_shared/askForkyText.ts';
@@ -108,14 +107,20 @@ Deno.serve(async (req) => {
   });
 
   try {
-    const [{ data: profile, error: profileError }, { data: flag, error: flagError }] = await Promise.all([
-      admin.from('profiles').select('plan, role').eq('id', userId).maybeSingle(),
+    const [profileWithTier, { data: flag, error: flagError }] = await Promise.all([
+      admin.from('profiles').select('plan, role, plan_tier').eq('id', userId).maybeSingle(),
       admin.from('feature_flags').select('enabled').eq('key', 'askForky').maybeSingle(),
     ]);
+    // Deployed before the plan_tiers migration: the column is not there yet (42703). Read without
+    // it; a paying account is then treated as Plus.
+    const { data: profile, error: profileError } =
+      profileWithTier.error?.code === '42703'
+        ? await admin.from('profiles').select('plan, role').eq('id', userId).maybeSingle()
+        : profileWithTier;
     if (profileError) throw profileError;
     if (flagError) throw flagError;
 
-    const profileRow = profile as { plan?: string | null; role?: string | null } | null;
+    const profileRow = profile as { plan?: string | null; role?: string | null; plan_tier?: string | null } | null;
     const isAdmin = profileRow?.role === 'admin';
     const flagOn = (flag as { enabled?: boolean } | null)?.enabled === true;
     if (!flagOn && !isAdmin) {
@@ -123,10 +128,13 @@ Deno.serve(async (req) => {
     }
 
     const now = new Date();
-    const { period, isPlus } = forkyUsagePeriod(profileRow?.plan, now, isAdmin);
-    const limit = isPlus
-      ? parseCap(Deno.env.get('FORKY_PLUS_MONTHLY_LIMIT'), ASK_FORKY_DEFAULT_CAPS.plusPerMonth)
-      : parseCap(Deno.env.get('FORKY_FREE_TOTAL_LIMIT'), ASK_FORKY_DEFAULT_CAPS.freeTotal);
+    const { period, limit, tier, isPlus } = forkyAllowance(
+      profileRow?.plan,
+      profileRow?.plan_tier,
+      now,
+      isAdmin,
+      Deno.env.get('PLAN_LIMITS_OVERRIDE'),
+    );
 
     const { data: remaining, error: claimError } = await admin.rpc('claim_forky_message', {
       p_user_id: userId,
@@ -136,7 +144,7 @@ Deno.serve(async (req) => {
     if (claimError) throw claimError;
     if (typeof remaining !== 'number' || remaining < 0) {
       return jsonResponse(
-        { error: 'No questions left for now.', code: 'LIMIT_REACHED', remaining: 0, limit, isPlus },
+        { error: 'No questions left this month.', code: 'LIMIT_REACHED', remaining: 0, limit, isPlus, tier },
         429,
       );
     }
@@ -203,7 +211,7 @@ Deno.serve(async (req) => {
     await settle(inputTokens, outputTokens, false);
     console.log('ask-forky: ok', JSON.stringify({ model, inputTokens, outputTokens, isPlus, offTopic: reply.offTopic }));
 
-    return jsonResponse({ ...reply, remaining, limit, isPlus });
+    return jsonResponse({ ...reply, remaining, limit, isPlus, tier });
   } catch (error) {
     console.error('ask-forky failed', error instanceof Error ? error.message : error);
     return jsonResponse({ error: 'Forky could not answer. Please try again.', code: 'UPSTREAM_ERROR' }, 502);
