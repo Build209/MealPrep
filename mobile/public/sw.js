@@ -6,7 +6,7 @@
 const CACHE_VERSION = '__CACHE_VERSION__';
 const PRECACHE_URLS = __PRECACHE_URLS__;
 /** Bumped when navigation caching policy changes (forces fresh shell cache). */
-const NAV_POLICY_VERSION = '6';
+const NAV_POLICY_VERSION = '7';
 const SHELL_CACHE = `meal-prep-shell-${CACHE_VERSION}-${NAV_POLICY_VERSION}`;
 
 const SUPABASE_HOST_RE = /(^|\.)supabase\.co$/i;
@@ -57,8 +57,17 @@ function cacheFirst(request) {
   });
 }
 
+/**
+ * Ask the server, not the browser's own HTTP cache. GitHub Pages lets browsers keep a page for
+ * ten minutes, which showed people the previous version of the app right after an update.
+ * If a browser refuses the no-store request, the ordinary request still runs.
+ */
+function fetchFresh(request) {
+  return fetch(request, { cache: 'no-store' }).catch(() => fetch(request));
+}
+
 function networkFirst(request, offlineFallback) {
-  return fetch(request)
+  return fetchFresh(request)
     .then((response) => {
       if (response.ok) {
         const copy = response.clone();

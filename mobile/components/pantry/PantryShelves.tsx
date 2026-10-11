@@ -80,17 +80,12 @@ const SHAPE_PARTS: Record<Exclude<PackageShape, 'crate'>, ViewStyle[]> = {
     box(8, 6, 60, 94, { borderRadius: 4, backgroundColor: KRAFT, borderWidth: 1.5, borderColor: KRAFT_EDGE }),
     box(8, 17, 60, 1.5, { backgroundColor: KRAFT_EDGE }),
   ],
+  // A pillow bag: flat sealed strips top and bottom, square shoulders, so it never reads as a jar.
   bag: [
-    box(18, 8, 40, 8, { borderRadius: 2, backgroundColor: '#D8CBA8' }),
-    box(8, 16, 60, 84, {
-      backgroundColor: '#F1E9D3',
-      borderWidth: 1.5,
-      borderColor: '#D8CBA8',
-      borderTopLeftRadius: 22,
-      borderTopRightRadius: 22,
-      borderBottomLeftRadius: 6,
-      borderBottomRightRadius: 6,
-    }),
+    box(8, 12, 60, 88, { borderRadius: 3, backgroundColor: '#F1E9D3', borderWidth: 1.5, borderColor: '#D8CBA8' }),
+    box(8, 12, 60, 9, { borderRadius: 2, backgroundColor: '#D8CBA8' }),
+    box(8, 92, 60, 8, { borderRadius: 2, backgroundColor: '#D8CBA8' }),
+    box(14, 15.5, 48, 1.5, { backgroundColor: '#C2B38B' }),
   ],
   tub: [
     box(4, 36, 68, 11, { borderRadius: 4, backgroundColor: '#E3E8E0', borderWidth: 1.5, borderColor: WHITE_EDGE }),

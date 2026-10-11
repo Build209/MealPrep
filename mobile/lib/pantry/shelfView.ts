@@ -26,8 +26,8 @@ export const SHELF_VIEW_COPY = {
   seeAll: 'See all',
   useSoon: 'Use soon',
   scanLabel: 'Scan',
-  scanA11y: 'Scan your fridge, pantry or a receipt',
-  hideScanA11y: 'Hide scan options',
+  scanA11y: 'Scan your fridge or pantry',
+  scanReceipt: 'Scan a receipt',
   placeLabels: { fridge: 'Refrigerator', pantry: 'Pantry', spice_rack: 'Spice rack' } as Record<
     PantryStorageLocation,
     string
@@ -69,7 +69,7 @@ export const PACKAGE_LABEL_BOX: Record<PackageShape, readonly [number, number, n
   jar: [42, 12, 10],
   bottle: [50, 10, 14],
   box: [24, 8, 12],
-  bag: [44, 10, 12],
+  bag: [30, 16, 12],
   tub: [52, 6, 14],
   crate: [56, 5, 10],
   shaker: [46, 8, 12],
@@ -127,21 +127,57 @@ const SHAPE_RULES: readonly (readonly [PackageShape, RegExp])[] = [
   ],
 ];
 
-const LEAFY_OR_BAGGED = /\b(spinach|lettuce|kale|arugula|salad|greens|herbs?|cilantro|parsley|basil|celery|carrots?|grapes?|green beans|sprouts|mushrooms?|broccoli|cauliflower|chard|cabbage|scallions?|green onions?|berries|peas)\b/;
+/** Units that name the package an item came in, and the drawing that goes with each. */
+const UNIT_SHAPES: Readonly<Record<string, PackageShape>> = {
+  can: 'can',
+  jar: 'jar',
+  bottle: 'bottle',
+  tube: 'bottle',
+  carton: 'carton',
+  jug: 'jug',
+  box: 'box',
+  bag: 'bag',
+  pouch: 'bag',
+  sack: 'bag',
+  tub: 'tub',
+  container: 'tub',
+  tray: 'tub',
+  package: 'tub',
+  pack: 'tub',
+  pkg: 'tub',
+};
 
-/** Which package to draw for an item. A guess from its name, category and place; never stored. */
+function singularUnit(unit: string): string {
+  const u = unit.trim().toLowerCase();
+  if (u === 'boxes') return 'box';
+  return u.endsWith('s') && u.length > 2 ? u.slice(0, -1) : u;
+}
+
+/** The package named by the item's unit ("2 jar", "1 can"), or null for a count or a measure. */
+export function packageShapeFromUnit(unit: string): PackageShape | null {
+  return UNIT_SHAPES[singularUnit(unit)] ?? null;
+}
+
+/**
+ * Fresh fruit and vegetables: the produce category, unless the unit says it came sealed in a
+ * jar, can, bottle, tube or the like (jarred peppers, ginger paste). A bag of grapes is fresh.
+ */
+export function isFreshProduce(item: Pick<PantryItem, 'category' | 'unit'>): boolean {
+  if (item.category !== 'produce') return false;
+  const fromUnit = packageShapeFromUnit(item.unit);
+  return fromUnit === null || fromUnit === 'bag';
+}
+
+/** Which package to draw for an item. A guess from its unit, name, category and place; never stored. */
 export function packageShapeFor(
   item: Pick<PantryItem, 'name' | 'category' | 'location' | 'unit'>,
 ): PackageShape {
   const name = item.name.toLowerCase();
   if (item.location === 'spice_rack' || item.category === 'spices') return 'shaker';
-  if (item.category === 'produce') return has(name, LEAFY_OR_BAGGED) ? 'bag' : 'crate';
-  const unit = item.unit.toLowerCase();
-  if (/\bcans?\b/.test(unit)) return 'can';
-  if (/\bjars?\b/.test(unit)) return 'jar';
-  if (/\bbottles?\b/.test(unit)) return 'bottle';
-  if (/\b(box|boxes)\b/.test(unit)) return 'box';
-  if (/\bbags?\b/.test(unit)) return 'bag';
+  // Fresh produce is always loose in a crate, never in a jar, bottle or bag.
+  if (isFreshProduce(item)) return 'crate';
+  const fromUnit = packageShapeFromUnit(item.unit);
+  if (fromUnit) return fromUnit;
   for (const [shape, pattern] of SHAPE_RULES) {
     if (has(name, pattern)) return shape;
   }
@@ -186,7 +222,11 @@ export function produceColor(name: string): string {
   return FRUIT_COLORS.green;
 }
 
-const COUNT_UNITS = new Set(['', 'each', 'ea', 'x', 'ct', 'count', 'item', 'items', 'pc', 'pcs', 'piece', 'pieces', 'unit', 'units']);
+/** Units that measure an amount. Only these are printed on the label ("15 oz"). */
+const MEASURE_UNITS = new Set([
+  'oz', 'ounce', 'fl oz', 'floz', 'lb', 'pound', 'g', 'gram', 'kg', 'ml', 'l', 'liter', 'litre',
+  'gal', 'gallon', 'qt', 'quart', 'pt', 'pint', 'cup', 'tbsp', 'tsp', 'dozen',
+]);
 
 function trimNumber(value: number): string {
   if (!Number.isFinite(value)) return '';
@@ -195,20 +235,20 @@ function trimNumber(value: number): string {
 }
 
 /**
- * What the package says about how much there is. A plain count ("3 each") becomes the round
- * "×3" badge and nothing for a single one; anything measured ("15 oz") is printed on the label.
+ * What the package says about how much there is. A measured amount ("15 oz") is printed on the
+ * label. Anything else is a count of packages ("3 each", "2 jar"): the drawing already shows
+ * the jar, so it becomes the round "×2" badge, and nothing at all for a single one.
  */
 export function shelfAmount(item: Pick<PantryItem, 'quantity' | 'unit'>): {
   badge: string | null;
   size: string | null;
 } {
-  const unit = item.unit.trim().toLowerCase();
   const quantity = Number.isFinite(item.quantity) ? item.quantity : 0;
-  if (COUNT_UNITS.has(unit)) {
-    return { badge: quantity > 1 ? `×${trimNumber(quantity)}` : null, size: null };
+  const unit = item.unit.trim().toLowerCase();
+  if (MEASURE_UNITS.has(unit) || MEASURE_UNITS.has(singularUnit(unit))) {
+    return { badge: null, size: quantity > 0 ? `${trimNumber(quantity)} ${item.unit.trim()}` : null };
   }
-  if (quantity <= 0) return { badge: null, size: null };
-  return { badge: null, size: `${trimNumber(quantity)} ${item.unit.trim()}` };
+  return { badge: quantity > 1 ? `×${trimNumber(quantity)}` : null, size: null };
 }
 
 /** Yellow corner badge on a package that should be used soon: "3d", "Today", or "Old" once past its date. */
@@ -295,6 +335,8 @@ const PANTRY_SHELVES: readonly ShelfSpec[] = [
 function shelfIdFor(item: PantryItem, location: PantryStorageLocation, shape: PackageShape): string {
   if (location === 'fridge') {
     if (item.category === 'dairy' || /\beggs?\b/i.test(item.name)) return 'dairy';
+    // Jarred, canned or tubed "produce" is a condiment as far as the fridge shelves go.
+    if (item.category === 'produce' && !isFreshProduce(item)) return 'condiments';
     if (FRIDGE_SHELVES.some((s) => s.category === item.category)) return item.category;
     return 'other';
   }
@@ -304,9 +346,11 @@ function shelfIdFor(item: PantryItem, location: PantryStorageLocation, shape: Pa
     if (shape === 'box') return 'boxed';
     return 'dry';
   }
-  if (item.category === 'produce' || item.category === 'condiments' || item.category === 'spices') {
-    return item.category;
+  if (item.category === 'produce') {
+    if (isFreshProduce(item)) return 'produce';
+    return shape === 'can' || shape === 'jar' ? 'canned' : 'other';
   }
+  if (item.category === 'condiments' || item.category === 'spices') return item.category;
   if (shape === 'can') return 'canned';
   return 'other';
 }
