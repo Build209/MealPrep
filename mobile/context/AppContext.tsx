@@ -141,8 +141,9 @@ import {
 import { usePublishedLibraryRecipes } from '../hooks/usePublishedLibraryRecipes';
 import { findKitchenRecipeById } from '../lib/mealPlan/kitchenRecipeLookup';
 import {
-  groceryItemsToPantryItems,
+  diffPantryForServer,
   mergePantryStock,
+  replacePantryRowsById,
   reconcilePantryAfterServerLoad,
 } from '../lib/pantry/mergePantryStock';
 import { buildManualPantryItem } from '../lib/pantry/manualPantryItem';
@@ -548,6 +549,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [kitchenError, setKitchenError] = useState<string | null>(null);
   const groceryRestockLedgerRef = useRef(new Map<string, { pantryItemId: string; quantityAdded: number; unit: string }>());
   const pendingManualPantryInsertsRef = useRef(createManualInsertCoordinator());
+  /** Local ids of hand-added pantry rows whose save is on its way to the server right now. */
+  const manualPantryInsertsInFlightRef = useRef(new Set<string>());
   const pendingManualGroceryInsertsRef = useRef(createManualGroceryInsertCoordinator());
   /** Manual grocery adds that finished saving, keyed by their optimistic local id (FK3-6). */
   const savedManualGroceryByLocalIdRef = useRef(new Map<string, GroceryListItem>());
@@ -780,6 +783,22 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       mergedPantry = reconcilePantryAfterServerLoad(nextPantry, prev);
       return mergedPantry;
     });
+    // Rows added by hand while offline exist only on this device (the offline add returns before
+    // any save). Now that the server answered, save them, or they would never reach the account.
+    const offlineAdds = mergedPantry.filter(
+      (row) => isManualPantryLocalId(row.id) && !manualPantryInsertsInFlightRef.current.has(row.id),
+    );
+    if (offlineAdds.length > 0) {
+      try {
+        const savedAdds = await insertPantryItems(supabase, userId, offlineAdds);
+        const savedByLocalId = new Map(offlineAdds.map((row, index) => [row.id, savedAdds[index]]));
+        const swap = (rows: PantryItem[]) => rows.map((row) => savedByLocalId.get(row.id) ?? row);
+        mergedPantry = swap(mergedPantry);
+        setPantry(swap);
+      } catch {
+        // Still offline or the save was refused: the rows stay on this device and are retried on the next load.
+      }
+    }
     setRecipes(nextRecipes);
     setGrocery(nextGrocery);
     setFeatureFlags(bundle.featureFlags);
@@ -2133,7 +2152,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       if (toRestock.length === 0) return;
 
       const pantrySnapshot = pantry.map((row) => ({ ...row }));
-      let nextPantry = applyGroceryCheckRestockBatch(
+      const nextPantry = applyGroceryCheckRestockBatch(
         pantry,
         toRestock,
         groceryRestockLedgerRef.current,
@@ -2143,14 +2162,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
       if (!demoMode && !isGuest && supabase && userId) {
         try {
-          const merged = mergePantryStock(pantrySnapshot, groceryItemsToPantryItems(toRestock));
-          for (const row of merged.updated) {
+          // What the screen shows is what is saved: the same rows, under the same ids. (Saving a
+          // second, separately built set of rows left the screen, the server and the untick
+          // ledger pointing at different ids, so Undo and unticking missed the new rows.)
+          const { inserted, updated } = diffPantryForServer(pantrySnapshot, nextPantry);
+          for (const row of updated) {
             await updatePantryItem(supabase, userId, row);
           }
-          if (merged.inserted.length > 0) {
-            const saved = await insertPantryItems(supabase, userId, merged.inserted);
-            const reconciled = mergePantryStock(pantrySnapshot, saved).pantry;
-            setPantry(reconciled);
+          if (inserted.length > 0) {
+            const saved = await insertPantryItems(supabase, userId, inserted);
+            setPantry((prev) => replacePantryRowsById(prev, saved));
           }
         } catch (error: unknown) {
           setKitchenError(error instanceof Error ? error.message : 'Failed to update pantry');
@@ -2203,12 +2224,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       if (willCheck && current) {
         void restockGroceriesToPantry([current]);
       } else if (willUncheck && current && userPreferences.addCheckedItemsToPantry) {
-        const pantrySnapshot = pantry.map((row) => ({ ...row }));
-        setPantry((prev) => reverseGroceryCheckRestock(prev, id, groceryRestockLedgerRef.current));
-        if (!demoMode && !isGuest && supabase && userId) {
-          void syncPantryToSnapshot(supabase, userId, pantry, pantrySnapshot).catch((error: unknown) => {
-            setKitchenError(error instanceof Error ? error.message : 'Failed to update pantry');
-          });
+        // Unticking takes the stock back out, on the screen and on the server. (The server call
+        // used to compare the pantry with a copy of itself, so the server kept the stock.)
+        const reversed = reverseGroceryCheckRestock(pantry, id, groceryRestockLedgerRef.current);
+        if (reversed !== pantry) {
+          setPantry(reversed);
+          if (!demoMode && !isGuest && supabase && userId) {
+            void syncPantryToSnapshot(supabase, userId, pantry, reversed).catch((error: unknown) => {
+              setKitchenError(error instanceof Error ? error.message : 'Failed to update pantry');
+            });
+          }
         }
       }
     },
@@ -2243,18 +2268,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       if (nextChecked) {
         void restockGroceriesToPantry(toCheck);
       } else if (userPreferences.addCheckedItemsToPantry) {
-        const pantrySnapshot = pantry.map((row) => ({ ...row }));
-        setPantry((prev) => {
-          let updated = prev;
-          for (const item of toCheck) {
-            updated = reverseGroceryCheckRestock(updated, item.id, groceryRestockLedgerRef.current);
+        let reversed = pantry;
+        for (const item of toCheck) {
+          reversed = reverseGroceryCheckRestock(reversed, item.id, groceryRestockLedgerRef.current);
+        }
+        if (reversed !== pantry) {
+          setPantry(reversed);
+          if (!demoMode && !isGuest && supabase && userId) {
+            void syncPantryToSnapshot(supabase, userId, pantry, reversed).catch((error: unknown) => {
+              setKitchenError(error instanceof Error ? error.message : 'Failed to update pantry');
+            });
           }
-          return updated;
-        });
-        if (!demoMode && !isGuest && supabase && userId) {
-          void syncPantryToSnapshot(supabase, userId, pantry, pantrySnapshot).catch((error: unknown) => {
-            setKitchenError(error instanceof Error ? error.message : 'Failed to update pantry');
-          });
         }
       }
     },
@@ -2396,75 +2420,19 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     persistGroceryList(nextGrocery);
     setGrocery(nextGrocery);
 
-    const restockEnabled = userPreferences.addCheckedItemsToPantry;
-    const pantrySnapshot = pantry.map((row) => ({ ...row }));
-    let nextPantry = pantry;
-
-    if (restockEnabled) {
-      const toRestock = removed.filter((item) => !groceryRestockLedgerRef.current.has(item.id));
-      nextPantry = applyGroceryCheckRestockBatch(pantry, toRestock, groceryRestockLedgerRef.current);
-      setPantry(nextPantry);
-
-      if (!demoMode && !isGuest && supabase && userId && toRestock.length > 0) {
-        const pantryBefore = pantrySnapshot;
-        void (async () => {
-          try {
-            const incoming = groceryItemsToPantryItems(toRestock);
-            const merged = mergePantryStock(pantryBefore, incoming);
-            for (const row of merged.updated) {
-              await updatePantryItem(supabase, userId, row);
-            }
-            if (merged.inserted.length > 0) {
-              const saved = await insertPantryItems(supabase, userId, merged.inserted);
-              setPantry((prev) => {
-                const insertIds = new Set(merged.inserted.map((row) => row.id));
-                const without = prev.filter((row) => !insertIds.has(row.id));
-                return [...saved, ...without];
-              });
-            }
-          } catch (error: unknown) {
-            setAuthError(error instanceof Error ? error.message : 'Failed to update pantry');
-            setPantry(pantrySnapshot);
-            setGrocery(previousGrocery);
-            persistGroceryList(previousGrocery);
-            for (const item of toRestock) {
-              groceryRestockLedgerRef.current.delete(item.id);
-            }
-          }
-        })();
-      }
-    }
-
+    // Clearing never touches the pantry. Ticking an item is what adds it to the pantry; adding
+    // again here counted the same shopping twice whenever the app had been reopened in between
+    // (and after a receipt scan), and drew new items twice on the Pantry tab.
     setUndoToast({
-      message: restockEnabled
-        ? PANTRY_RESTOCK_COPY.addedToPantry(removed.length)
-        : GROCERY_COPY.undoCleared(removed.length),
+      message: GROCERY_COPY.undoCleared(removed.length),
       onUndo: () => {
+        removeGroceryDismissals(ownerId, dismissalKeys);
         setGrocery(previousGrocery);
         persistGroceryList(previousGrocery);
-        if (restockEnabled) {
-          setPantry(pantrySnapshot);
-          if (!demoMode && !isGuest && supabase && userId) {
-            void syncPantryToSnapshot(supabase, userId, nextPantry, pantrySnapshot).catch((error: unknown) => {
-              setAuthError(error instanceof Error ? error.message : 'Failed to undo pantry update');
-            });
-          }
-        }
         setUndoToast(null);
       },
     });
-  }, [
-    demoMode,
-    grocery,
-    groceryDismissalContext,
-    isGuest,
-    ownerId,
-    pantry,
-    persistGroceryList,
-    supabase,
-    userId,
-    userPreferences.addCheckedItemsToPantry,
-  ]);
+  }, [grocery, groceryDismissalContext, ownerId, persistGroceryList]);
 
   const removeGroceryItem = useCallback(
     (id: string) => {
@@ -2800,6 +2768,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
+      manualPantryInsertsInFlightRef.current.add(item.id);
       try {
         const saved = await insertPantryItem(supabase, userId, item);
         const cancelled = isManualInsertCancelled(pendingManualPantryInsertsRef.current, item.id);
@@ -2828,6 +2797,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           return next;
         });
         throw error instanceof Error ? error : new Error('Failed to add pantry item');
+      } finally {
+        manualPantryInsertsInFlightRef.current.delete(item.id);
       }
     },
     [demoMode, isGuest, profile, supabase, userId],
@@ -2882,9 +2853,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         throw new Error('Sign in to update pantry.');
       }
       await deletePantryItemsByIds(supabase, userId, ids);
-      setPantry((prev) => prev.filter((item) => item.location !== location));
+      setPantry((prev) => {
+        const next = prev.filter((item) => item.location !== location);
+        writeAccountPantryCache(userId, next, { profile });
+        return next;
+      });
     },
-    [demoMode, isGuest, pantry, supabase, userId],
+    [demoMode, isGuest, pantry, profile, supabase, userId],
   );
 
   const previewPantryResort = useCallback(() => previewResortFromDefaultPantry(pantry), [pantry]);
@@ -2930,8 +2905,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
     await deleteAllPantryItems(supabase, userId);
     removeStorageKey(STORAGE_KEYS.pantry);
+    writeAccountPantryCache(userId, [], { profile });
     setPantry([]);
-  }, [demoMode, isGuest, pantry.length, supabase, userId]);
+  }, [demoMode, isGuest, pantry.length, profile, supabase, userId]);
 
   const savePantryScanReview = useCallback(
     async (
@@ -2950,26 +2926,46 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
       const pantrySnapshot = pantry.map((row) => ({ ...row }));
       const { pantry: nextPantry, inserted, updated } = mergePantryStock(pantry, toSave);
+      /** The pantry as the server holds it after this save: new rows under the ids the server gave them. */
+      let savedPantry = nextPantry;
 
       setPantry(nextPantry);
 
       if (!demoMode && !isGuest) {
         if (!supabase || !userId) {
+          setPantry(pantrySnapshot);
           throw new Error('Sign in to save pantry items.');
         }
-        for (const row of updated) {
-          await updatePantryItem(supabase, userId, row);
-        }
-        if (inserted.length > 0) {
-          const savedInserts = await insertPantryItems(supabase, userId, inserted);
-          setPantry((prev) => {
+        let savedInserts: PantryItem[] = [];
+        try {
+          // New rows first, in one request: if that fails nothing has changed anywhere.
+          if (inserted.length > 0) {
+            savedInserts = await insertPantryItems(supabase, userId, inserted);
+          }
+          for (const row of updated) {
+            await updatePantryItem(supabase, userId, row);
+          }
+        } catch (error: unknown) {
+          // Put the screen back. Left in place, the unsaved rows made every retry fail (they were
+          // sent as updates to rows the server never had) and stayed on this device as items the
+          // account does not own.
+          setPantry(pantrySnapshot);
+          if (savedInserts.length > 0) {
+            // The new rows were saved but a quantity update after them failed. Take the server
+            // back to where it was too, so "Save" can be pressed again without doubling anything.
             const insertIds = new Set(inserted.map((row) => row.id));
-            const without = prev.filter((row) => !insertIds.has(row.id));
-            return [...savedInserts, ...without];
-          });
+            const attempted = [...savedInserts, ...nextPantry.filter((row) => !insertIds.has(row.id))];
+            void syncPantryToSnapshot(supabase, userId, attempted, pantrySnapshot).catch(() => undefined);
+          }
+          throw error;
         }
+        if (savedInserts.length > 0) {
+          const insertIds = new Set(inserted.map((row) => row.id));
+          savedPantry = [...savedInserts, ...nextPantry.filter((row) => !insertIds.has(row.id))];
+          setPantry((prev) => [...savedInserts, ...prev.filter((row) => !insertIds.has(row.id))]);
+        }
+        writeAccountPantryCache(userId, savedPantry, { profile });
       }
-
 
       setUndoToast({
         message: PANTRY_SCAN_UI_COPY.addedToPantry(toSave.length),
@@ -2977,14 +2973,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           setPantry(pantrySnapshot);
           setUndoToast(null);
           if (!demoMode && !isGuest && supabase && userId) {
-            void syncPantryToSnapshot(supabase, userId, nextPantry, pantrySnapshot).catch((error: unknown) => {
-              setAuthError(error instanceof Error ? error.message : 'Failed to undo pantry update');
-            });
+            // Compared against the saved ids: with the local "scan-…" ids nothing matched on the
+            // server, so the undone items came back on the next load.
+            void syncPantryToSnapshot(supabase, userId, savedPantry, pantrySnapshot)
+              .then(() => writeAccountPantryCache(userId, pantrySnapshot, { profile }))
+              .catch((error: unknown) => {
+                setAuthError(error instanceof Error ? error.message : 'Failed to undo pantry update');
+              });
           }
         },
       });
     },
-    [demoMode, isGuest, pantry, supabase, userId],
+    [demoMode, isGuest, pantry, profile, supabase, userId],
   );
 
   const addPantryStaples = useCallback(

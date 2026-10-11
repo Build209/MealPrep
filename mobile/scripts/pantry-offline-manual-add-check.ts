@@ -34,7 +34,9 @@ const mobileRoot = path.resolve(__dirname, '..');
 const appContextSource = fs.readFileSync(path.join(mobileRoot, 'context/AppContext.tsx'), 'utf8');
 assert.match(appContextSource, /buildManualPantryItem\(input\)/);
 assert.match(appContextSource, /writeAccountPantryCache\(userId, next, \{ profile \}\)/);
-assert.match(appContextSource, /mergePantryStock\(nextPantry, prev\)\.pantry/);
+// Rows added while offline are saved once the server answers again.
+assert.match(appContextSource, /const offlineAdds = mergedPantry\.filter\(/);
+assert.match(appContextSource, /await insertPantryItems\(supabase, userId, offlineAdds\)/);
 assert.match(
   appContextSource,
   /if \(isOffline\(\)\) \{\s*return;\s*\}/,
