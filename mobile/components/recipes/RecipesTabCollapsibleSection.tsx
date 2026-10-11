@@ -17,7 +17,7 @@ export function RecipesTabCollapsibleSection({
   title: string;
   /** Short heading shown on screen; falls back to `title`. */
   heading?: string;
-  /** Optional link shown at the right end of the heading row. */
+  /** Optional link shown at the right end of the heading row while the section is open. */
   headerAction?: React.ReactNode;
   /** Show the chips/avatars above the heading instead of under it. */
   bubbleRowAbove?: boolean;
@@ -50,7 +50,8 @@ export function RecipesTabCollapsibleSection({
             <Text className="text-xs text-muted">Loading…</Text>
           ) : null}
         </Pressable>
-        {headerAction ?? null}
+        {/* Folded, the row is only the name and its arrow, on one line; the link joins it once open. */}
+        {expanded ? (headerAction ?? null) : null}
       </View>
       {!bubbleRowAbove && expanded && bubbleRow ? <View className="mt-1">{bubbleRow}</View> : null}
       {expanded && children ? <View className="mt-3">{children}</View> : null}
