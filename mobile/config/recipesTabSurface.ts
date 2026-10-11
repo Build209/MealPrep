@@ -6,8 +6,11 @@ export const RECIPES_TAB_SURFACE = {
   visitStateStorageKey: 'mealprep.recipesTab.visitState',
   sectionExpandedStorageKey: 'mealprep.recipesTab.sectionExpanded',
   surfaceEventsStoragePrefix: 'mealprep.recipesTab.surfaceEvents',
-  /** Home catalog sections start collapsed on each fresh app load. */
-  defaultClassicExpanded: false,
+  /**
+   * The pantry recipes open by themselves (redesign, owner 2026-10-11): they are the reason to
+   * scan. Creators stay folded until asked for.
+   */
+  defaultClassicExpanded: true,
   defaultCreatorsExpanded: false,
   explorationSwapProbability: 0.3,
   minLifetimeImpressionsForExploration: 3,

@@ -14,6 +14,7 @@ import { RecipeThumbnail } from './RecipeThumbnail';
 import { RecipeSaveButton } from './RecipeSaveButton';
 import { CookThisButton } from '../mealCalendar/CookThisButton';
 import { RECIPES_COPY } from '../../config/recipesCopy';
+import { Sticker } from '../ui/Sticker';
 
 interface RecipesUnifiedFeedCardProps {
   row: RecipesTabRow;
@@ -89,7 +90,7 @@ function RecipesUnifiedFeedCardInner({
       disabled={interactionLoading}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
-      className="relative mb-3 overflow-hidden rounded-[18px] border border-border bg-card"
+      className="relative mb-3 rounded-[18px] border border-border bg-card"
       style={grid ? GRID_CARD_STYLE : undefined}
     >
       <View className="relative">
@@ -108,6 +109,12 @@ function RecipesUnifiedFeedCardInner({
           />
         )}
         <DietAllergenBadge ingredientLines={ingredientLines} />
+        {/* Pantry match as a sticker on the corner of the photo: leaf when everything is in. */}
+        {pantryPill ? (
+          <View className="absolute -bottom-3 left-2">
+            <Sticker label={pantryPill} tone={readyToCook ? 'leaf' : 'banana'} size="sm" tilt={readyToCook ? -5 : -3} />
+          </View>
+        ) : null}
         {onToggleSave ? (
           <View className="absolute right-1.5 top-1.5">
             <RecipeSaveButton
@@ -120,18 +127,11 @@ function RecipesUnifiedFeedCardInner({
           </View>
         ) : null}
       </View>
-      <View className="p-3">
+      <View className={pantryPill ? 'px-3 pb-3 pt-5' : 'p-3'}>
         {name ? (
           <Text className="text-[15px] font-bold leading-[18px] text-ink" numberOfLines={2}>
             {name}
           </Text>
-        ) : null}
-        {pantryPill ? (
-          <View className="mt-2 self-start rounded-[10px] bg-primary-light px-2 py-1">
-            <Text className="text-xs font-bold text-primary" numberOfLines={1}>
-              {pantryPill}
-            </Text>
-          </View>
         ) : null}
         {showShopLine ? (
           <Text

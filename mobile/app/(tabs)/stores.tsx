@@ -39,7 +39,7 @@ export default function StoresScreen() {
         contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 20, paddingBottom: 32 }}
         keyboardShouldPersistTaps="handled"
       >
-        <Text className="text-[28px] font-extrabold leading-8 text-ink">{STORES_TAB_COPY.title}</Text>
+        <Text className="font-display text-[32px] leading-[34px] text-ink">{STORES_TAB_COPY.title}</Text>
         <View className="flex-row flex-wrap items-center">
           <Ionicons name="location-outline" size={16} color={THEME.muted} />
           <Text className="ml-1.5 shrink text-[15px] text-muted">

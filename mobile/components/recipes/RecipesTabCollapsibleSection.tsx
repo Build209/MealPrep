@@ -41,8 +41,7 @@ export function RecipesTabCollapsibleSection({
         >
           <Text
             accessibilityRole="header"
-            className="shrink text-[19px] font-extrabold text-ink"
-            style={{ letterSpacing: -0.2 }}
+            className="shrink font-display text-[22px] leading-[26px] text-ink"
           >
             {heading ?? title}
           </Text>

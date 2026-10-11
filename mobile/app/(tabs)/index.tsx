@@ -1040,6 +1040,42 @@ export default function HomeScreen() {
         refreshing={homeRecipesRefresh.refreshing}
         pullDistance={homeScrollRefresh.pullDistance ?? 0}
       />
+      {/* Sticker aisle look: the banana bar carries on behind the page title and the search. */}
+      <View className="-mx-5 bg-banana px-5 pb-5">
+        <Text
+          accessibilityRole="header"
+          className="pt-4 font-display text-[38px] leading-[38px] text-on-banana"
+        >
+          {RECIPES_TAB_SURFACE_COPY.homeHeading}
+        </Text>
+
+        <View ref={tutorialSearchRef} className="mt-4 min-w-0 flex-row items-center gap-2">
+          <View
+            className="min-h-[48px] min-w-0 flex-1 flex-row items-center rounded-full border border-border bg-card pl-4 pr-3"
+            style={{ flexGrow: 1, flexShrink: 1, minWidth: 0 }}
+          >
+            <Ionicons name="search" size={20} color={THEME.muted} />
+            <TextInput
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholder={
+                creatorFeedEnabled
+                  ? CREATOR_RECIPES_COPY.searchPlaceholder
+                  : RECIPES_COPY.discoveryPanel.searchPlaceholder
+              }
+              placeholderTextColor={THEME.muted}
+              className="ml-2.5 min-h-[46px] min-w-0 flex-1 text-base text-ink"
+              style={{ flexGrow: 1, flexShrink: 1, minWidth: 0 }}
+              autoCapitalize="none"
+              autoCorrect={false}
+              accessibilityLabel="Search recipes"
+            />
+          </View>
+          {creatorFeedEnabled && !searching ? (
+            <CreatorRecipesFeedModeDropdown value={feedMode} onChange={handleFeedModeChange} />
+          ) : null}
+        </View>
+      </View>
       {showHomePantryCta ? <HomePantryCta /> : null}
       <InstallAppBanner className="mt-4" />
       <GuestSaveNudge />
@@ -1057,86 +1093,6 @@ export default function HomeScreen() {
           Demo mode — local data only until you sign in with a connected account.
         </Text>
       ) : null}
-
-      <Text
-        accessibilityRole="header"
-        className="mt-5 text-[28px] font-extrabold leading-[31px] text-ink"
-        style={{ letterSpacing: -0.6 }}
-      >
-        {RECIPES_TAB_SURFACE_COPY.homeHeading}
-      </Text>
-
-      <View ref={tutorialSearchRef} className="mt-4 min-w-0 flex-row items-center gap-2">
-        <View
-          className="min-h-[48px] min-w-0 flex-1 flex-row items-center rounded-full border border-border bg-card pl-4 pr-3"
-          style={{ flexGrow: 1, flexShrink: 1, minWidth: 0 }}
-        >
-          <Ionicons name="search" size={20} color={THEME.muted} />
-          <TextInput
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            placeholder={
-              creatorFeedEnabled
-                ? CREATOR_RECIPES_COPY.searchPlaceholder
-                : RECIPES_COPY.discoveryPanel.searchPlaceholder
-            }
-            placeholderTextColor={THEME.muted}
-            className="ml-2.5 min-h-[46px] min-w-0 flex-1 text-base text-ink"
-            style={{ flexGrow: 1, flexShrink: 1, minWidth: 0 }}
-            autoCapitalize="none"
-            autoCorrect={false}
-            accessibilityLabel="Search recipes"
-          />
-        </View>
-        {creatorFeedEnabled && !searching ? (
-          <CreatorRecipesFeedModeDropdown value={feedMode} onChange={handleFeedModeChange} />
-        ) : null}
-      </View>
-
-      <Card
-        className="mt-4"
-        title={creatorFeedEnabled ? undefined : RECIPES_COPY.cookNowCard.title}
-        subtitle={
-          creatorFeedEnabled
-            ? RECIPES_COPY.homeToolbarCard.subtitle
-            : RECIPES_COPY.cookNowCard.subtitle
-        }
-        subtitleClassName={
-          creatorFeedEnabled ? 'text-base text-muted' : undefined
-        }
-      >
-        <RecipeImportFromShareParams
-          url={typeof params.url === 'string' ? params.url : undefined}
-          text={typeof params.text === 'string' ? params.text : undefined}
-          autoRun={autoStartSharedImport}
-        />
-        {showLegacyKitchenFeed ? (
-          <RecipesTabFilterBar
-            baseRows={filterBaseRows}
-            filters={filters}
-            onSetFilter={setFilter}
-            onClearAll={clearAllFilters}
-          />
-        ) : null}
-        {pantryEmpty ? (
-          <Text className="mt-2 text-xs text-muted">{RECIPES_COPY.cookNowCard.emptyPantryBrowseHint}</Text>
-        ) : null}
-        {showLegacyKitchenFeed ? (
-          <Pressable
-            onPress={showDifferentIdeas}
-            disabled={mealDbLoading}
-            className="mt-2 min-h-[44px] items-center justify-center rounded-full px-4"
-            accessibilityRole="button"
-            accessibilityLabel={RECIPES_COPY.cookNowCard.showDifferentIdeas}
-          >
-            <Text className="text-sm font-bold text-primary">
-              {mealDbLoading
-                ? RECIPES_COPY.discoveryPanel.searching
-                : RECIPES_COPY.cookNowCard.showDifferentIdeas}
-            </Text>
-          </Pressable>
-        ) : null}
-      </Card>
 
       {listLoading ? (
         <View className="mt-4 flex-row items-center gap-2">
@@ -1444,6 +1400,52 @@ export default function HomeScreen() {
           ))}
         </View>
       ) : null}
+
+      {/* Recipe import sits under the recipes now: what the pantry can make leads the screen. */}
+      <Card
+        className="mt-6"
+        title={creatorFeedEnabled ? undefined : RECIPES_COPY.cookNowCard.title}
+        subtitle={
+          creatorFeedEnabled
+            ? RECIPES_COPY.homeToolbarCard.subtitle
+            : RECIPES_COPY.cookNowCard.subtitle
+        }
+        subtitleClassName={
+          creatorFeedEnabled ? 'text-base text-muted' : undefined
+        }
+      >
+        <RecipeImportFromShareParams
+          url={typeof params.url === 'string' ? params.url : undefined}
+          text={typeof params.text === 'string' ? params.text : undefined}
+          autoRun={autoStartSharedImport}
+        />
+        {showLegacyKitchenFeed ? (
+          <RecipesTabFilterBar
+            baseRows={filterBaseRows}
+            filters={filters}
+            onSetFilter={setFilter}
+            onClearAll={clearAllFilters}
+          />
+        ) : null}
+        {pantryEmpty ? (
+          <Text className="mt-2 text-xs text-muted">{RECIPES_COPY.cookNowCard.emptyPantryBrowseHint}</Text>
+        ) : null}
+        {showLegacyKitchenFeed ? (
+          <Pressable
+            onPress={showDifferentIdeas}
+            disabled={mealDbLoading}
+            className="mt-2 min-h-[44px] items-center justify-center rounded-full px-4"
+            accessibilityRole="button"
+            accessibilityLabel={RECIPES_COPY.cookNowCard.showDifferentIdeas}
+          >
+            <Text className="text-sm font-bold text-primary">
+              {mealDbLoading
+                ? RECIPES_COPY.discoveryPanel.searching
+                : RECIPES_COPY.cookNowCard.showDifferentIdeas}
+            </Text>
+          </Pressable>
+        ) : null}
+      </Card>
 
       <HomeHubSheet
         rows={savedRecipes.feedRows}
