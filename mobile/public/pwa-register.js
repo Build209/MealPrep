@@ -5,6 +5,7 @@
   var PENDING_RELOAD_KEY = 'mealprep.pwaPendingReload';
   var RELOAD_LOOP_GUARD_KEY = 'mealprep.pwaReloadGuardMs';
   var RELOAD_LOOP_GUARD_MS = 8000;
+  var UPDATE_CHECK_MS = 15 * 60 * 1000;
   var hadControllerOnLoad = Boolean(navigator.serviceWorker.controller);
   var userInteracted = false;
   var reloadRequested = false;
@@ -50,6 +51,36 @@
     return true;
   }
 
+  /**
+   * A new version took over while this page was already running (the app was left open or
+   * brought back from the background). The page on screen is still the old one until it
+   * reloads: do that at once if nobody has touched it, otherwise offer it so nothing typed
+   * or scanned is lost.
+   */
+  function onNewVersionTookOver() {
+    if (!hadControllerOnLoad) return;
+    if (userInteracted) {
+      showUpdateBanner(function () {
+        window.location.reload();
+      });
+      return;
+    }
+    var now = Date.now();
+    var last = 0;
+    try {
+      last = Number(sessionStorage.getItem(RELOAD_LOOP_GUARD_KEY) || '0');
+    } catch (e) {
+      last = 0;
+    }
+    if (last && now - last < RELOAD_LOOP_GUARD_MS) return;
+    try {
+      sessionStorage.setItem(RELOAD_LOOP_GUARD_KEY, String(now));
+    } catch (e) {
+      /* ignore */
+    }
+    window.location.reload();
+  }
+
   navigator.serviceWorker.addEventListener('controllerchange', function () {
     var pending = false;
     try {
@@ -57,7 +88,10 @@
     } catch (e) {
       pending = reloadRequested;
     }
-    if (!pending) return;
+    if (!pending) {
+      onNewVersionTookOver();
+      return;
+    }
     var now = Date.now();
     var lastReload = 0;
     try {
@@ -128,6 +162,13 @@
         if (registration.waiting && navigator.serviceWorker.controller) {
           maybeActivateOnColdStart(registration);
         }
+        // An app left open for hours never navigates, so ask for the new version now and then.
+        window.setInterval(function () {
+          if (document.visibilityState !== 'visible') return;
+          registration.update().catch(function () {
+            /* ignore */
+          });
+        }, UPDATE_CHECK_MS);
       })
       .catch(function (err) {
         console.warn('[PWA] Service worker registration failed', err);

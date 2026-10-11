@@ -10,7 +10,15 @@ const exportScript = fs.readFileSync(
   'utf8',
 );
 
-assert.match(swSource, /NAV_POLICY_VERSION = '6'/);
+assert.match(swSource, /NAV_POLICY_VERSION = '7'/);
+// Pages are asked for fresh from the server: the browser's ten-minute copy showed the old app after an update.
+assert.match(swSource, /fetch\(request, \{ cache: 'no-store' \}\)\.catch\(\(\) => fetch\(request\)\)/);
+assert.match(swSource, /function networkFirst\(request, offlineFallback\) \{\s*return fetchFresh\(request\)/);
+const registerSource = fs.readFileSync(path.join(mobileRoot, 'public/pwa-register.js'), 'utf8');
+// A page already open when a new version takes over reloads (untouched) or offers to (in use).
+assert.match(registerSource, /if \(!pending\) \{\s*onNewVersionTookOver\(\);/);
+assert.match(registerSource, /function onNewVersionTookOver\(\) \{\s*if \(!hadControllerOnLoad\) return;\s*if \(userInteracted\) \{\s*showUpdateBanner/);
+assert.match(registerSource, /registration\.update\(\)/);
 assert.match(swSource, /function cacheFirst\(/);
 assert.match(swSource, /function networkFirst\(/);
 assert.doesNotMatch(swSource, /function staleWhileRevalidate\(/);

@@ -7,12 +7,14 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {
   buildPantryShelves,
+  isFreshProduce,
   isPantryViewMode,
   PACKAGE_LABEL_BOX,
   PACKAGE_LABEL_COLORS,
   PACKAGE_SHAPES,
   packageLabelColor,
   packageShapeFor,
+  packageShapeFromUnit,
   pantryShelfSummary,
   resolveShelfPlace,
   SHELF_MAX_TILES,
@@ -64,7 +66,20 @@ assert.equal(shape('Greek yogurt', 'dairy', 'fridge'), 'tub');
 assert.equal(shape('Spaghetti', 'dry_goods'), 'box');
 assert.equal(shape('Jasmine rice', 'dry_goods'), 'bag');
 assert.equal(shape('Apples', 'produce', 'fridge'), 'crate');
-assert.equal(shape('Spinach', 'produce', 'fridge'), 'bag');
+assert.equal(shape('Spinach', 'produce', 'fridge'), 'crate');
+// Owner, 2026-10-10: produce is never drawn in a bottle or a jar.
+for (const [name, unit] of [['Grape', 'bag'], ['Onions', 'each'], ['Garlic', 'head'], ['Carrots', 'lb'], ['Lemon juice lemons', 'each']] as const) {
+  assert.equal(shape(name, 'produce', 'fridge', unit), 'crate', `${name} [${unit}] is fresh produce in a crate`);
+}
+// The unit a scan saved names the package.
+assert.equal(shape('Pepperoncini', 'produce', 'fridge', 'jar'), 'jar', 'jarred peppers are not fresh produce');
+assert.equal(shape('Ginger Paste', 'produce', 'fridge', 'tube'), 'bottle');
+assert.equal(shape('Heavy Whipping Cream', 'dairy', 'fridge', 'carton'), 'carton');
+assert.equal(shape('Pork Tenderloin', 'meats', 'fridge', 'package'), 'tub');
+assert.equal(shape('Tuna In Water Pouch', 'meats', 'pantry', 'pouch'), 'bag');
+assert.equal(shape('Mystery', 'dry_goods', 'pantry', 'Boxes'), 'box');
+assert.equal(packageShapeFromUnit('oz'), null);
+assert.ok(isFreshProduce({ category: 'produce', unit: 'bag' }) && !isFreshProduce({ category: 'produce', unit: 'jar' }));
 assert.equal(shape('Corn', 'produce', 'fridge'), 'crate', 'fresh produce is never drawn as a can');
 assert.equal(shape('Mystery thing', 'dry_goods', 'pantry', 'cans'), 'can', 'the unit can name the package');
 assert.equal(shape('Chicken thighs', 'meats', 'fridge'), 'tub');
@@ -82,6 +97,11 @@ assert.deepEqual(shelfAmount({ quantity: 1, unit: 'each' }), { badge: null, size
 assert.deepEqual(shelfAmount({ quantity: 3, unit: 'each' }), { badge: '×3', size: null });
 assert.deepEqual(shelfAmount({ quantity: 15, unit: 'oz' }), { badge: null, size: '15 oz' });
 assert.deepEqual(shelfAmount({ quantity: 1.5, unit: 'lb' }), { badge: null, size: '1.5 lb' });
+assert.deepEqual(shelfAmount({ quantity: 2, unit: 'lbs' }), { badge: null, size: '2 lbs' });
+// The drawing already shows the jar: no "1 jar" on the label, and a badge only for more than one.
+assert.deepEqual(shelfAmount({ quantity: 1, unit: 'jar' }), { badge: null, size: null });
+assert.deepEqual(shelfAmount({ quantity: 2, unit: 'bottle' }), { badge: '×2', size: null });
+assert.deepEqual(shelfAmount({ quantity: 1, unit: 'chopped' }), { badge: null, size: null }, 'an odd unit is never printed');
 assert.equal(shelfDaysBadge({ expiresOn: null }, NOW), null);
 assert.equal(shelfDaysBadge({ expiresOn: '2026-10-10' }, NOW), 'Today');
 assert.equal(shelfDaysBadge({ expiresOn: '2026-10-13' }, NOW), '3d');
@@ -121,6 +141,23 @@ assert.deepEqual(shelf.map((s) => s.name), ['Dry goods', 'Canned goods', 'Boxed 
 assert.equal(shelf[2].tiles[0].sizeLabel, '16 oz');
 assert.deepEqual(buildPantryShelves(pantry, 'spice_rack', NOW).map((s) => s.name), ['Spices']);
 assert.deepEqual(buildPantryShelves([], 'fridge', NOW), [], 'an empty place has no shelves');
+
+// Sealed "produce" does not sit on the Produce shelf.
+const mixed = [
+  item('Grape', 'produce', 'fridge', { unit: 'bag' }),
+  item('Pepperoncini', 'produce', 'fridge', { unit: 'jar' }),
+  item('Onions', 'produce', 'pantry'),
+  item('Peach', 'produce', 'pantry', { unit: 'jar' }),
+];
+const mixedFridge = buildPantryShelves(mixed, 'fridge', NOW);
+assert.deepEqual(mixedFridge.map((s) => [s.name, s.tiles.map((t) => t.shape)]), [['Produce', ['crate']], ['Condiments', ['jar']]]);
+const mixedPantry = buildPantryShelves(mixed, 'pantry', NOW);
+assert.deepEqual(mixedPantry.map((s) => [s.name, s.tiles.map((t) => t.shape)]), [['Canned goods', ['jar']], ['Produce', ['crate']]]);
+for (const place of SHELF_PLACES) {
+  for (const s of buildPantryShelves([...pantry, ...mixed], place, NOW)) {
+    if (s.name === 'Produce') assert.ok(s.tiles.every((t) => t.shape === 'crate'), 'everything on a Produce shelf is in a crate');
+  }
+}
 
 // Every item is drawn exactly once per place.
 for (const place of SHELF_PLACES) {
@@ -169,9 +206,14 @@ assert.match(screen, /writeJson\(PANTRY_VIEW_MODE_STORAGE_KEY, next\)/, 'the vie
 assert.match(screen, /scanCardsShown = scanControlsVisible && \(!scanCardsFolded \|\| scanPanelOpen \|\| tutorial\.active\)/, 'the scan cards stay reachable: empty pantry, list view, camera button, and during the tour');
 assert.match(screen, /if \(viewMode === 'shelves'\) selectLocationFilter\(inferredLocation\)/, 'a hand-added item is shown on its shelf');
 
-// Scanning sells Plus: with the cards folded away, a labelled Scan button sits beside Add item, not a bare icon.
-assert.match(screen, /border-tomato[\s\S]{0,900}\{SHELF_VIEW_COPY\.scanLabel\}/, 'the Scan button is labelled and in the scan colour');
+// Scanning sells Plus: with the cards folded away, a labelled Scan button sits beside Add item.
+// Owner, 2026-10-10: it is a plain button that goes straight to the photo, not a drop-down.
+assert.match(screen, /onPress=\{\(\) => void handleQuickScan\(false\)\}[\s\S]{0,700}\{SHELF_VIEW_COPY\.scanLabel\}/);
+assert.doesNotMatch(screen, /chevron-down/, 'no drop-down arrow on the Scan button');
 assert.match(screen, /freeScanBadge \?\? PANTRY_SCAN_UI_COPY\.scanCardPlusBadge/, 'it carries the same Plus or free-scans badge as the card');
+assert.match(screen, /receipt \? plusOnlyScanAccess : photoScanAccess/, 'the quick scan uses the same gates as the cards');
+assert.match(screen, /if \(access !== 'allowed'\) \{\s*setScanPanelOpen\(true\);/, 'someone who may not scan gets the cards, which explain why');
+assert.match(screen, /onScanReceipt=\{/, 'the receipt scan stays reachable from the menu');
 assert.equal(SHELF_VIEW_COPY.scanLabel, 'Scan');
 
 console.log('pantry-shelf-view-check: ok');

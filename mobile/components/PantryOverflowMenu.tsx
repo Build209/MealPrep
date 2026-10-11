@@ -13,6 +13,9 @@ interface PantryOverflowMenuProps {
   onClearLocation: (location: PantryStorageLocation, count: number) => void;
   totalCount: number;
   onClearAll: () => void;
+  /** Shelves view: the receipt scan lives here when its card is folded away. */
+  onScanReceipt?: () => void;
+  scanReceiptLabel?: string;
 }
 
 export function PantryOverflowMenu({
@@ -24,6 +27,8 @@ export function PantryOverflowMenu({
   onClearLocation,
   totalCount,
   onClearAll,
+  onScanReceipt,
+  scanReceiptLabel,
 }: PantryOverflowMenuProps) {
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
@@ -31,6 +36,19 @@ export function PantryOverflowMenu({
         <View className="mt-16 items-end px-4">
           <Pressable onPress={(e) => e.stopPropagation()} className="min-w-[260px] rounded-2xl border border-border bg-card p-2 shadow-lg">
             <Text className="px-3 py-2 text-xs font-bold uppercase tracking-wide text-muted">More</Text>
+            {onScanReceipt ? (
+              <Pressable
+                onPress={() => {
+                  onClose();
+                  onScanReceipt();
+                }}
+                accessibilityRole="button"
+                className="flex-row items-center gap-3 rounded-xl px-3 py-3"
+              >
+                <Ionicons name="receipt-outline" size={20} color={THEME.tomatoDark} />
+                <Text className="flex-1 text-sm font-semibold text-ink">{scanReceiptLabel ?? 'Scan a receipt'}</Text>
+              </Pressable>
+            ) : null}
             <Pressable
               disabled={resortPreviewTotal === 0}
               onPress={() => {

@@ -811,6 +811,44 @@ export default function PantryScreen() {
     await runVisionFromUri(result.assets[0].uri, scanLocation, kind);
   }
 
+  /**
+   * The Scan button beside "Add item" (shelves view) and "Scan a receipt" in the menu: straight
+   * to the photo picker, no card to open first. Someone who may not scan (guest, free plan with
+   * no scans left) gets the scan cards instead, which explain why and offer sign-in or Plus.
+   */
+  async function handleQuickScan(receipt: boolean) {
+    if (!featureFlags.photoScan) return;
+    const kind: PantryScanKind = receipt ? 'receipt' : 'shelf';
+    const { access } = await resolvePhotoScanAccess(receipt ? plusOnlyScanAccess : photoScanAccess, session);
+    if (access !== 'allowed') {
+      setScanPanelOpen(true);
+      if (!receipt) setAutoOpenScanMode('menu');
+      return;
+    }
+    if (Platform.OS !== 'web') {
+      Alert.alert(PANTRY_SCAN_UI_COPY.choosePhotoSourceTitle, PANTRY_SCAN_UI_COPY.choosePhotoSourceMessage, [
+        { text: PANTRY_SCAN_UI_COPY.takePhoto, onPress: () => void handleNativeScan('camera', kind) },
+        { text: PANTRY_SCAN_UI_COPY.chooseFromLibrary, onPress: () => void handleNativeScan('library', kind) },
+        { text: 'Cancel', style: 'cancel' },
+      ]);
+      return;
+    }
+    try {
+      const { pickWebImageFile } = await import('../../lib/web/pickWebImageFile');
+      const { preparePantryImageFromFile } = await import('../../lib/pantryVision/prepareImage.web');
+      // No forced camera: the phone offers its own "take photo or choose one" sheet.
+      const file = await pickWebImageFile();
+      if (!file) return;
+      const prepared = await preparePantryImageFromFile(file, { detailTiles: receipt ? 'receipt' : true });
+      // A shelf photo taken while looking at the Refrigerator shelves is a fridge photo.
+      const location = receipt ? readLastPantryScanLocation() : shelfPlace;
+      setScanLocationHint(location);
+      await runVisionFromPrepared(prepared, location, { kind });
+    } catch (error) {
+      handleWebPrepareError(error instanceof Error ? error.message : 'Could not prepare photo');
+    }
+  }
+
   function submitScanCorrectionsFeedback() {
     if (demoMode || !session?.user?.id || !scanSessionIdRef.current) return;
 
@@ -1135,20 +1173,15 @@ export default function PantryScreen() {
                 <Ionicons name="add" size={20} color={THEME.brandCream} />
                 <Text className="text-[15px] font-bold text-cream">Add item</Text>
               </Pressable>
-              {scanCardsFolded && scanControlsVisible ? (
+              {scanCardsFolded && scanControlsVisible && featureFlags.photoScan ? (
                 <Pressable
-                  onPress={() => setScanPanelOpen((open) => !open)}
-                  className={`h-11 min-w-0 flex-1 flex-row items-center gap-2 rounded-full border-[1.5px] border-tomato pl-1.5 pr-3 ${
-                    scanPanelOpen ? 'bg-tomato-light' : 'bg-card'
-                  }`}
+                  onPress={() => void handleQuickScan(false)}
+                  className="h-11 min-w-0 flex-1 flex-row items-center justify-center gap-2 rounded-full border-[1.5px] border-tomato bg-card px-3"
                   accessibilityRole="button"
-                  accessibilityState={{ expanded: scanPanelOpen }}
-                  accessibilityLabel={scanPanelOpen ? SHELF_VIEW_COPY.hideScanA11y : SHELF_VIEW_COPY.scanA11y}
+                  accessibilityLabel={SHELF_VIEW_COPY.scanA11y}
                 >
-                  <View className="h-8 w-8 shrink-0 items-center justify-center rounded-full bg-tomato-light">
-                    <Ionicons name="camera-outline" size={18} color={THEME.tomatoDark} />
-                  </View>
-                  <Text className="min-w-0 flex-1 text-[15px] font-extrabold text-ink" numberOfLines={1}>
+                  <Ionicons name="camera-outline" size={20} color={THEME.tomatoDark} />
+                  <Text className="text-[15px] font-extrabold text-ink" numberOfLines={1}>
                     {SHELF_VIEW_COPY.scanLabel}
                   </Text>
                   {showScanPlusBadge || freeScanBadge ? (
@@ -1158,7 +1191,6 @@ export default function PantryScreen() {
                       </Text>
                     </View>
                   ) : null}
-                  <Ionicons name={scanPanelOpen ? 'chevron-up' : 'chevron-down'} size={16} color={THEME.muted} />
                 </Pressable>
               ) : null}
               {pantry.length > 0 ? (
@@ -1460,6 +1492,12 @@ export default function PantryScreen() {
         onClearLocation={(location, count) => setConfirmAction({ kind: 'clear-location', location, count })}
         totalCount={pantry.length}
         onClearAll={() => setConfirmAction({ kind: 'clear-all', count: pantry.length })}
+        onScanReceipt={
+          scanCardsFolded && scanControlsVisible && featureFlags.photoScan
+            ? () => void handleQuickScan(true)
+            : undefined
+        }
+        scanReceiptLabel={SHELF_VIEW_COPY.scanReceipt}
       />
 
       <Modal visible={addOpen} animationType="slide" transparent onRequestClose={closeManualModal}>
