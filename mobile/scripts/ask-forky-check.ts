@@ -6,6 +6,7 @@ import { ASK_FORKY_COPY, ASK_FORKY_LIMITS as APP_LIMITS } from '../config/askFor
 import { buildAskForkyBody } from '../lib/forky/askForkyRequest.ts';
 import {
   ASK_FORKY_DEFAULT_CAPS,
+  ASK_FORKY_DEFAULT_MODEL,
   ASK_FORKY_LIMITS,
   FORKY_REPLY_TOOL,
   forkyMessages,
@@ -181,5 +182,15 @@ const privacy = read('public/privacy.html');
 assert.match(privacy, /Ask Forky/);
 assert.match(privacy, /Anthropic/);
 assert.match(read('../.github/workflows/deploy-function.yml'), /- ask-forky/);
+
+// --- Model: Claude Haiku 5.5 (owner's decision, Oct 10). It rejects sampling settings and a prefilled
+// reply, and counts more tokens for the same text, so the request must stay free of those.
+assert.equal(ASK_FORKY_DEFAULT_MODEL, 'claude-haiku-5-5');
+assert.ok(ASK_FORKY_LIMITS.maxOutputTokens >= 650, 'room for a 90-word answer at the new token counts');
+const forkyFunction = read('supabase/functions/ask-forky/index.ts');
+assert.doesNotMatch(forkyFunction, /\b(temperature|top_p|top_k|budget_tokens)\b/, 'no settings Haiku 5.5 rejects');
+assert.match(forkyFunction, /tool_choice: \{ type: 'tool', name: FORKY_REPLY_TOOL\.name \}/, 'reply is always the tool call');
+const lastTurn = forkyMessages({ question: 'q', history: [{ role: 'forky', text: 'hi' }], pantry: [], recipes: [] }).at(-1);
+assert.equal(lastTurn?.role, 'user', 'the conversation always ends on the user turn (no prefill)');
 
 console.log('ask-forky-check: ok');
