@@ -28,6 +28,13 @@ import { pickProfilePhotoFromLibrary } from './pickProfilePhoto';
 import { HomeZipField } from './HomeZipField';
 import { formatHomeZipInput, validateOptionalHomeZip } from '../../lib/profile/homeZip';
 import { resetForkinatorTips } from '../../lib/forkinator/resetForkinatorTips';
+import { emitForkinatorTipsReset } from '../../lib/forkinator/resetForkinatorTipsEvent';
+import {
+  FORKY_TIP_FREQUENCIES,
+  readForkyTipFrequency,
+  writeForkyTipFrequency,
+  type ForkyTipFrequency,
+} from '../../lib/forkinator/tipBackoff';
 import { TUTORIAL_COPY } from '../../config/tutorial';
 import { canOpenTutorialFromAccount, startTutorial } from '../../lib/tutorial/tutorialStore';
 
@@ -63,6 +70,7 @@ function AccountSheetBody({ onClose }: { onClose: () => void }) {
   const [dietaryNotes, setDietaryNotes] = useState(profile.dietaryNotes);
   const [dietPrefs, setDietPrefs] = useState<UserDietPrefs>(userDietPrefs);
   const [busy, setBusy] = useState(false);
+  const [forkyTipFrequency, setForkyTipFrequency] = useState<ForkyTipFrequency>(readForkyTipFrequency);
   const [status, setStatus] = useState<string | null>(null);
 
   async function persistFields() {
@@ -103,6 +111,14 @@ function AccountSheetBody({ onClose }: { onClose: () => void }) {
     } catch (err) {
       setStatus(err instanceof Error ? err.message : 'Could not update photo.');
     }
+  }
+
+  function chooseForkyTipFrequency(next: ForkyTipFrequency) {
+    if (next === forkyTipFrequency) return;
+    writeForkyTipFrequency(next);
+    setForkyTipFrequency(next);
+    // Forky re-reads the setting and puts away anything he was about to say.
+    emitForkinatorTipsReset();
   }
 
   function runResetForkyTips() {
@@ -276,7 +292,33 @@ function AccountSheetBody({ onClose }: { onClose: () => void }) {
 
             <View className="mt-4 rounded-2xl border border-border bg-card px-4 py-3">
               <Text className="text-sm font-bold text-ink">Forky</Text>
-              <Text className="mt-1 text-xs text-muted">
+              <Text className="mt-3 font-semibold text-ink">{ACCOUNT_SHEET_COPY.forkyTipFrequencyLabel}</Text>
+              <Text className="text-xs text-muted">{ACCOUNT_SHEET_COPY.forkyTipFrequencyBlurb}</Text>
+              <View className="mt-2 flex-row gap-2" accessibilityRole="radiogroup">
+                {FORKY_TIP_FREQUENCIES.map((option) => {
+                  const selected = option === forkyTipFrequency;
+                  return (
+                    <Pressable
+                      key={option}
+                      onPress={() => chooseForkyTipFrequency(option)}
+                      accessibilityRole="radio"
+                      accessibilityState={{ selected }}
+                      accessibilityLabel={`${ACCOUNT_SHEET_COPY.forkyTipFrequencyLabel}: ${ACCOUNT_SHEET_COPY.forkyTipFrequencyOptions[option]}`}
+                      className={`min-h-[44px] flex-1 items-center justify-center rounded-xl border px-2 ${
+                        selected ? 'border-primary bg-primary' : 'border-border bg-paper'
+                      }`}
+                    >
+                      <Text className={`text-center font-bold ${selected ? 'text-on-primary' : 'text-slate'}`}>
+                        {ACCOUNT_SHEET_COPY.forkyTipFrequencyOptions[option]}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+              {forkyTipFrequency === 'off' ? (
+                <Text className="mt-2 text-xs text-muted">{ACCOUNT_SHEET_COPY.forkyTipFrequencyOffNote}</Text>
+              ) : null}
+              <Text className="mt-4 text-xs text-muted">
                 See Forky&apos;s greeting and tips again if you dismissed them.
               </Text>
               <Pressable

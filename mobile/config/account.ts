@@ -31,6 +31,11 @@ export const ACCOUNT_SHEET_COPY = {
   resetForkyTipsConfirmBody: 'Forky will show his greeting and tips again.',
   resetForkyTipsConfirmAction: 'Reset',
   resetForkyTipsDoneToast: "Forky's tips are reset.",
+  forkyTipFrequencyLabel: "Forky's tips",
+  forkyTipFrequencyBlurb:
+    'How often Forky speaks up by himself. He also rests a tip for a while after you close it a couple of times.',
+  forkyTipFrequencyOptions: { normal: 'Normal', less: 'Less often', off: 'Off' },
+  forkyTipFrequencyOffNote: 'Off: Forky stays quiet. He still tells you when he adds something to your list.',
 } as const;
 
 export const LEGAL_LINKS = {

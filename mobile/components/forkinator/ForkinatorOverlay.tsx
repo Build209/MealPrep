@@ -128,6 +128,12 @@ import { readGuestPantry } from '../../lib/guest/localKitchenStore';
 import { readJson } from '../../lib/storage';
 import { logUsageEvent } from '../../lib/usage/usageLog';
 import {
+  forkyTipAllowed,
+  readForkyTipFrequency,
+  recordForkyTipOutcome,
+  recordForkyTipShown,
+} from '../../lib/forkinator/tipBackoff';
+import {
   FORKINATOR_AUTO_PROMPT_PRIORITY,
   shouldReplaceForkinatorAutoPrompt,
   type ForkinatorAutoPromptKind,
@@ -199,6 +205,8 @@ export function ForkinatorOverlay() {
   const [mascotImageLoaded, setMascotImageLoaded] = useState(false);
   const [expirationPromptItems, setExpirationPromptItems] = useState<PantryItem[]>([]);
   const [tipsAutoShowEpoch, setTipsAutoShowEpoch] = useState(0);
+  /** How often Forky speaks up by himself: the person's choice in Account (normal, less, off). */
+  const [tipFrequency, setTipFrequency] = useState(readForkyTipFrequency);
   const greetingAutoShowStartedRef = useRef(false);
   const expirationAutoShowStartedRef = useRef(false);
   const scannerAutoShowStartedRef = useRef(false);
@@ -262,6 +270,8 @@ export function ForkinatorOverlay() {
     aisleSortPromptVisibleRef.current = kind === 'aisleSort';
     scannerPromptVisibleRef.current = kind === 'scanner';
     sessionAutoPromptShownRef.current = true;
+    // Counts toward "less often", and notes whether the last one was left untouched.
+    recordForkyTipShown(kind);
     return true;
   }, [visibleAutoPromptKind]);
 
@@ -343,6 +353,7 @@ export function ForkinatorOverlay() {
       setExpirationPromptItems([]);
       setRestockPromptMessage('');
       setRestockUndoLines([]);
+      setTipFrequency(readForkyTipFrequency());
       setTipsAutoShowEpoch((epoch) => epoch + 1);
     });
   }, []);
@@ -370,7 +381,7 @@ export function ForkinatorOverlay() {
     }
 
     const expirationPlan = shouldAutoShowForkinatorExpirationPrompt(pantryForForkinator);
-    if (expirationPlan.show) {
+    if (expirationPlan.show && forkyTipAllowed('expiration')) {
       if (expirationAutoShowStartedRef.current) return;
       expirationAutoShowStartedRef.current = true;
       pendingAutoPromptKindRef.current = 'expiration';
@@ -389,6 +400,8 @@ export function ForkinatorOverlay() {
     if (blockScannerThisSessionRef.current) return;
     if (scannerAutoShowStartedRef.current) return;
     if (!shouldAutoShowForkinatorScannerPrompt(readForkinatorHasScanned())) return;
+    // Resting after being closed unused, or tips are set to less often or off.
+    if (!forkyTipAllowed('scanner')) return;
 
     scannerAutoShowStartedRef.current = true;
     pendingAutoPromptKindRef.current = 'scanner';
@@ -434,6 +447,7 @@ export function ForkinatorOverlay() {
       return;
     }
     aisleCheckedOnPathRef.current = true;
+    if (!forkyTipAllowed('aisleSort')) return;
     if (showAutoPrompt('aisleSort')) markForkinatorAisleSortPromptShown();
   }, [
     groceryCombineByAisle,
@@ -533,6 +547,7 @@ export function ForkinatorOverlay() {
    */
   const forkInRoadPromptVisible =
     forkinatorUiReady &&
+    tipFrequency !== 'off' &&
     isHomeScreen &&
     !mealMadeReviewOpen &&
     !forkInRoadQuizVisible &&
@@ -756,6 +771,7 @@ export function ForkinatorOverlay() {
 
   const handleScannerCameraPress = useCallback(() => {
     logUsageEvent('forky_prompt_tapped', { prompt: 'scanner', action: 'camera' });
+    recordForkyTipOutcome('scanner', 'tapped');
     setScannerPromptVisible(false);
     markForkinatorScannerNudgeShown();
     if (!IS_WEB) {
@@ -775,6 +791,7 @@ export function ForkinatorOverlay() {
 
   const handleAisleSortPress = useCallback(() => {
     logUsageEvent('forky_prompt_tapped', { prompt: 'aisleSort' });
+    recordForkyTipOutcome('aisleSort', 'tapped');
     setAisleSortPromptVisible(false);
     markForkinatorAisleSortUsed();
     writeGroceryCombinePreference(true);
@@ -787,6 +804,7 @@ export function ForkinatorOverlay() {
   const handleExpirationShowPress = useCallback(() => {
     const ids = expirationPromptItems.map((item) => item.id);
     logUsageEvent('forky_prompt_tapped', { prompt: 'expiration' });
+    recordForkyTipOutcome('expiration', 'tapped');
     setExpirationPromptVisible(false);
     openPantryExpiringHighlightFromForkinator(ids);
   }, [expirationPromptItems]);
@@ -874,6 +892,7 @@ export function ForkinatorOverlay() {
     }
     if (action === 'dismissExpirationPrompt') {
       logUsageEvent('forky_prompt_dismissed', { prompt: 'expiration' });
+      recordForkyTipOutcome('expiration', 'dismissed');
       setExpirationPromptVisible(false);
       return;
     }
@@ -889,11 +908,13 @@ export function ForkinatorOverlay() {
     }
     if (action === 'dismissAisleSortPrompt') {
       logUsageEvent('forky_prompt_dismissed', { prompt: 'aisleSort' });
+      recordForkyTipOutcome('aisleSort', 'dismissed');
       setAisleSortPromptVisible(false);
       return;
     }
     if (action === 'dismissScannerPrompt') {
       logUsageEvent('forky_prompt_dismissed', { prompt: 'scanner' });
+      recordForkyTipOutcome('scanner', 'dismissed');
       setScannerPromptVisible(false);
       return;
     }
@@ -964,6 +985,7 @@ export function ForkinatorOverlay() {
           accessibilityLabel={FORKINATOR_EXPIRATION_PROMPT_A11Y_LABEL}
           onPress={() => {
             logUsageEvent('forky_prompt_dismissed', { prompt: 'expiration' });
+            recordForkyTipOutcome('expiration', 'dismissed');
             setExpirationPromptVisible(false);
           }}
           actionButton={{
@@ -982,6 +1004,7 @@ export function ForkinatorOverlay() {
           accessibilityLabel={FORKINATOR_AISLE_SORT_A11Y_LABEL}
           onPress={() => {
             logUsageEvent('forky_prompt_dismissed', { prompt: 'aisleSort' });
+            recordForkyTipOutcome('aisleSort', 'dismissed');
             setAisleSortPromptVisible(false);
           }}
           actionButton={{
@@ -1018,6 +1041,7 @@ export function ForkinatorOverlay() {
           accessibilityLabel={FORKINATOR_SCANNER_NUDGE_A11Y_LABEL}
           onPress={() => {
             logUsageEvent('forky_prompt_tapped', { prompt: 'scanner' });
+            recordForkyTipOutcome('scanner', 'tapped');
             setScannerPromptVisible(false);
             openPantryScannerFromForkinator();
           }}
