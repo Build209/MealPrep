@@ -122,13 +122,13 @@ assert.match(appContext, /setUsualItemsOwner\(ownerId\);/);
 assert.match(appContext, /notePurchasedToday\(\[current\]\);/);
 assert.match(appContext, /notePurchasedToday\(toCheck\);/);
 assert.match(appContext, /if \(willUncheck && current\) noteTickTakenBack\(current\.name\);/);
-assert.match(read('app/(tabs)/pantry.tsx'), /notePurchasedToday\(reviewItems\.filter\(\(item\) => item\.enabled\)\);/);
+assert.match(read('app/(tabs)/pantry.tsx'), /notePurchasedToday\(reviewItems\.filter\(\(item\) => item\.enabled\), new Date\(\), 'receipt'\);/);
 assert.match(read('app/(tabs)/grocery.tsx'), /<UsualItemsCard groceryNames=\{groceryNames\} onAdd=\{addManualGroceryItem\} \/>/);
 assert.match(read('lib/account/clearUserScopedLocalStorage.ts'), /clearUsualItemsForOwner\(userId\);/);
 const card = read('components/grocery/UsualItemsCard.tsx');
 assert.match(card, /if \(suggestions\.length === 0\) return null;/, 'no empty card for a new account');
 assert.doesNotMatch(`${GROCERY_COPY.usualsTitle} ${GROCERY_COPY.usualsBlurb}`, /\$|\bsav/i, 'no money or savings claims on the card');
-// The purchase memory stays on the device: this module never talks to the server.
-assert.doesNotMatch(read('lib/usual/usualItems.ts'), /supabase|fetch\(/i);
+// This module never talks to the server itself: sync goes through the hooks lib/learningSync sets.
+assert.doesNotMatch(read('lib/usual/usualItems.ts'), /getSupabase|fetch\(/);
 
 console.log('usual-items-check: ok');

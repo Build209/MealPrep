@@ -23,6 +23,59 @@ function storageKey(ownerId: string): string {
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
+/**
+ * Where a signed-in account's events also go (lib/learningSync sets it; null for guests). This
+ * file stays free of network code: it only reports what was added or removed.
+ */
+export interface RecipeEngagementRemote {
+  added(ownerId: string, event: RecipeEngagementEvent): void;
+  wontCookCleared(ownerId: string, refKey: string): void;
+}
+
+let engagementRemote: RecipeEngagementRemote | null = null;
+
+export function setRecipeEngagementRemote(next: RecipeEngagementRemote | null): void {
+  engagementRemote = next;
+}
+
+/** Events worth keeping with the account. Impressions are noise at many per screen. */
+export function isSyncedEngagementType(type: RecipeEngagementEventType): boolean {
+  return type !== 'impression';
+}
+
+const eventIdentity = (event: RecipeEngagementEvent) => `${event.refKey}|${event.type}|${event.at}`;
+
+/**
+ * Folds the account's saved events into this device's, oldest first, without repeats.
+ * Returns the merged list and the device-only events the account does not have yet.
+ */
+export function mergeRemoteEngagementEvents(
+  local: readonly RecipeEngagementEvent[],
+  remoteEvents: readonly RecipeEngagementEvent[],
+): { merged: RecipeEngagementEvent[]; missingRemotely: RecipeEngagementEvent[] } {
+  const remoteIds = new Set(remoteEvents.map(eventIdentity));
+  const seen = new Set<string>();
+  const merged: RecipeEngagementEvent[] = [];
+  for (const event of [...remoteEvents, ...local]) {
+    const id = eventIdentity(event);
+    if (seen.has(id)) continue;
+    seen.add(id);
+    merged.push(event);
+  }
+  merged.sort((a, b) => (a.v2?.ts ?? Date.parse(a.at)) - (b.v2?.ts ?? Date.parse(b.at)));
+  const missingRemotely = local.filter(
+    (event) => isSyncedEngagementType(event.type) && !remoteIds.has(eventIdentity(event)),
+  );
+  return { merged, missingRemotely };
+}
+
+/** Replaces the owner's events and rebuilds the taste index from them (after a merge). */
+export function replaceRecipeEngagementEvents(ownerId: string, events: RecipeEngagementEvent[]): void {
+  const trimmed = trimEvents(events);
+  writeJson(storageKey(ownerId), trimmed);
+  writeEngagementIndex(ownerId, rebuildEngagementIndex(trimmed, defaultTasteMetaForEvent));
+}
+
 export function readRecipeEngagementEvents(ownerId: string): RecipeEngagementEvent[] {
   const raw = readJson<RecipeEngagementEvent[]>(storageKey(ownerId), []);
   if (!Array.isArray(raw)) return [];
@@ -82,6 +135,7 @@ export function appendRecipeEngagementEvent(
   const index = readEngagementIndex(ownerId) ?? rebuildEngagementIndex(base, defaultTasteMetaForEvent);
   applyEngagementEventToIndex(index, event, defaultTasteMetaForEvent(event.refKey, event));
   writeEngagementIndex(ownerId, index);
+  if (engagementRemote && isSyncedEngagementType(event.type)) engagementRemote.added(ownerId, event);
   return next;
 }
 
@@ -144,6 +198,7 @@ export function clearWontCookForRef(
   const base = existing ?? readRecipeEngagementEvents(ownerId);
   const next = base.filter((event) => !(event.refKey === refKey && event.type === 'wont_cook'));
   writeRecipeEngagementEvents(ownerId, next);
+  engagementRemote?.wontCookCleared(ownerId, refKey);
   return next;
 }
 

@@ -904,7 +904,7 @@ export default function PantryScreen() {
       });
       if (reviewHasReceiptRef.current) {
         // A receipt is a shopping trip: remember what was bought for "Your usuals".
-        notePurchasedToday(reviewItems.filter((item) => item.enabled));
+        notePurchasedToday(reviewItems.filter((item) => item.enabled), new Date(), 'receipt');
         // What was bought is now in the pantry, so the matching grocery rows are done.
         const { groceryIdsBoughtOnReceipt } = await import('../../lib/pantryVision/reviewItems');
         const boughtIds = groceryIdsBoughtOnReceipt(reviewItems, grocery);

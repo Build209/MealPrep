@@ -11,6 +11,8 @@
  * after it was bought is what people reject. So: counts, the middle gap, and nothing early.
  *
  * Pure rules first (tested by scripts/usual-items-check.ts), device storage at the bottom.
+ * For a signed-in account the same facts are also kept with the account (lib/learningSync), so
+ * they follow the person to a new device.
  */
 import { PANTRY_CATEGORIES, type PantryCategory } from '../../types/mealprep';
 import { normalizeIngredientName } from '../recipeMatch/normalize';
@@ -197,6 +199,69 @@ export function usualSuggestions(
   return due.slice(0, USUAL_ITEM_RULES.maxSuggestions).map(({ overdue: _overdue, ...rest }) => rest);
 }
 
+export interface RemotePurchaseRow {
+  itemKey: string;
+  day: string;
+  name: string;
+  unit: string;
+  category: string | null;
+  quantity: number;
+}
+
+/**
+ * Folds the account's saved purchases into what this device already knows. Days are combined
+ * (never dropped), the newest purchase supplies the display name and size, and an item hidden on
+ * any device stays hidden.
+ */
+export function mergeRemotePurchases(
+  history: UsualItemHistory,
+  rows: readonly RemotePurchaseRow[],
+  hiddenKeys: readonly string[],
+): UsualItemHistory {
+  const next: UsualItemHistory = { ...history };
+  const isDay = (value: string) => /^\d{4}-\d{2}-\d{2}$/.test(value);
+  for (const row of rows) {
+    if (!row.itemKey || !isDay(row.day) || !row.name.trim()) continue;
+    const existing = next[row.itemKey];
+    const days = existing ? [...existing.days] : [];
+    if (!days.includes(row.day)) days.push(row.day);
+    days.sort();
+    const newest = !existing || row.day >= (existing.days[existing.days.length - 1] ?? '');
+    const category = (PANTRY_CATEGORIES as readonly string[]).includes(row.category ?? '')
+      ? (row.category as PantryCategory)
+      : (existing?.category ?? 'dry_goods');
+    next[row.itemKey] = {
+      name: newest ? row.name.trim().slice(0, 80) : existing.name,
+      unit: newest ? row.unit || 'each' : existing.unit,
+      category: newest ? category : existing.category,
+      quantity: newest && Number.isFinite(row.quantity) && row.quantity > 0 ? row.quantity : (existing?.quantity ?? 1),
+      days: days.slice(-USUAL_ITEM_RULES.maxPurchaseDays),
+      ...(existing?.hidden ? { hidden: true } : {}),
+    };
+  }
+  for (const key of hiddenKeys) {
+    const existing = next[key];
+    if (existing) next[key] = { ...existing, hidden: true };
+  }
+  return trimHistory(next);
+}
+
+/** Purchases this device knows that the account does not have yet (sent up once after sign-in). */
+export function purchasesMissingRemotely(
+  history: UsualItemHistory,
+  rows: readonly RemotePurchaseRow[],
+): RemotePurchaseRow[] {
+  const have = new Set(rows.map((row) => `${row.itemKey}|${row.day}`));
+  const missing: RemotePurchaseRow[] = [];
+  for (const [itemKey, record] of Object.entries(history)) {
+    for (const day of record.days) {
+      if (have.has(`${itemKey}|${day}`)) continue;
+      missing.push({ itemKey, day, name: record.name, unit: record.unit, category: record.category, quantity: record.quantity });
+    }
+  }
+  return missing;
+}
+
 /** The household's steadiest repeat buys, for Ask Forky's profile (names only). */
 export function topUsualItemNames(history: UsualItemHistory, limit: number): string[] {
   return Object.values(history)
@@ -229,7 +294,28 @@ function cleanHistory(raw: unknown): UsualItemHistory {
 }
 
 // ---------------------------------------------------------------------------------------------
-// On this device, per account (or guest). Not sent anywhere.
+// On this device, per account (or guest). A signed-in account's changes are also passed to the
+// remote hooks below, which lib/learningSync fills in. Guests stay on the device only.
+
+export type PurchaseSource = 'tick' | 'receipt';
+
+export interface UsualItemsRemote {
+  purchased(rows: RemotePurchaseRow[], source: PurchaseSource): void;
+  tickTakenBack(itemKey: string, day: string): void;
+  hidden(itemKey: string): void;
+}
+
+let remote: UsualItemsRemote | null = null;
+
+/** lib/learningSync sets this for a signed-in account and clears it otherwise. */
+export function setUsualItemsRemote(next: UsualItemsRemote | null): void {
+  remote = next;
+}
+
+/** Replaces this kitchen's purchase memory (used after merging with the account's copy). */
+export function replaceUsualItemHistory(history: UsualItemHistory): void {
+  save(history);
+}
 
 const STORAGE_PREFIX = 'mealprep.usualItems';
 let currentOwnerId = '';
@@ -260,19 +346,46 @@ function save(history: UsualItemHistory): void {
   for (const listener of listeners) listener();
 }
 
-export function notePurchasedToday(items: readonly PurchasedItem[], now = new Date()): void {
+export function notePurchasedToday(
+  items: readonly PurchasedItem[],
+  now = new Date(),
+  source: PurchaseSource = 'tick',
+): void {
   if (items.length === 0) return;
-  save(recordPurchases(readUsualItemHistory(), items, usualDayKey(now)));
+  const day = usualDayKey(now);
+  save(recordPurchases(readUsualItemHistory(), items, day));
+  if (!remote) return;
+  const rows: RemotePurchaseRow[] = [];
+  const seen = new Set<string>();
+  for (const item of items) {
+    const itemKey = usualItemKey(item.name);
+    const name = item.name.trim();
+    if (!itemKey || !name || seen.has(itemKey)) continue;
+    seen.add(itemKey);
+    rows.push({
+      itemKey,
+      day,
+      name: name.slice(0, 80),
+      unit: (item.unit || 'each').trim().slice(0, 24) || 'each',
+      category: item.category,
+      quantity: Number.isFinite(item.quantity) && item.quantity > 0 ? item.quantity : 1,
+    });
+  }
+  if (rows.length > 0) remote.purchased(rows, source);
 }
 
 export function noteTickTakenBack(name: string, now = new Date()): void {
   const history = readUsualItemHistory();
-  const next = forgetPurchase(history, name, usualDayKey(now));
-  if (next !== history) save(next);
+  const day = usualDayKey(now);
+  const next = forgetPurchase(history, name, day);
+  if (next === history) return;
+  save(next);
+  remote?.tickTakenBack(usualItemKey(name), day);
 }
 
 export function hideUsualItemForGood(key: string): void {
   save(hideUsualItem(readUsualItemHistory(), key));
+  remote?.hidden(key);
 }
 
 export function readUsualSuggestions(groceryNames: readonly string[], now = new Date()): UsualSuggestion[] {
