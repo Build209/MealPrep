@@ -1816,6 +1816,24 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setAuthError(error instanceof Error ? error.message : 'Failed to mark meal as made');
       mealMadeUndoRef.current = null;
       setPantry(pantrySnapshot);
+      if (!demoMode && supabase && userId) {
+        // Some of the pantry rows may have been saved before the failure. The screen goes back to
+        // before the cook, so the server must too, or pressing "Made it" again would take the
+        // ingredients out a second time. A row the cook used up was deleted: it is put back.
+        void (async () => {
+          for (const line of lines) {
+            try {
+              await updatePantryItem(supabase, userId, line.previous);
+            } catch {
+              try {
+                await insertPantryItem(supabase, userId, line.previous);
+              } catch {
+                // Still no connection: nothing more can be done from here.
+              }
+            }
+          }
+        })();
+      }
       if (item && previousMeal) {
         setMealPlan((prev) => prev.map((row) => (row.id === item.id ? previousMeal : row)));
       }

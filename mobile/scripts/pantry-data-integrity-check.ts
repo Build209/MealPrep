@@ -134,4 +134,7 @@ assert.match(clearAll, /writeAccountPantryCache\(userId, \[\], \{ profile \}\)/,
 const update = between('const updatePantryItemEntry = useCallback(', 'const deletePantryItemEntry = useCallback(');
 assert.match(update, /if \(!isPersistedRowUuid\(item\.id\)\) \{/, 'editing a row the server does not have yet stays on the device instead of failing with a database error');
 
+const made = between('const confirmMealMade = useCallback(', 'const logCookEngagement = useCallback(');
+assert.match(made, /setPantry\(pantrySnapshot\);[\s\S]{0,700}await updatePantryItem\(supabase, userId, line\.previous\);[\s\S]{0,200}await insertPantryItem\(supabase, userId, line\.previous\);/, 'made it: a failed save puts the server back, including rows the cook used up');
+
 console.log('pantry-data-integrity-check: ok');
