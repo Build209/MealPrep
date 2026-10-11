@@ -25,7 +25,8 @@ export const SHELF_VIEW_COPY = {
   viewToggleA11y: 'Pantry view',
   seeAll: 'See all',
   useSoon: 'Use soon',
-  scanA11y: 'Scan with camera',
+  scanLabel: 'Scan',
+  scanA11y: 'Scan your fridge, pantry or a receipt',
   hideScanA11y: 'Hide scan options',
   placeLabels: { fridge: 'Refrigerator', pantry: 'Pantry', spice_rack: 'Spice rack' } as Record<
     PantryStorageLocation,

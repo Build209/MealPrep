@@ -169,4 +169,9 @@ assert.match(screen, /writeJson\(PANTRY_VIEW_MODE_STORAGE_KEY, next\)/, 'the vie
 assert.match(screen, /scanCardsShown = scanControlsVisible && \(!scanCardsFolded \|\| scanPanelOpen \|\| tutorial\.active\)/, 'the scan cards stay reachable: empty pantry, list view, camera button, and during the tour');
 assert.match(screen, /if \(viewMode === 'shelves'\) selectLocationFilter\(inferredLocation\)/, 'a hand-added item is shown on its shelf');
 
+// Scanning sells Plus: with the cards folded away, a labelled Scan button sits beside Add item, not a bare icon.
+assert.match(screen, /border-tomato[\s\S]{0,900}\{SHELF_VIEW_COPY\.scanLabel\}/, 'the Scan button is labelled and in the scan colour');
+assert.match(screen, /freeScanBadge \?\? PANTRY_SCAN_UI_COPY\.scanCardPlusBadge/, 'it carries the same Plus or free-scans badge as the card');
+assert.equal(SHELF_VIEW_COPY.scanLabel, 'Scan');
+
 console.log('pantry-shelf-view-check: ok');

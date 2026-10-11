@@ -1102,19 +1102,6 @@ export default function PantryScreen() {
                     : 'Track what you own — fewer duplicate buys'}
                 </Text>
               </View>
-              {scanCardsFolded && scanControlsVisible ? (
-                <Pressable
-                  onPress={() => setScanPanelOpen((open) => !open)}
-                  className={`h-11 w-11 items-center justify-center rounded-full border-[1.5px] ${
-                    scanPanelOpen ? 'border-primary bg-primary-light' : 'border-border bg-card'
-                  }`}
-                  accessibilityRole="button"
-                  accessibilityState={{ expanded: scanPanelOpen }}
-                  accessibilityLabel={scanPanelOpen ? SHELF_VIEW_COPY.hideScanA11y : SHELF_VIEW_COPY.scanA11y}
-                >
-                  <Ionicons name="camera-outline" size={22} color={THEME.primary} />
-                </Pressable>
-              ) : null}
               <View
                 className="flex-row rounded-full bg-border/60 p-[3px]"
                 accessibilityRole="tablist"
@@ -1148,6 +1135,32 @@ export default function PantryScreen() {
                 <Ionicons name="add" size={20} color={THEME.brandCream} />
                 <Text className="text-[15px] font-bold text-cream">Add item</Text>
               </Pressable>
+              {scanCardsFolded && scanControlsVisible ? (
+                <Pressable
+                  onPress={() => setScanPanelOpen((open) => !open)}
+                  className={`h-11 min-w-0 flex-1 flex-row items-center gap-2 rounded-full border-[1.5px] border-tomato pl-1.5 pr-3 ${
+                    scanPanelOpen ? 'bg-tomato-light' : 'bg-card'
+                  }`}
+                  accessibilityRole="button"
+                  accessibilityState={{ expanded: scanPanelOpen }}
+                  accessibilityLabel={scanPanelOpen ? SHELF_VIEW_COPY.hideScanA11y : SHELF_VIEW_COPY.scanA11y}
+                >
+                  <View className="h-8 w-8 shrink-0 items-center justify-center rounded-full bg-tomato-light">
+                    <Ionicons name="camera-outline" size={18} color={THEME.tomatoDark} />
+                  </View>
+                  <Text className="min-w-0 flex-1 text-[15px] font-extrabold text-ink" numberOfLines={1}>
+                    {SHELF_VIEW_COPY.scanLabel}
+                  </Text>
+                  {showScanPlusBadge || freeScanBadge ? (
+                    <View className="shrink-0 rounded-[10px] bg-tomato px-2 py-0.5">
+                      <Text className="text-xs font-extrabold text-on-tomato">
+                        {freeScanBadge ?? PANTRY_SCAN_UI_COPY.scanCardPlusBadge}
+                      </Text>
+                    </View>
+                  ) : null}
+                  <Ionicons name={scanPanelOpen ? 'chevron-up' : 'chevron-down'} size={16} color={THEME.muted} />
+                </Pressable>
+              ) : null}
               {pantry.length > 0 ? (
                 <Pressable
                   onPress={() => setOverflowOpen(true)}
