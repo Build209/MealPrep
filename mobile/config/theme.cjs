@@ -32,6 +32,8 @@ function tailwindThemeColors() {
     warning: c.warning,
     'warning-light': c.warningLight,
     'on-warning': c.onWarning,
+    banana: c.banana,
+    'on-banana': c.onBanana,
   };
 }
 

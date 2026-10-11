@@ -1,5 +1,6 @@
 /**
- * Home catalog sections: collapsed by default; bubble rows always rendered in section chrome.
+ * Home catalog sections: pantry recipes open by default, creators collapsed; bubble rows always
+ * rendered in section chrome.
  * Run from mobile/: npm run test:home-collapsed-sections
  */
 import assert from 'node:assert/strict';
@@ -11,9 +12,9 @@ import { CREATOR_RECIPES_COPY } from '../config/creatorRecipes';
 import { defaultRecipesTabSectionExpanded } from '../lib/recipesTab/sectionExpanded';
 
 const defaults = defaultRecipesTabSectionExpanded();
-assert.equal(defaults.classic, false, 'classic should default collapsed');
+assert.equal(defaults.classic, true, 'pantry recipes open by default (redesign, 2026-10-11)');
 assert.equal(defaults.creators, false, 'creators should default collapsed');
-assert.equal(RECIPES_TAB_SURFACE.defaultClassicExpanded, false);
+assert.equal(RECIPES_TAB_SURFACE.defaultClassicExpanded, true);
 assert.equal(RECIPES_TAB_SURFACE.defaultCreatorsExpanded, false);
 assert.equal(
   RECIPES_TAB_SURFACE_COPY.classicSectionTitle,
@@ -50,7 +51,7 @@ assert.match(
 );
 
 const homeSource = fs.readFileSync(path.join(mobileRoot, 'app/(tabs)/index.tsx'), 'utf8');
-assert.match(homeSource, /defaultRecipesTabSectionExpanded\(\)/, 'home should init collapsed defaults');
+assert.match(homeSource, /defaultRecipesTabSectionExpanded\(\)/, 'home should init the section defaults');
 assert.match(homeSource, /bubbleRow=\{[\s\S]*CategoryAvatarsRow/, 'classic bubbles in bubbleRow');
 assert.match(homeSource, /bubbleRow=\{[\s\S]*CreatorAvatarsRow/, 'creator bubbles in bubbleRow');
 assert.doesNotMatch(

@@ -1161,7 +1161,7 @@ export default function PantryScreen() {
           <View>
             <View className="flex-row items-center justify-between gap-2">
               <View className="min-w-0 flex-1">
-                <Text className="text-[28px] font-extrabold leading-8 text-ink" accessibilityRole="header">
+                <Text className="font-display text-[32px] leading-[34px] text-ink" accessibilityRole="header">
                   Pantry
                 </Text>
                 <Text className="mt-0.5 text-[13px] leading-[18px] text-muted">

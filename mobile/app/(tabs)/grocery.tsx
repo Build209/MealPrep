@@ -232,7 +232,7 @@ export default function GroceryScreen() {
           <View className="mt-5 min-h-[44px] flex-row items-center justify-between gap-3">
             <Text
               accessibilityRole="header"
-              className="min-w-0 flex-1 text-[28px] font-extrabold leading-[31px] tracking-tight text-ink"
+              className="min-w-0 flex-1 font-display text-[32px] leading-[34px] text-ink"
             >
               {GROCERY_COPY.listTitle}
             </Text>

@@ -36,7 +36,7 @@ export function ProfileAvatar({ name, photoUrl, size = 32, guest = false, onHead
         <HydrationSafeIonicon
           name="person-outline"
           size={onHeader ? 22 : size * 0.5}
-          color={onHeader ? THEME.brandCream : THEME.onPrimaryMuted}
+          color={onHeader ? THEME.onBanana : THEME.onPrimaryMuted}
         />
       </View>
     );
@@ -44,7 +44,7 @@ export function ProfileAvatar({ name, photoUrl, size = 32, guest = false, onHead
 
   return (
     <View style={dimension} className={`items-center justify-center ${onHeader ? '' : 'bg-primary'}`}>
-      <Text className={`font-extrabold ${onHeader ? 'text-cream' : 'text-on-primary'}`} style={{ fontSize: size * 0.38 }}>
+      <Text className={`font-extrabold ${onHeader ? 'text-on-banana' : 'text-on-primary'}`} style={{ fontSize: size * 0.38 }}>
         {initials(name)}
       </Text>
     </View>

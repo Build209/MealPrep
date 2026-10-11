@@ -39,9 +39,9 @@ export function AppHeader() {
   });
   const onHome = pathname === APP_ROUTES.home || pathname === '/index';
 
-  // Approved design (D-2): 64px green bar, fork mark in a cream circle, wordmark, round account button.
+  // Sticker aisle look: 64px banana bar, Forky, the wordmark in ink, square-ish account button.
   return (
-    <View className="h-16 justify-center bg-primary pl-5 pr-4">
+    <View className="h-16 justify-center bg-banana pl-5 pr-4">
       <View className="flex-row items-center justify-between">
         <View className="min-w-0 flex-1 flex-row items-center pr-2">
           <BrandLogo variant="header" />
@@ -55,10 +55,10 @@ export function AppHeader() {
               accessibilityLabel={HOME_HUB_COPY.openAccessibilityLabel}
               className="h-11 w-11 items-center justify-center rounded-full"
               style={({ pressed }) => ({
-                backgroundColor: pressed ? 'rgba(252,248,236,0.16)' : 'transparent',
+                backgroundColor: pressed ? 'rgba(27,31,59,0.12)' : 'transparent',
               })}
             >
-              <HydrationSafeIonicon name="book-outline" size={22} color={THEME.brandCream} />
+              <HydrationSafeIonicon name="book-outline" size={22} color={THEME.onBanana} />
             </Pressable>
           ) : null}
           <Pressable
@@ -66,7 +66,7 @@ export function AppHeader() {
             accessibilityLabel={avatarAccessibilityLabel}
             onPress={signedIn ? openAccountSheet : openAuthSheet}
             className="h-11 w-11 items-center justify-center rounded-full"
-            style={{ borderWidth: 1.5, borderColor: 'rgba(252,248,236,0.55)' }}
+            style={{ borderWidth: 2, borderColor: THEME.onBanana }}
           >
             {hydrated && accountChromeReady ? (
               <ProfileAvatar name={avatarName} photoUrl={avatarPhoto} guest={!signedIn} size={36} onHeader />

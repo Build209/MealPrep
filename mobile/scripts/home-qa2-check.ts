@@ -179,7 +179,7 @@ assert.match(homeIndex, /emptySearchForQuery/);
 // Item 10 — pantry CTA pressed state
 const pantryCta = fs.readFileSync(path.join(mobileRoot, 'components/home/HomePantryCta.tsx'), 'utf8');
 assert.match(pantryCta, /onPressIn/);
-assert.match(pantryCta, /primaryDark/);
+assert.match(pantryCta, /tomatoDark/);
 assert.match(pantryCta, /0\.96/);
 
 // Item 16 — engagement index waits for hydration

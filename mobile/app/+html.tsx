@@ -4,17 +4,24 @@ import { THEME } from '../config/appConfig';
 import { getWebBasePath, webAssetPath } from '../lib/webBasePath';
 
 /**
- * Figtree (approved design D-2), served from our own site so no outside font service is called.
- * App text has no font of its own, so it takes Figtree; icons set their own icon font and are
- * left alone (the :not() below), as is anything else that names a font.
+ * Sticker aisle look: Atkinson Hyperlegible Next for everything read, Bagel Fat One for titles and
+ * stickers. Both are served from our own site so no outside font service is called. App text has
+ * no font of its own, so it takes the reading face; icons set their own icon font and are left
+ * alone (the :not() below), as is anything else that names a font, and the `font-display` class,
+ * which the rule would otherwise outrank.
  */
+const READING_FONT_FILE = '/fonts/AtkinsonHyperlegibleNext-Variable-Latin.ttf';
+const DISPLAY_FONT_FILE = '/fonts/BagelFatOne-Latin.ttf';
+
 function fontCss(): string {
-  const src = webAssetPath('/fonts/Figtree-Variable.woff2');
-  const stack = "Figtree, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+  const reading = webAssetPath(READING_FONT_FILE);
+  const display = webAssetPath(DISPLAY_FONT_FILE);
+  const stack = "'Atkinson Hyperlegible Next', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
   return [
-    `@font-face{font-family:Figtree;src:url(${src}) format('woff2');font-weight:300 900;font-style:normal;font-display:swap}`,
+    `@font-face{font-family:'Atkinson Hyperlegible Next';src:url(${reading}) format('truetype');font-weight:200 800;font-style:normal;font-display:swap}`,
+    `@font-face{font-family:'Bagel Fat One';src:url(${display}) format('truetype');font-weight:400;font-style:normal;font-display:swap}`,
     `html,body{font-family:${stack}}`,
-    `[dir]:not([class*="r-fontFamily-"]):not([style*="font-family"]),input,textarea,button{font-family:${stack}}`,
+    `[dir]:not([class*="r-fontFamily-"]):not([style*="font-family"]):not(.font-display),input,textarea,button{font-family:${stack}}`,
   ].join('');
 }
 
@@ -43,7 +50,7 @@ export default function Root({ children }: { children: React.ReactNode }) {
           name="viewport"
           content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover"
         />
-        <meta name="theme-color" content={THEME.primaryDark} />
+        <meta name="theme-color" content={THEME.banana} />
         <meta name="application-name" content={APP_BRAND.shortName} />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -53,7 +60,7 @@ export default function Root({ children }: { children: React.ReactNode }) {
         <link rel="manifest" href={manifestHref} />
         <link rel="apple-touch-icon" href={appleIconHref} />
         <ScrollViewStyleReset />
-        <link rel="preload" href={webAssetPath('/fonts/Figtree-Variable.woff2')} as="font" type="font/woff2" crossOrigin="anonymous" />
+        <link rel="preload" href={webAssetPath(READING_FONT_FILE)} as="font" type="font/ttf" crossOrigin="anonymous" />
         <style dangerouslySetInnerHTML={{ __html: fontCss() }} />
         <style dangerouslySetInnerHTML={{ __html: NO_PULL_TO_REFRESH_CSS }} />
         {headNodes}

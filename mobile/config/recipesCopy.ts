@@ -16,11 +16,11 @@ export const RECIPES_COPY = {
     refreshOffline: "You're offline, showing saved recipes",
   },
 
-  /** Compact Home prompt below catalog section bars — nudge users to fill pantry. */
+  /** Home with an empty pantry: Forky asks for one photo (redesign, owner 2026-10-11). */
   homePantryPrompt: {
-    description:
-      "Add what's in your kitchen — recipes will match what you have, and your grocery list skips it.",
-    buttonLabel: 'Go to Pantry',
+    heading: 'Show me your fridge.',
+    description: "Take one photo. I list what's in it, then show you what you can cook tonight.",
+    buttonLabel: 'Scan my fridge',
   },
 
   cookNowCard: {

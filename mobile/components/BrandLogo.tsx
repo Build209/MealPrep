@@ -22,9 +22,9 @@ export function BrandLogo({ variant, style }: BrandLogoProps) {
         accessibilityLabel={APP_BRAND.name}
       >
         <View style={{ width: FORKINATOR_PINNED_WIDTH_PX, height: 36 }} />
-        {/* Wordmark as in the approved logo: "Plan" picked out in light tomato on green. */}
-        <Text className="shrink text-[19px] font-extrabold text-cream" style={{ letterSpacing: -0.3 }} numberOfLines={1}>
-          Meal<Text style={{ color: '#F8A27F' }}>Plan</Text>atic
+        {/* Wordmark in the display face on the banana bar, "Plan" picked out in tomato as in the logo. */}
+        <Text className="shrink font-display text-[21px] text-on-banana" numberOfLines={1}>
+          Meal<Text className="font-display text-tomato">Plan</Text>atic
         </Text>
       </View>
     );
