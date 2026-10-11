@@ -2207,6 +2207,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           for (const item of toRestock) {
             groceryRestockLedgerRef.current.delete(item.id);
           }
+          // Some quantity updates may have been saved before the failure: put the server back as
+          // well, so ticking the item again does not add the stock a second time.
+          void syncPantryToSnapshot(supabase, userId, nextPantry, pantrySnapshot).catch(() => undefined);
           return;
         }
       }
@@ -2994,9 +2997,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           // sent as updates to rows the server never had) and stayed on this device as items the
           // account does not own.
           setPantry(pantrySnapshot);
-          if (savedInserts.length > 0) {
-            // The new rows were saved but a quantity update after them failed. Take the server
-            // back to where it was too, so "Save" can be pressed again without doubling anything.
+          if (savedInserts.length > 0 || updated.length > 0) {
+            // Something reached the server before the failure (the new rows, or some of the
+            // quantity updates). Take the server back to where it was too, so "Save" can be
+            // pressed again without doubling anything.
             const insertIds = new Set(inserted.map((row) => row.id));
             const attempted = [...savedInserts, ...nextPantry.filter((row) => !insertIds.has(row.id))];
             void syncPantryToSnapshot(supabase, userId, attempted, pantrySnapshot).catch(() => undefined);
