@@ -447,7 +447,9 @@ export function ForkinatorOverlay() {
   // FK3-8: aisle and fork-in-the-road prompts belong to their own screens, and the Made-it
   // review sheet counts as busy (adjusted during render, not in an effect).
   const mealMadeReviewOpen = mealMadeReview != null;
-  if (aisleSortPromptVisible && !isGroceryScreen) {
+  // Also dropped when the list has nothing left to sort: the offer used to stay up over an empty
+  // list (seen live 2026-10-10) after the items were cleared or the saved list loaded empty.
+  if ((aisleSortPromptVisible && !isGroceryScreen) || (aisleSortPromptVisible && openGroceryCount === 0)) {
     setAisleSortPromptVisible(false);
   }
   if (!isHomeScreen && forkInRoadExpanded) {
