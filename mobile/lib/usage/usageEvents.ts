@@ -35,6 +35,10 @@ export const USAGE_EVENT_NAMES = [
   'grocery_item_checked',
   /** The last unticked item on a list of three or more was ticked. props: count */
   'grocery_list_completed',
+  /** A "Your usuals" item was added to the grocery list. */
+  'usual_item_added',
+  /** The person said an item is not a usual. */
+  'usual_item_hidden',
   /** The Plus offer was put in front of the person. props: source */
   'plus_offer_shown',
   /** The person pressed the buy button and was sent to checkout. props: plan */
