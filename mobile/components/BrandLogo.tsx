@@ -22,9 +22,9 @@ export function BrandLogo({ variant, style }: BrandLogoProps) {
         accessibilityLabel={APP_BRAND.name}
       >
         <View style={{ width: FORKINATOR_PINNED_WIDTH_PX, height: 36 }} />
-        {/* Wordmark in the display face, one colour, on the banana bar. */}
+        {/* Wordmark in the display face on the banana bar, "Plan" picked out in tomato as in the logo. */}
         <Text className="shrink font-display text-[21px] text-on-banana" numberOfLines={1}>
-          MealPlanatic
+          Meal<Text className="font-display text-tomato">Plan</Text>atic
         </Text>
       </View>
     );

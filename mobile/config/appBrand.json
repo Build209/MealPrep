@@ -8,7 +8,8 @@
     "iconBackground": "#1F4D33",
     "iconSticker": "#FFD12E",
     "iconStickerRing": "#FFFFFF",
-    "logoInk": "#1B1F3B"
+    "logoInk": "#1B1F3B",
+    "logoAccent": "#D9301A"
   },
   "displayFont": "public/fonts/BagelFatOne-Latin.ttf",
   "sourceMascot": "assets/brand/forkinator-mascot.png",

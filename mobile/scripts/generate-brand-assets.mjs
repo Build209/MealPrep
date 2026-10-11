@@ -123,7 +123,11 @@ async function logoLockup(iconBuffer) {
   const tile = await roundedCorners(iconBuffer, tileSize, 0.22);
   const word = await sharp({
     text: {
-      text: `<span foreground="${brand.colors.logoInk}">${brand.name}</span>`,
+      // "Plan" is picked out in tomato, as in the first logo (owner, 2026-10-11).
+      text:
+        `<span foreground="${brand.colors.logoInk}">Meal</span>` +
+        `<span foreground="${brand.colors.logoAccent}">Plan</span>` +
+        `<span foreground="${brand.colors.logoInk}">atic</span>`,
       font: 'Bagel Fat One',
       fontfile: displayFontPath,
       width: 1400,
