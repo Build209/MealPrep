@@ -20,7 +20,7 @@ export function planLabel(plan: UserPlan, planTier: PaidTier | null | undefined)
 export const PLANS_COPY = {
   photoScanUpgradeTitle: 'More scans come with a paid plan',
   photoScanUpgradeBody:
-    'A free account has a few scans each month. Upgrade to a paid plan for more scans of shelves and receipts, and shelf tags in Smart Shop. Manual entry stays free.',
+    'A free account has a few scans each month. Upgrade to a paid plan for more scans of shelves and receipts. Manual entry stays free.',
   photoScanProfileLoading: 'Loading your plan… try again in a moment.',
   photoScanProfileLoadingTitle: 'One moment',
   /** Badge on the scan card for a free account that still has free scans. */

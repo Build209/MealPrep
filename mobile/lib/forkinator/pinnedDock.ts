@@ -10,6 +10,8 @@ export const FORKINATOR_PINNED_HEIGHT_PX = 72;
 /** From the left edge of the app column and the top of the bar (the bar is 64px tall). */
 export const FORKINATOR_PINNED_LEFT_PX = 16;
 export const FORKINATOR_PINNED_TOP_PX = 5;
+/** Height of the tab screens' top bar. His feet hang below it; nothing else of his may. */
+export const APP_TOP_BAR_HEIGHT_PX = 64;
 /** The app's content column is centred and never wider than this (Tailwind `max-w-lg`). */
 export const APP_COLUMN_MAX_WIDTH_PX = 512;
 /** A cloud folds away by itself after this long; the think bubbles stay as a "tap me" hint. */
@@ -47,13 +49,17 @@ export function isForkinatorTabRoute(pathname: string): boolean {
 
 export type ForkinatorThinkDot = { left: number; top: number; size: number };
 
-/** Two small bubbles rising from Forky's feet toward the page: "I have something, tap me". */
+/**
+ * Two small bubbles beside Forky: "I have something, tap me". They sit in the bottom corner of
+ * the top bar, under the wordmark, and never below the bar: the page scrolls underneath it, so
+ * a bubble hanging lower would float over recipe text.
+ */
 export function forkinatorThinkDots(position: { x: number; y: number }): ForkinatorThinkDot[] {
   const right = position.x + FORKINATOR_PINNED_WIDTH_PX;
-  const feet = position.y + FORKINATOR_PINNED_HEIGHT_PX;
+  const barBottom = position.y - FORKINATOR_PINNED_TOP_PX + APP_TOP_BAR_HEIGHT_PX;
   return [
-    { left: right + 1, top: feet - 9, size: 7 },
-    { left: right + 10, top: feet - 2, size: 10 },
+    { left: right + 1, top: barBottom - 18, size: 7 },
+    { left: right + 9, top: barBottom - 12, size: 10 },
   ];
 }
 

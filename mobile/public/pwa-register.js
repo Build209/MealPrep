@@ -25,16 +25,34 @@
 
   function showUpdateBanner(onTap) {
     if (document.getElementById(UPDATE_BANNER_ID)) return;
+    // A small pill, centred above the tab bar, with its own close button: the full-width bar
+    // sat on top of whatever the page said at the bottom (seen over the import message on Home).
+    // Closing it only puts the notice away; the update is offered again when the app is reopened.
     var bar = document.createElement('div');
     bar.id = UPDATE_BANNER_ID;
     bar.setAttribute('role', 'status');
     bar.style.cssText =
-      'position:fixed;left:12px;right:12px;bottom:72px;z-index:10000;padding:10px 14px;border-radius:12px;background:#1B1F3B;color:#fff;font:600 13px/1.35 system-ui,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,0.18);cursor:pointer;text-align:center;';
-    bar.textContent = 'Update ready — tap to reload';
-    bar.addEventListener('click', function () {
+      'position:fixed;left:50%;transform:translateX(-50%);bottom:76px;z-index:10000;display:flex;align-items:center;max-width:calc(100% - 24px);border-radius:999px;background:#1B1F3B;color:#fff;font:600 13px/1.35 system-ui,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,0.18);white-space:nowrap;';
+    var reload = document.createElement('button');
+    reload.type = 'button';
+    reload.textContent = 'Update ready — tap to reload';
+    reload.style.cssText =
+      'all:unset;cursor:pointer;min-height:44px;display:flex;align-items:center;padding:0 6px 0 16px;';
+    reload.addEventListener('click', function () {
       hideUpdateBanner();
       onTap();
     });
+    var close = document.createElement('button');
+    close.type = 'button';
+    close.setAttribute('aria-label', 'Hide this notice');
+    close.textContent = '\u00d7';
+    close.style.cssText =
+      'all:unset;cursor:pointer;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;font-size:20px;line-height:1;';
+    close.addEventListener('click', function () {
+      hideUpdateBanner();
+    });
+    bar.appendChild(reload);
+    bar.appendChild(close);
     document.body.appendChild(bar);
   }
 
