@@ -204,7 +204,12 @@ assert.match(screen, /<PantryShelves[\s\S]{0,200}onPressItem=\{openEditModal\}/,
 assert.match(screen, /<PantryFilteredItemList/, 'the list view is still there');
 assert.match(screen, /writeJson\(PANTRY_VIEW_MODE_STORAGE_KEY, next\)/, 'the view choice is remembered');
 assert.match(screen, /scanCardsShown = scanControlsVisible && \(!scanCardsFolded \|\| scanPanelOpen \|\| tutorial\.active\)/, 'the scan cards stay reachable: empty pantry, list view, camera button, and during the tour');
-assert.match(screen, /if \(viewMode === 'shelves'\) selectLocationFilter\(inferredLocation\)/, 'a hand-added item is shown on its shelf');
+assert.match(screen, /if \(viewMode === 'shelves'\) selectLocationFilter\(manualLocation\)/, 'a hand-added item is shown on its shelf');
+// Add sheet: what is saved is what the chips show. They follow the typed name until the user picks by hand.
+assert.match(screen, /onChangeText=\{handleManualNameChange\}/, 'typing a name updates the sheet');
+assert.match(screen, /if \(formError\) setFormError\(null\);/, 'typing clears the "Enter an item name." error');
+assert.match(screen, /if \(!manualCategoryPicked\) setManualCategory\(category\);/, 'the category chip follows the name');
+assert.match(screen, /category: manualCategory,\s*location: manualLocation,\s*expiresOn: manualExpiresOn,\s*\}\);\s*\/\/ Shelves show one place/, 'a new item is saved with the category and place shown');
 
 // Scanning sells Plus: with the cards folded away, a labelled Scan button sits beside Add item.
 // Owner, 2026-10-10: it is a plain button that goes straight to the photo, not a drop-down.
