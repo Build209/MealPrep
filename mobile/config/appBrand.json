@@ -3,12 +3,14 @@
   "shortName": "MealPlanatic",
   "pwaDescription": "Plan meals, use your pantry, and shop smarter.",
   "colors": {
-    "brandCream": "#FCF8EC",
+    "brandCream": "#F3F5F7",
     "themePrimaryDark": "#163A26",
     "iconBackground": "#1F4D33",
     "iconSticker": "#FFD12E",
-    "iconStickerRing": "#FFFFFF"
+    "iconStickerRing": "#FFFFFF",
+    "logoInk": "#1B1F3B"
   },
+  "displayFont": "public/fonts/BagelFatOne-Latin.ttf",
   "sourceMascot": "assets/brand/forkinator-mascot.png",
   "sourceLogo": "assets/brand/mealplanatic-logo-lockup.png",
   "iconMascot": { "left": 0.196, "top": 0.05, "width": 0.608 },

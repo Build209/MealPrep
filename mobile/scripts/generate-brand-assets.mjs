@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 /**
- * Generates Expo / Android / in-app brand assets from the two source images in
- * assets/brand/: the fork mascot cut-out and the "fork + MealPlanatic" logo.
+ * Generates Expo / Android / in-app brand assets from the fork mascot cut-out in assets/brand/.
+ * The logo is composed here: the app icon tile (Forky on a banana sticker, on green) followed by
+ * the name set in the display face (owner's choice, 2026-10-11). The older drawn lockup in
+ * assets/brand/ is kept as a source file but no longer used.
  * Paths, colors and the mascot's placement on the icon are in config/appBrand.json.
  */
 import fs from 'node:fs';
@@ -15,8 +17,8 @@ const brandPath = path.join(mobileRoot, 'config', 'appBrand.json');
 const brand = JSON.parse(fs.readFileSync(brandPath, 'utf8'));
 
 const mascotPath = path.join(mobileRoot, brand.sourceMascot);
-const logoPath = path.join(mobileRoot, brand.sourceLogo);
-for (const source of [mascotPath, logoPath]) {
+const displayFontPath = path.join(mobileRoot, brand.displayFont);
+for (const source of [mascotPath, displayFontPath]) {
   if (!fs.existsSync(source)) {
     throw new Error(`Missing brand source image: ${source}`);
   }
@@ -114,7 +116,37 @@ async function roundedCorners(buffer, size, radiusRatio) {
     .toBuffer();
 }
 
-/** Logo with name on brand cream, with a margin around it. */
+/** The logo: rounded icon tile, then the app name in the display face, on a transparent strip. */
+async function logoLockup(iconBuffer) {
+  const tileSize = 440;
+  const gap = 44;
+  const tile = await roundedCorners(iconBuffer, tileSize, 0.22);
+  const word = await sharp({
+    text: {
+      text: `<span foreground="${brand.colors.logoInk}">${brand.name}</span>`,
+      font: 'Bagel Fat One',
+      fontfile: displayFontPath,
+      width: 1400,
+      height: 210,
+      rgba: true,
+    },
+  })
+    .png()
+    .toBuffer();
+  const trimmed = await sharp(word).trim().png().toBuffer();
+  const wordMeta = await sharp(trimmed).metadata();
+  return sharp({
+    create: { width: tileSize + gap + wordMeta.width, height: tileSize, channels: 4, background: TRANSPARENT },
+  })
+    .composite([
+      { input: tile, left: 0, top: 0 },
+      { input: trimmed, left: tileSize + gap, top: Math.round((tileSize - wordMeta.height) / 2) },
+    ])
+    .png()
+    .toBuffer();
+}
+
+/** Logo with name on the app's ground colour, with a margin around it. */
 async function logoOnCream(logoBuffer, marginRatio = 0.08) {
   const meta = await sharp(logoBuffer).metadata();
   const margin = Math.round(meta.width * marginRatio);
@@ -157,7 +189,7 @@ async function main() {
 
   const favicon = await roundedCorners(icon1024, 48, 0.22);
 
-  const logoTransparent = await sharp(logoPath).resize({ width: 1040 }).png().toBuffer();
+  const logoTransparent = await sharp(await logoLockup(icon1024)).resize({ width: 1040 }).png().toBuffer();
   const logoFull = await logoOnCream(logoTransparent);
 
   const writes = [
@@ -180,7 +212,7 @@ async function main() {
     console.log('wrote', relative);
   }
 
-  console.log('Brand assets generated from', brand.sourceMascot, 'and', brand.sourceLogo);
+  console.log('Brand assets generated from', brand.sourceMascot, 'and', brand.displayFont);
 }
 
 main().catch((err) => {
