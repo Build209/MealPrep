@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { GuestSaveNudge } from '../../components/GuestSaveNudge';
 import { InstallAppBanner } from '../../components/InstallAppBanner';
+import { WeeklyRecapCard } from '../../components/home/WeeklyRecapCard';
 import { CookConfirmBanner } from '../../components/home/CookConfirmBanner';
 import { HomeRecipesRefreshButton } from '../../components/home/HomeRecipesRefreshButton';
 import { HomePantryCta } from '../../components/home/HomePantryCta';
@@ -1043,6 +1044,7 @@ export default function HomeScreen() {
       {showHomePantryCta ? <HomePantryCta /> : null}
       <InstallAppBanner className="mt-4" />
       <GuestSaveNudge />
+      <WeeklyRecapCard />
       {cookConfirmPrompt ? (
         <CookConfirmBanner
           title={cookConfirmPrompt.title}
