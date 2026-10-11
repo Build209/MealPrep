@@ -33,8 +33,13 @@ export const PLUS_UPGRADE_COPY = {
   heading: 'MealPlanatic Plus',
   benefit:
     'Scan your fridge, pantry and receipts with your camera, import recipes from links and videos, and ask Forky what to cook. A paid plan gives you more of each every month.',
+  /** Title of the full-screen offer now that it sells three plans. New wording: compliance to confirm. */
+  screenTitle: 'Pick a plan',
   tierChoiceLabel: 'Choose a plan',
   intervalChoiceLabel: 'Pay monthly or yearly',
+  intervalLabels: { year: 'Pay yearly', month: 'Pay monthly' },
+  /** Lead-in to the free plan's own limits. New wording: compliance to confirm. */
+  freePlanLead: 'Free stays free:',
   close: 'Close',
   termsLinkLabel: 'See Terms.',
   notNow: 'Not now',
