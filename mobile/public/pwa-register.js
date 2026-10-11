@@ -29,7 +29,7 @@
     bar.id = UPDATE_BANNER_ID;
     bar.setAttribute('role', 'status');
     bar.style.cssText =
-      'position:fixed;left:12px;right:12px;bottom:72px;z-index:10000;padding:10px 14px;border-radius:12px;background:#1e3a2f;color:#fff;font:600 13px/1.35 system-ui,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,0.18);cursor:pointer;text-align:center;';
+      'position:fixed;left:12px;right:12px;bottom:72px;z-index:10000;padding:10px 14px;border-radius:12px;background:#1B1F3B;color:#fff;font:600 13px/1.35 system-ui,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,0.18);cursor:pointer;text-align:center;';
     bar.textContent = 'Update ready — tap to reload';
     bar.addEventListener('click', function () {
       hideUpdateBanner();

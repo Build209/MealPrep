@@ -84,7 +84,7 @@ import type { PantryScanReviewItem, PreparedPantryImage } from '../../lib/pantry
 import type { PantryScanKind } from '../../lib/pantryVision/client';
 import { useFreeScanAllowance } from '../../hooks/useFreeScanAllowance';
 import { freeScansUsedFromServer } from '../../lib/pantry/freeScanAllowance';
-import { hasPlusPhotoScanAccess, PLANS_COPY } from '../../config/plans';
+import { FREE_PHOTO_SCANS, hasPlusPhotoScanAccess, PLANS_COPY } from '../../config/plans';
 import {
   shouldBlockGuestPantryPhotoScan,
   shouldDeferPantryPhotoScanForAuth,
@@ -1144,9 +1144,16 @@ export default function PantryScreen() {
   /** "Plus" badge on the scan card: only for people the existing gate would not let scan (guest or free plan). */
   const scanAccessState = photoScanAccessState(photoScanAccess);
   const showScanPlusBadge = scanAccessState === 'guest_blocked' || scanAccessState === 'plan_blocked';
-  /** Free account with free scans left: the shelf card says so instead of "Plus". */
+  /**
+   * Free account with free scans left: the card says so instead of "Plus". A signed-out visitor
+   * sees the free plan's monthly allowance too, because a free account is all the scan needs.
+   */
   const freeScanBadge =
-    !isPlusForScans && freeScans.remaining > 0 ? PLANS_COPY.freeScansLeftBadge(freeScans.remaining) : undefined;
+    scanAccessState === 'guest_blocked'
+      ? PLANS_COPY.freeScansLeftBadge(FREE_PHOTO_SCANS)
+      : !isPlusForScans && freeScans.remaining > 0
+        ? PLANS_COPY.freeScansLeftBadge(freeScans.remaining)
+        : undefined;
   const receiptAccessState = photoScanAccessState(photoScanAccess);
   const showReceiptPlusBadge = receiptAccessState === 'guest_blocked' || receiptAccessState === 'plan_blocked';
 
@@ -1215,8 +1222,8 @@ export default function PantryScreen() {
                     {SHELF_VIEW_COPY.scanLabel}
                   </Text>
                   {showScanPlusBadge || freeScanBadge ? (
-                    <View className="shrink-0 rounded-[10px] bg-tomato px-2 py-0.5">
-                      <Text className="text-xs font-extrabold text-on-tomato">
+                    <View className={`shrink-0 rounded-[10px] px-2 py-0.5 ${freeScanBadge ? 'bg-ink' : 'bg-tomato'}`}>
+                      <Text className={`text-xs font-extrabold ${freeScanBadge ? 'text-banana' : 'text-on-tomato'}`}>
                         {freeScanBadge ?? PANTRY_SCAN_UI_COPY.scanCardPlusBadge}
                       </Text>
                     </View>
