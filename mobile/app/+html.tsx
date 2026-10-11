@@ -35,6 +35,9 @@ export default function Root({ children }: { children: React.ReactNode }) {
     <html lang="en" suppressHydrationWarning {...htmlAttributes}>
       <head>
         <meta charSet="utf-8" />
+        {/* Without a title the browser tab, history, bookmarks and shared links showed a bare address. */}
+        <title>{`${APP_BRAND.name}: pantry, grocery list and recipes`}</title>
+        <meta name="description" content={APP_BRAND.pwaDescription} />
         <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
         <meta
           name="viewport"

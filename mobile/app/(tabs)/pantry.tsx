@@ -237,6 +237,9 @@ export default function PantryScreen() {
   const [manualUnit, setManualUnit] = useState('each');
   const [manualCategory, setManualCategory] = useState<PantryCategory>('produce');
   const [manualLocation, setManualLocation] = useState<PantryStorageLocation>(DEFAULT_PANTRY_STORAGE_LOCATION);
+  // Add sheet only: once the user picks a category or a storage place by hand, typing no longer changes it.
+  const [manualCategoryPicked, setManualCategoryPicked] = useState(false);
+  const [manualLocationPicked, setManualLocationPicked] = useState(false);
   const [confirmAction, setConfirmAction] = useState<PantryConfirmAction | null>(null);
   const [confirmBusy, setConfirmBusy] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
@@ -944,8 +947,26 @@ export default function PantryScreen() {
     setManualUnit('each');
     setManualCategory('produce');
     setManualLocation(suggestStorageLocationForCategory('produce'));
+    setManualCategoryPicked(false);
+    setManualLocationPicked(false);
     setManualExpiresOn(null);
     setManualExpiryInputOpen(false);
+  }
+
+  /**
+   * Typing a name in the Add sheet. Clears the "Enter an item name." error (it used to stay up
+   * after a name was typed) and, for a new item, moves the Category and Storage chips to where
+   * the name suggests, so the sheet shows what will be saved. A choice made by hand is kept.
+   */
+  function handleManualNameChange(text: string) {
+    setManualName(text);
+    if (formError) setFormError(null);
+    if (editItem) return;
+    const trimmed = text.trim();
+    if (!trimmed) return;
+    const category = manualCategoryPicked ? manualCategory : inferGroceryCategoryFromName(trimmed);
+    if (!manualCategoryPicked) setManualCategory(category);
+    if (!manualLocationPicked) setManualLocation(suggestStorageLocationForPantryItem(trimmed, category));
   }
 
   function openAddModal() {
@@ -1013,18 +1034,19 @@ export default function PantryScreen() {
         });
       } else {
         const trimmedName = manualName.trim();
-        const inferredCategory = inferGroceryCategoryFromName(trimmedName);
-        const inferredLocation = suggestStorageLocationForPantryItem(trimmedName, inferredCategory);
+        // The chips follow the name as it is typed (handleManualNameChange) and can be changed by
+        // hand, so what is saved is what the sheet shows. Before, the chips were ignored here and
+        // the item was filed by its name alone, whatever the user had picked.
         await addManualPantryItem({
           name: trimmedName,
           quantity: qty,
           unit: manualUnit.trim() || 'each',
-          category: inferredCategory,
-          location: inferredLocation,
+          category: manualCategory,
+          location: manualLocation,
           expiresOn: manualExpiresOn,
         });
         // Shelves show one place at a time: go to where the new item landed so it is seen.
-        if (viewMode === 'shelves') selectLocationFilter(inferredLocation);
+        if (viewMode === 'shelves') selectLocationFilter(manualLocation);
       }
       closeManualModal();
     } catch (error) {
@@ -1506,8 +1528,9 @@ export default function PantryScreen() {
             <Text className="text-[19px] font-extrabold text-ink">{editItem ? 'Edit item' : 'Add item'}</Text>
             <TextInput
               value={manualName}
-              onChangeText={setManualName}
+              onChangeText={handleManualNameChange}
               placeholder="Item name"
+              accessibilityLabel="Item name"
               placeholderTextColor={THEME.muted}
               className="mt-4 rounded-xl border border-border bg-card px-4 py-3 text-base text-ink"
             />
@@ -1517,6 +1540,7 @@ export default function PantryScreen() {
                 onChangeText={setManualQty}
                 keyboardType="decimal-pad"
                 placeholder="Qty"
+                accessibilityLabel="Quantity"
                 placeholderTextColor={THEME.muted}
                 className="w-24 rounded-xl border border-border bg-card px-4 py-3 text-base text-ink"
               />
@@ -1524,6 +1548,7 @@ export default function PantryScreen() {
                 value={manualUnit}
                 onChangeText={setManualUnit}
                 placeholder="Unit"
+                accessibilityLabel="Unit"
                 placeholderTextColor={THEME.muted}
                 className="flex-1 rounded-xl border border-border bg-card px-4 py-3 text-base text-ink"
               />
@@ -1537,10 +1562,13 @@ export default function PantryScreen() {
                     key={cat}
                     onPress={() => {
                       setManualCategory(cat);
-                      if (!editItem) {
+                      setManualCategoryPicked(true);
+                      if (!editItem && !manualLocationPicked) {
                         setManualLocation(suggestStorageLocationForCategory(cat));
                       }
                     }}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected }}
                     className={`mr-2 min-h-[44px] items-center justify-center rounded-full px-4 ${selected ? 'bg-primary' : 'border border-border bg-card'}`}
                   >
                     <Text className={`text-sm font-semibold ${selected ? 'text-cream' : 'text-ink'}`}>
@@ -1553,7 +1581,10 @@ export default function PantryScreen() {
             <View className="mt-4">
               <PantryStorageLocationChips
                 selected={manualLocation}
-                onSelect={setManualLocation}
+                onSelect={(location) => {
+                  setManualLocation(location);
+                  setManualLocationPicked(true);
+                }}
               />
             </View>
             <Text className="mt-4 text-xs font-bold uppercase tracking-wide text-muted">Expiration</Text>
@@ -1568,6 +1599,8 @@ export default function PantryScreen() {
                       setManualExpiresOn(target);
                       setManualExpiryInputOpen(false);
                     }}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected }}
                     className={`min-h-[44px] items-center justify-center rounded-full px-4 ${selected ? 'bg-primary' : 'border border-border bg-card'}`}
                   >
                     <Text className={`text-sm font-semibold ${selected ? 'text-cream' : 'text-ink'}`}>
@@ -1578,6 +1611,8 @@ export default function PantryScreen() {
               })}
               <Pressable
                 onPress={() => setManualExpiryInputOpen((open) => !open)}
+                accessibilityRole="button"
+                accessibilityState={{ selected: manualExpiryInputOpen }}
                 className={`min-h-[44px] items-center justify-center rounded-full px-4 ${manualExpiryInputOpen ? 'bg-primary' : 'border border-border bg-card'}`}
               >
                 <Text
@@ -1591,6 +1626,8 @@ export default function PantryScreen() {
                   setManualExpiresOn(null);
                   setManualExpiryInputOpen(false);
                 }}
+                accessibilityRole="button"
+                accessibilityState={{ selected: manualExpiresOn === null }}
                 className={`min-h-[44px] items-center justify-center rounded-full px-4 ${manualExpiresOn === null ? 'bg-primary' : 'border border-border bg-card'}`}
               >
                 <Text
@@ -1628,6 +1665,7 @@ export default function PantryScreen() {
                 </Pressable>
                 <Pressable
                   onPress={requestDeleteItem}
+                  accessibilityRole="button"
                   className="mt-3 min-h-[44px] items-center justify-center rounded-full border border-danger/30 px-4"
                 >
                   <Text className="text-center font-bold text-danger">Delete item</Text>
@@ -1637,12 +1675,14 @@ export default function PantryScreen() {
             <View className="mt-6 flex-row gap-2">
               <Pressable
                 onPress={closeManualModal}
+                accessibilityRole="button"
                 className="min-h-[44px] flex-1 items-center justify-center rounded-full border border-border bg-card px-4"
               >
                 <Text className="text-center font-bold text-ink">Cancel</Text>
               </Pressable>
               <Pressable
                 onPress={() => void submitManualForm()}
+                accessibilityRole="button"
                 className="min-h-[44px] flex-1 items-center justify-center rounded-full bg-primary px-4"
               >
                 <Text className="text-center font-bold text-cream">{editItem ? 'Save changes' : 'Add to pantry'}</Text>

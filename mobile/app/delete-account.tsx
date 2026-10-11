@@ -59,7 +59,13 @@ export default function DeleteAccountScreen() {
   return (
     <View className="flex-1 bg-paper" style={{ paddingTop: insets.top + 8, paddingBottom: insets.bottom + 16 }}>
       <ScrollView className="px-5" contentContainerStyle={{ paddingBottom: 32 }}>
-        <Pressable onPress={() => router.replace('/')} hitSlop={12} className="mb-4 self-start">
+        <Pressable
+          onPress={() => router.replace('/')}
+          hitSlop={12}
+          accessibilityRole="link"
+          accessibilityLabel="Back to Home"
+          className="mb-4 min-h-[44px] justify-center self-start"
+        >
           <Text className="text-sm font-bold text-primary">← Home</Text>
         </Pressable>
 
@@ -89,12 +95,14 @@ export default function DeleteAccountScreen() {
             <Pressable
               disabled={busy}
               onPress={confirmDelete}
+              accessibilityRole="button"
               className={`mt-4 rounded-xl border border-danger/50 px-4 py-3 ${busy ? 'opacity-60' : ''}`}
             >
               <Text className="text-center font-bold text-danger">{ACCOUNT_SHEET_COPY.deleteAccount}</Text>
             </Pressable>
             <Pressable
               onPress={() => void signOut()}
+              accessibilityRole="button"
               className="mt-3 rounded-xl border border-border px-4 py-3"
             >
               <Text className="text-center font-bold text-slate">{ACCOUNT_SHEET_COPY.signOut}</Text>
@@ -105,6 +113,7 @@ export default function DeleteAccountScreen() {
             <Text className="text-sm leading-5 text-muted">Sign in to delete your account from this page.</Text>
             <Pressable
               onPress={openAuthSheet}
+              accessibilityRole="button"
               className="mt-4 items-center rounded-full bg-primary px-4 py-3"
             >
               <Text className="font-bold text-on-primary">Sign in</Text>
@@ -122,7 +131,11 @@ export default function DeleteAccountScreen() {
           from the address on your account and we will process your request.
         </Text>
 
-        <Pressable className="mt-6" onPress={() => void Linking.openURL(githubPagesLegalUrl('privacy'))}>
+        <Pressable
+          className="mt-6 min-h-[44px] justify-center self-start"
+          accessibilityRole="link"
+          onPress={() => void Linking.openURL(githubPagesLegalUrl('privacy'))}
+        >
           <Text className="text-sm font-bold text-primary">Privacy Policy</Text>
         </Pressable>
       </ScrollView>

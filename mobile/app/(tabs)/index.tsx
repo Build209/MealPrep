@@ -1105,22 +1105,6 @@ export default function HomeScreen() {
           creatorFeedEnabled ? 'text-base text-muted' : undefined
         }
       >
-        {selectedCreator ? (
-          <Pressable
-            onPress={() => setSelectedCreator(null)}
-            className="mt-1 min-h-[44px] justify-center self-start"
-            accessibilityRole="button"
-            accessibilityLabel="Back to all creators"
-          >
-            <Text className="text-sm font-bold text-primary">← All creators</Text>
-          </Pressable>
-        ) : null}
-        {activeCreator && selectedCreator ? (
-          <Text className="mb-2 text-[15px] font-bold text-ink">{activeCreator.displayName}</Text>
-        ) : null}
-        {activeCreator && selectedCreator && activeCreatorWebsite ? (
-          <CreatorRecipeWebsiteLink website={activeCreatorWebsite} />
-        ) : null}
         <RecipeImportFromShareParams
           url={typeof params.url === 'string' ? params.url : undefined}
           text={typeof params.text === 'string' ? params.text : undefined}
@@ -1367,7 +1351,27 @@ export default function HomeScreen() {
                     )
                   }
                 />
-              ) : null
+              ) : (
+                // The chosen creator's name and the way back sit with the creator's videos.
+                // They used to be drawn inside the import card at the top of Home, out of sight
+                // once the screen had scrolled down to the videos.
+                <View>
+                  <Pressable
+                    onPress={() => setSelectedCreator(null)}
+                    className="min-h-[44px] justify-center self-start"
+                    accessibilityRole="button"
+                    accessibilityLabel="Back to all creators"
+                  >
+                    <Text className="text-sm font-bold text-primary">← All creators</Text>
+                  </Pressable>
+                  {activeCreator ? (
+                    <Text className="mb-2 text-[15px] font-bold text-ink">{activeCreator.displayName}</Text>
+                  ) : null}
+                  {activeCreator && activeCreatorWebsite ? (
+                    <CreatorRecipeWebsiteLink website={activeCreatorWebsite} />
+                  ) : null}
+                </View>
+              )
             }
           >
             {!selectedCreator ? (

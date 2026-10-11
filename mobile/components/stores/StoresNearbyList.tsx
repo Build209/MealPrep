@@ -89,8 +89,10 @@ function StoreCard({
 export function StoresNearbyList({ stores, localStores = [], searching = false, onSelectStore }: Props) {
   const [showLocal, setShowLocal] = useState(false);
 
+  // The Stores tab prints its own "no match" / "no stores nearby" line; printing one here too
+  // showed "No stores match your search." twice.
   if (stores.length === 0 && localStores.length === 0) {
-    return <Text className="mt-3.5 text-sm text-muted">{STORES_TAB_COPY.emptySearch}</Text>;
+    return null;
   }
 
   // With no recognised store to lead with, hiding everything behind a button would look like an empty list.

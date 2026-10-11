@@ -65,7 +65,7 @@ const saveMartPage = resolveStorePageUrl(oakdaleSaveMart);
 assert(saveMartPage.includes('google.com/maps'), 'save mart without store website uses Maps');
 
 const weekly = resolveWeeklyAdLink(oakdaleSaveMart);
-assert(weekly?.url.includes('weekly-ad'), 'save mart weekly ad');
+assert(weekly?.url.includes('flyers'), 'save mart weekly ad');
 
 const osmOnly: StoreLocation = {
   ...oakdaleSaveMart,

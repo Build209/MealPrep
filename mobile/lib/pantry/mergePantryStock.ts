@@ -6,6 +6,7 @@ import {
   normalizeIngredientName,
 } from '../recipeMatch/ingredientNormalize';
 import { convertIngredientQuantity, ingredientUnitsConvertible } from '../units/ingredientUnitBridge';
+import { isPersistedRowUuid } from './persistIds';
 
 function roundQty(value: number): number {
   return Math.round(value * 100) / 100;
@@ -68,20 +69,69 @@ export interface MergePantryStockResult {
  * (specific satisfies generic; generic does not satisfy specific).
  */
 /**
- * After a signed-in kitchen fetch, server rows win. Keep only local rows that are
- * not on the server yet (optimistic inserts during load), never sum quantities.
+ * After a signed-in kitchen fetch, server rows win. The only local rows kept are ones the server
+ * has never seen: rows still carrying a local id ("manual-…", "scan-…") and rows named in
+ * `pendingIds` (a save in flight under an id the client chose). Quantities are never summed.
+ *
+ * A local row with a saved (uuid) id that the server no longer returns was deleted, here or on
+ * another device. It must not come back: the copy of the kitchen kept on the device used to
+ * bring a cleared pantry back to life on the next open.
  */
 export function reconcilePantryAfterServerLoad(
   serverPantry: PantryItem[],
   previousLocal: PantryItem[],
+  options?: { pendingIds?: ReadonlySet<string> },
 ): PantryItem[] {
   const serverIds = new Set(serverPantry.map((row) => row.id));
   const pendingLocalOnly = previousLocal.filter((row) => {
     if (serverIds.has(row.id)) return false;
+    if (isPersistedRowUuid(row.id) && !options?.pendingIds?.has(row.id)) return false;
     if (serverPantry.some((serverRow) => pantryItemsMatch(serverRow, row))) return false;
     return true;
   });
   return [...serverPantry, ...pendingLocalOnly];
+}
+
+/**
+ * What to send to the server to turn the saved pantry `before` into `after`, comparing rows by
+ * id: rows only in `after` are inserts, rows in both whose stock changed are updates, rows only
+ * in `before` are deletes. One computation feeds both the screen and the server, so the two can
+ * never disagree about which row is which.
+ */
+export function diffPantryForServer(
+  before: readonly PantryItem[],
+  after: readonly PantryItem[],
+): { inserted: PantryItem[]; updated: PantryItem[]; removedIds: string[] } {
+  const beforeById = new Map(before.map((row) => [row.id, row]));
+  const afterIds = new Set(after.map((row) => row.id));
+  const inserted: PantryItem[] = [];
+  const updated: PantryItem[] = [];
+  for (const row of after) {
+    const prior = beforeById.get(row.id);
+    if (!prior) {
+      inserted.push(row);
+      continue;
+    }
+    if (
+      prior.quantity !== row.quantity ||
+      prior.unit !== row.unit ||
+      prior.name !== row.name ||
+      prior.location !== row.location ||
+      prior.category !== row.category ||
+      (prior.expiresOn ?? null) !== (row.expiresOn ?? null)
+    ) {
+      updated.push(row);
+    }
+  }
+  const removedIds = before.filter((row) => !afterIds.has(row.id)).map((row) => row.id);
+  return { inserted, updated, removedIds };
+}
+
+/** Swap rows for their saved copies (same id), keeping every other row and the order. */
+export function replacePantryRowsById(pantry: PantryItem[], saved: readonly PantryItem[]): PantryItem[] {
+  if (saved.length === 0) return pantry;
+  const savedById = new Map(saved.map((row) => [row.id, row]));
+  return pantry.map((row) => savedById.get(row.id) ?? row);
 }
 
 export function mergePantryStock(
