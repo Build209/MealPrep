@@ -4,6 +4,7 @@ import { LEGAL_LINKS } from '../../config/account';
 import { PLUS_INTERVAL_ORDER, PLUS_UPGRADE_COPY, type BillingInterval } from '../../config/pricing';
 import { useApp } from '../../context/AppContext';
 import { BillingError, startPlusCheckout } from '../../lib/billing/client';
+import { flushUsageLog, logUsageEvent } from '../../lib/usage/usageLog';
 import { plusPriceLabel, plusRenewalDisclosure, plusSubscribeLabel } from '../../lib/billing/pricing';
 
 type Props = {
@@ -65,6 +66,9 @@ export function PlusUpgradeOptions({ onNotNow }: Props) {
     setBusy(true);
     setError(null);
     try {
+      // Sent straight away: the browser is about to leave for Stripe.
+      logUsageEvent('checkout_started', { plan: interval });
+      void flushUsageLog();
       await startPlusCheckout(interval);
       // On success the browser leaves for Stripe; keep the button disabled meanwhile.
     } catch (err) {

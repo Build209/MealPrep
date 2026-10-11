@@ -76,6 +76,7 @@ import {
   subscribePantryExpiringHighlight,
 } from '../../lib/pantry/openExpiringHighlightRequest';
 import { readJson, writeJson } from '../../lib/storage';
+import { logUsageEvent } from '../../lib/usage/usageLog';
 import { logPantryScanFailure } from '../../lib/pantryVision/scanLog';
 import { PantryImageQualityError } from '../../lib/pantryVision/prepareImageShared';
 import type { PantryScanReviewItem, PreparedPantryImage } from '../../lib/pantryVision/types';
@@ -896,6 +897,10 @@ export default function PantryScreen() {
         scanPhotoPath = await pantryScanUploadRef.current;
       }
       await savePantryScanReview(reviewItems, scanPhotoPath, scanLocationHint);
+      logUsageEvent('scan_saved', {
+        kind: reviewHasReceiptRef.current ? 'receipt' : 'shelf',
+        count: reviewItems.length,
+      });
       if (reviewHasReceiptRef.current) {
         // What was bought is now in the pantry, so the matching grocery rows are done.
         const { groceryIdsBoughtOnReceipt } = await import('../../lib/pantryVision/reviewItems');

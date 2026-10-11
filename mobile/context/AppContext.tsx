@@ -194,6 +194,8 @@ import { mergeGuestKitchenIntoAccount } from '../lib/guest/mergeGuestKitchen';
 import { clearGuestSavedRecipes, readGuestSavedRecipes } from '../lib/savedRecipes/localStore';
 import { mergeGuestSavedRecipesIntoAccount } from '../lib/savedRecipes/supabaseStore';
 import { readJson, removeStorageKey, writeJson } from '../lib/storage';
+import { groceryListJustCompleted } from '../lib/usage/usageEvents';
+import { logUsageEvent, setUsageLogAccount } from '../lib/usage/usageLog';
 import {
   readAccountKitchenCache,
   writeAccountKitchenCache,
@@ -639,6 +641,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const isAdmin = profile.role === 'admin';
   const maintenanceActive = featureFlags.maintenanceMode && !isAdmin;
   const isGuest = !demoMode && !userId;
+
+  // Usage log: signed-in accounts only (never guests or demo mode). See lib/usage.
+  useEffect(() => {
+    setUsageLogAccount(!demoMode && Boolean(sessionUserId));
+  }, [demoMode, sessionUserId]);
   const profileReady =
     demoMode || (authReady && (userId ? liveDataLoaded : guestKitchenHydrated));
   const ownerId = userId ?? (demoMode ? profile.id || 'demo-user' : GUEST_OWNER_ID);
@@ -1571,6 +1578,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         return 0;
       }
 
+      logUsageEvent('grocery_items_added', { source: 'recipe', count: missing.length });
       let addedCount = 0;
       const dismissals = readGroceryDismissals(ownerId);
       setGrocery((prev) => {
@@ -1856,6 +1864,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         }
       }
 
+      logUsageEvent('meal_made');
       if (pendingCook) {
         logCookEngagement(pendingCook, 'cook_confirmed');
         markCookPromptAsked(ownerId, pendingCook.key);
@@ -2090,6 +2099,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       if (!supabase || !userId) throw new Error('Sign in to save your meal plan.');
       const saved = await insertMealPlanItem(supabase, userId, normalized);
       setMealPlan((prev) => [saved, ...prev]);
+      logUsageEvent('meal_planned');
       if (
         userPreferences.autoAddMissingToGrocery &&
         recipeId &&
@@ -2340,6 +2350,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (willCheck && current) {
+        logUsageEvent('grocery_item_checked');
+        if (groceryListJustCompleted(grocery, [id])) {
+          logUsageEvent('grocery_list_completed', { count: grocery.length });
+        }
         void restockGroceriesToPantry([current]);
       } else if (willUncheck && current && userPreferences.addCheckedItemsToPantry) {
         // Unticking takes the stock back out, on the screen and on the server. (The server call
@@ -2384,6 +2398,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (nextChecked) {
+        logUsageEvent('grocery_item_checked', { count: toCheck.length });
+        if (groceryListJustCompleted(grocery, toCheck.map((item) => item.id))) {
+          logUsageEvent('grocery_list_completed', { count: grocery.length });
+        }
         void restockGroceriesToPantry(toCheck);
       } else if (userPreferences.addCheckedItemsToPantry) {
         let reversed = pantry;
@@ -2506,6 +2524,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           return null;
         }
         savedManualGroceryByLocalIdRef.current.set(item.id, saved);
+        logUsageEvent('grocery_items_added', { source: 'manual', count: 1 });
         return saved.id;
       } catch (error: unknown) {
         completeManualGroceryInsertTracking(pendingManualGroceryInsertsRef.current, item.id);
@@ -2866,6 +2885,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       expiresOn?: string | null;
     }) => {
       const item = buildManualPantryItem(input);
+      logUsageEvent('pantry_item_added');
       if (demoMode || isGuest) {
         setPantry((prev) => [item, ...prev]);
         return;
