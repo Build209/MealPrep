@@ -8,6 +8,10 @@ const AUTH_CARD_BLURB_WITH_MAGIC_LINK =
 
 const AUTH_CARD_BLURB_PASSWORD_ONLY = 'Sign in with your email and password.';
 
+/** Shown above the Create account button. The terms and privacy pages state the same age. */
+export const AUTH_MINIMUM_AGE = 18;
+export const AUTH_SIGN_UP_NOTE = `By creating an account you confirm you are ${AUTH_MINIMUM_AGE} or older and agree to the Terms and Privacy Policy.`;
+
 export const AUTH_MAGIC_LINK_COPY = {
   buttonLabel: 'Email magic link',
   successMessage: 'Magic link sent — check your email.',
