@@ -37,6 +37,8 @@ import { ingredientLinesFromRecipe } from '../../lib/diet/ingredientLines';
 import { isVideoRecipeDetailContext, VideoRecipeDetailView } from './VideoRecipeDetailView';
 import { RecipeCostPerServingForRecipe } from './RecipeCostPerServingForRecipe';
 import { UndoToastModalHost } from '../UndoToastHosts';
+import { CookDashboard } from '../cook/CookDashboard';
+import { COOK_COPY } from '../../config/cookCopy';
 
 export interface RecipeDetailSheetProps {
   visible: boolean;
@@ -180,6 +182,7 @@ function ClassicRecipeDetailBody({
 }) {
   const insets = useSafeAreaInsets();
   const [section, setSection] = useState<DetailSection>(initialDetailSection ?? 'ingredients');
+  const [cooking, setCooking] = useState(false);
 
   useEffect(() => {
     if (initialDetailSection) setSection(initialDetailSection);
@@ -201,6 +204,12 @@ function ClassicRecipeDetailBody({
     row.kind === 'kitchen' && (isMealDbRecipeId(row.recipe.id) || row.recipe.sourceType === 'themealdb');
 
   const missingCount = match?.missingCount ?? 0;
+
+  // Cook mode needs steps to follow; recipes without steps keep the plain page.
+  const canCook = kitchenRecipe.steps.length > 0;
+  if (cooking) {
+    return <CookDashboard recipe={kitchenRecipe} onClose={() => setCooking(false)} />;
+  }
 
   return (
     <View className="flex-1 bg-paper" style={{ paddingTop: insets.top }}>
@@ -225,7 +234,14 @@ function ClassicRecipeDetailBody({
 
       <ScrollView
         className="flex-1"
-        contentContainerStyle={{ paddingBottom: onToggleSaveRecipe ? 120 + insets.bottom : 40 }}
+        contentContainerStyle={{
+          paddingBottom:
+            canCook && onToggleSaveRecipe
+              ? 184 + insets.bottom
+              : canCook || onToggleSaveRecipe
+                ? 120 + insets.bottom
+                : 40,
+        }}
         keyboardShouldPersistTaps="handled"
       >
         <RecipeThumbnail
@@ -379,16 +395,29 @@ function ClassicRecipeDetailBody({
         </View>
       </ScrollView>
 
-      {onToggleSaveRecipe ? (
+      {canCook || onToggleSaveRecipe ? (
         <View
-          className="absolute bottom-0 left-0 right-0 border-t border-border bg-card px-4 pt-3"
+          className="absolute bottom-0 left-0 right-0 gap-2 border-t border-border bg-card px-4 pt-3"
           style={{ paddingBottom: Math.max(insets.bottom, 12) }}
         >
-          <RecipeSaveCta
-            saved={Boolean(recipeSaved)}
-            onToggle={onToggleSaveRecipe}
-            disabled={saveDisabled}
-          />
+          {canCook ? (
+            <Pressable
+              onPress={() => setCooking(true)}
+              accessibilityRole="button"
+              accessibilityLabel={COOK_COPY.startAccessibility}
+              className="min-h-[52px] flex-row items-center justify-center gap-2 rounded-2xl bg-primary-dark px-4"
+            >
+              <Ionicons name="play" size={20} color={THEME.onPrimary} />
+              <Text className="text-base font-bold text-on-primary">{COOK_COPY.startButton}</Text>
+            </Pressable>
+          ) : null}
+          {onToggleSaveRecipe ? (
+            <RecipeSaveCta
+              saved={Boolean(recipeSaved)}
+              onToggle={onToggleSaveRecipe}
+              disabled={saveDisabled}
+            />
+          ) : null}
         </View>
       ) : null}
     </View>
