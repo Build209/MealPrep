@@ -176,17 +176,32 @@ function newPantryRowId(): string {
   return `00000000-0000-4000-8000-${Math.random().toString(16).slice(2, 14)}${Math.random().toString(16).slice(2, 6)}`;
 }
 
+/**
+ * A grocery line's name as it should read in the pantry. Lines built from a recipe carry the
+ * recipe's cooking notes ("butter (for toasting buns)", "cooked white rice (cooled)"); the
+ * pantry holds the thing bought, so bracketed notes are dropped. Never returns an empty name.
+ */
+export function pantryNameFromGroceryName(name: string): string {
+  const cleaned = name
+    .replace(/\s*\([^)]*\)/g, ' ')
+    .replace(/\s+,/g, ',')
+    .replace(/\s{2,}/g, ' ')
+    .replace(/^[\s,;:-]+|[\s,;:-]+$/g, '');
+  return cleaned || name.trim();
+}
+
 export function groceryItemToPantryItem(item: GroceryListItem, now = new Date().toISOString()): PantryItem {
-  const slug = item.name.toLowerCase().replace(/\s+/g, '-');
+  const name = pantryNameFromGroceryName(item.name);
+  const slug = name.toLowerCase().replace(/\s+/g, '-');
   const category = item.category as PantryCategory;
   return {
     id: newPantryRowId(),
     ingredientId: `grocery-${slug}`,
-    name: item.name.trim(),
+    name,
     category,
     quantity: item.quantity,
     unit: item.unit.trim() || 'each',
-    location: suggestStorageLocationForPantryItem(item.name, category),
+    location: suggestStorageLocationForPantryItem(name, category),
     photoUri: null,
     expiresOn: null,
     updatedAt: now,

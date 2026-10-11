@@ -8,6 +8,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {
   diffPantryForServer,
+  groceryItemToPantryItem,
+  pantryNameFromGroceryName,
   reconcilePantryAfterServerLoad,
   replacePantryRowsById,
 } from '../lib/pantry/mergePantryStock';
@@ -92,6 +94,16 @@ assert.deepEqual(diffPantryForServer(ticked, unticked).removedIds, [toServer.ins
 const untickedRice = reverseGroceryCheckRestock(unticked, 'g1', ledger);
 assert.deepEqual(diffPantryForServer(unticked, untickedRice).updated.map((r) => r.quantity), [2]);
 assert.equal(reverseGroceryCheckRestock(untickedRice, 'g1', ledger), untickedRice, 'a second untick changes nothing');
+
+// --- A ticked grocery line reads like a thing you own, not a recipe step (testing T-18) ---
+assert.equal(pantryNameFromGroceryName('butter (for toasting buns)'), 'butter');
+assert.equal(pantryNameFromGroceryName('cooked white rice (cooled)'), 'cooked white rice');
+assert.equal(pantryNameFromGroceryName('Parmesan cheese (freshly grated for serving)'), 'Parmesan cheese');
+assert.equal(pantryNameFromGroceryName('garlic paste (or minced garlic)'), 'garlic paste');
+assert.equal(pantryNameFromGroceryName('flour tortillas (taco-sized), warmed'), 'flour tortillas, warmed');
+assert.equal(pantryNameFromGroceryName('  Olive oil  '), 'Olive oil');
+assert.equal(pantryNameFromGroceryName('(optional)'), '(optional)', 'never an empty name');
+assert.equal(groceryItemToPantryItem(groceryItem('g9', 'butter (for toasting buns)')).name, 'butter');
 
 // --- Wiring in the app context ---
 const context = fs.readFileSync(path.join(__dirname, '..', 'context/AppContext.tsx'), 'utf8').replace(/\r\n/g, '\n');

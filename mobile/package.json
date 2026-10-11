@@ -114,7 +114,7 @@
     "test:sheet-back": "npx tsx scripts/sheet-back-check.ts",
     "test:stable-row-order": "npx tsx scripts/stable-row-order-check.ts",
     "test:pantry-shelf-view": "npx tsx scripts/pantry-shelf-view-check.ts",
-    "test:auth-sheet": "npx tsx scripts/auth-sheet-check.ts",
+    "test:auth-sheet": "npx tsx scripts/auth-sheet-check.ts && npx tsx scripts/kroger-locations-dedupe-check.ts",
     "test:pantry-data-integrity": "npx tsx scripts/pantry-data-integrity-check.ts && npx tsx scripts/pantry-offline-manual-add-check.ts && npx tsx scripts/stores-tab-check.ts",
     "test:tutorial": "npx tsx scripts/tutorial-check.ts",
     "test:forky-pinned": "npx tsx scripts/forky-pinned-check.ts",
