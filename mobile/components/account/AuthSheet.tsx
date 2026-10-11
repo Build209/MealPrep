@@ -7,6 +7,7 @@ import { APP_BRAND } from '../../config/appBrand';
 import {
   AUTH_MAGIC_LINK_COPY,
   AUTH_MIN_PASSWORD_LENGTH,
+  AUTH_RESET_COPY,
   AUTH_RESULT_COPY,
   getAuthCardBlurb,
   isMagicLinkSignInEnabled,
@@ -22,8 +23,10 @@ type AuthSheetProps = {
 
 export function AuthSheet({ visible, onClose }: AuthSheetProps) {
   const insets = useSafeAreaInsets();
-  const { signInWithPassword, signUpWithPassword, signInWithMagicLink } = useApp();
+  const { signInWithPassword, signUpWithPassword, signInWithMagicLink, requestPasswordReset } = useApp();
   const [mode, setMode] = useState<'sign-in' | 'sign-up'>('sign-in');
+  /** Sign-in tab only: the "Forgot password?" form is showing instead of the password field. */
+  const [resetting, setResetting] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -58,6 +61,16 @@ export function AuthSheet({ visible, onClose }: AuthSheetProps) {
     } finally {
       setBusy(false);
     }
+  }
+
+  function submitReset() {
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail) {
+      setStatus(null);
+      setError(AUTH_RESET_COPY.missingEmail);
+      return;
+    }
+    void run(() => requestPasswordReset(trimmedEmail));
   }
 
   function submitPassword() {
@@ -112,6 +125,7 @@ export function AuthSheet({ visible, onClose }: AuthSheetProps) {
                   key={tab}
                   onPress={() => {
                     setMode(tab);
+                    setResetting(false);
                     clearMessages();
                   }}
                   accessibilityRole="button"
@@ -126,6 +140,14 @@ export function AuthSheet({ visible, onClose }: AuthSheetProps) {
                 </Pressable>
               ))}
             </View>
+            {resetting ? (
+              <View className="mt-4">
+                <Text className="text-base font-bold text-ink" accessibilityRole="header">
+                  {AUTH_RESET_COPY.title}
+                </Text>
+                <Text className="mt-1 text-sm leading-5 text-muted">{AUTH_RESET_COPY.blurb}</Text>
+              </View>
+            ) : null}
             {mode === 'sign-up' ? (
               <TextInput
                 value={name}
@@ -150,33 +172,72 @@ export function AuthSheet({ visible, onClose }: AuthSheetProps) {
               placeholder="Email"
               accessibilityLabel="Email"
             />
-            <TextInput
-              value={password}
-              onChangeText={(text) => {
-                setPassword(text);
-                clearMessages();
-              }}
-              secureTextEntry
-              autoCapitalize="none"
-              autoCorrect={false}
-              autoComplete={mode === 'sign-up' ? 'new-password' : 'current-password'}
-              onSubmitEditing={submitPassword}
-              className="mt-3 rounded-xl border border-border bg-card px-3 py-2 text-ink"
-              placeholder={mode === 'sign-up' ? 'Password (min 6 chars)' : 'Password'}
-              accessibilityLabel="Password"
-            />
-            <Pressable
-              disabled={busy}
-              onPress={submitPassword}
-              accessibilityRole="button"
-              accessibilityState={{ busy }}
-              className={`mt-4 min-h-[44px] justify-center rounded-xl px-4 py-3 ${busy ? 'opacity-60 bg-emerald' : 'bg-emerald'}`}
-            >
-              <Text className="text-center font-bold text-on-emerald">
-                {mode === 'sign-in' ? ACCOUNT_SHEET_COPY.signInTab : ACCOUNT_SHEET_COPY.signUpTab}
-              </Text>
-            </Pressable>
-            {magicLink ? (
+            {resetting ? (
+              <>
+                <Pressable
+                  disabled={busy}
+                  onPress={submitReset}
+                  accessibilityRole="button"
+                  accessibilityState={{ busy }}
+                  className={`mt-4 min-h-[44px] justify-center rounded-xl px-4 py-3 ${busy ? 'opacity-60 bg-emerald' : 'bg-emerald'}`}
+                >
+                  <Text className="text-center font-bold text-on-emerald">{AUTH_RESET_COPY.sendButton}</Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => {
+                    setResetting(false);
+                    clearMessages();
+                  }}
+                  accessibilityRole="button"
+                  className="mt-1 min-h-[44px] items-center justify-center"
+                >
+                  <Text className="text-sm font-bold text-primary">{AUTH_RESET_COPY.backToSignIn}</Text>
+                </Pressable>
+              </>
+            ) : (
+              <>
+                <TextInput
+                  value={password}
+                  onChangeText={(text) => {
+                    setPassword(text);
+                    clearMessages();
+                  }}
+                  secureTextEntry
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  autoComplete={mode === 'sign-up' ? 'new-password' : 'current-password'}
+                  onSubmitEditing={submitPassword}
+                  className="mt-3 rounded-xl border border-border bg-card px-3 py-2 text-ink"
+                  placeholder={mode === 'sign-up' ? 'Password (min 6 chars)' : 'Password'}
+                  accessibilityLabel="Password"
+                />
+                <Pressable
+                  disabled={busy}
+                  onPress={submitPassword}
+                  accessibilityRole="button"
+                  accessibilityState={{ busy }}
+                  className={`mt-4 min-h-[44px] justify-center rounded-xl px-4 py-3 ${busy ? 'opacity-60 bg-emerald' : 'bg-emerald'}`}
+                >
+                  <Text className="text-center font-bold text-on-emerald">
+                    {mode === 'sign-in' ? ACCOUNT_SHEET_COPY.signInTab : ACCOUNT_SHEET_COPY.signUpTab}
+                  </Text>
+                </Pressable>
+                {mode === 'sign-in' ? (
+                  <Pressable
+                    onPress={() => {
+                      setResetting(true);
+                      setPassword('');
+                      clearMessages();
+                    }}
+                    accessibilityRole="button"
+                    className="mt-1 min-h-[44px] items-center justify-center"
+                  >
+                    <Text className="text-sm font-bold text-primary">{AUTH_RESET_COPY.forgotLink}</Text>
+                  </Pressable>
+                ) : null}
+              </>
+            )}
+            {magicLink && !resetting ? (
               <Pressable
                 disabled={busy || !email.trim()}
                 onPress={() => void run(() => magicLink(email.trim()))}

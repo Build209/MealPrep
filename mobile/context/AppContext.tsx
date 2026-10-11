@@ -28,9 +28,10 @@ import {
   type PantryResortPreview,
 } from '../config/pantryStorage';
 import { DEFAULT_FEATURE_FLAGS, MOCK_PANTRY, MOCK_RECIPES, profileForRole } from '../data/mockData';
-import { getAuthRedirectUrl } from '../lib/authRedirect';
+import { getAuthRedirectUrl, openedFromPasswordResetLink } from '../lib/authRedirect';
 import {
   AUTH_MAGIC_LINK_COPY,
+  AUTH_RESET_COPY,
   AUTH_RESULT_COPY,
   authErrorMessage,
   type AuthActionResult,
@@ -381,6 +382,10 @@ interface AppContextValue {
   signInWithPassword: (email: string, password: string) => Promise<AuthActionResult>;
   signUpWithPassword: (email: string, password: string, name: string) => Promise<AuthActionResult>;
   signInWithMagicLink: (email: string) => Promise<AuthActionResult>;
+  /** Emails a link for choosing a new password. Answers the same whether or not the address has an account. */
+  requestPasswordReset: (email: string) => Promise<AuthActionResult>;
+  /** Sets a new password for the signed-in account (used after opening a reset link). */
+  updatePassword: (password: string) => Promise<AuthActionResult>;
   signOut: () => Promise<void>;
   pantry: PantryItem[];
   recipes: Recipe[];
@@ -520,6 +525,9 @@ interface AppContextValue {
   accountUi: {
     sheet: 'closed' | 'auth' | 'account';
     showPostSignupSetup: boolean;
+    /** True after a password reset link was opened: the "choose a new password" sheet is up. */
+    showPasswordRecovery: boolean;
+    dismissPasswordRecovery: () => void;
     openAuthSheet: () => void;
     openAccountSheet: () => void;
     closeSheet: () => void;
@@ -606,6 +614,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [liveAnalytics, setLiveAnalytics] = useState<UserAnalytics | null>(null);
   const [accountSheet, setAccountSheet] = useState<'closed' | 'auth' | 'account'>('closed');
   const [showPostSignupSetup, setShowPostSignupSetup] = useState(false);
+  const [showPasswordRecovery, setShowPasswordRecovery] = useState(false);
   const [demoProfilePatch, setDemoProfilePatch] = useState<Partial<UserProfile>>({});
   const [offlineKitchenUserId, setOfflineKitchenUserId] = useState<string | null>(null);
   const sessionUserId = session?.user.id ?? null;
@@ -982,6 +991,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }
       setSession(nextSession);
       setAuthReady(true);
+      // A password reset link signs the person in and announces itself with this event.
+      if (event === 'PASSWORD_RECOVERY' && nextSession?.user?.id) {
+        setShowPasswordRecovery(true);
+      }
       const email = nextSession?.user?.email;
       const id = nextSession?.user?.id;
       if (event === 'SIGNED_IN' && email && id && !isPostSignupSetupDone(id)) {
@@ -1364,6 +1377,62 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     },
     [supabase],
   );
+
+  const requestPasswordReset = useCallback(
+    async (email: string): Promise<AuthActionResult> => {
+      if (!supabase) return { ok: false, error: AUTH_RESULT_COPY.unavailable };
+      const trimmed = email.trim();
+      if (!trimmed) return { ok: false, error: AUTH_RESET_COPY.missingEmail };
+      try {
+        const { error } = await supabase.auth.resetPasswordForEmail(trimmed, {
+          redirectTo: getAuthRedirectUrl(),
+        });
+        if (error) return { ok: false, error: authErrorMessage(error.message) };
+        return { ok: true, notice: AUTH_RESET_COPY.sent };
+      } catch (error: unknown) {
+        return { ok: false, error: authErrorMessage(error instanceof Error ? error.message : '') };
+      }
+    },
+    [supabase],
+  );
+
+  const updatePassword = useCallback(
+    async (password: string): Promise<AuthActionResult> => {
+      if (!supabase) return { ok: false, error: AUTH_RESULT_COPY.unavailable };
+      try {
+        const { error } = await supabase.auth.updateUser({ password });
+        if (error) return { ok: false, error: authErrorMessage(error.message) };
+        setShowPasswordRecovery(false);
+        setUndoToast({ message: AUTH_RESET_COPY.saved, showUndo: false, onUndo: () => setUndoToast(null) });
+        return { ok: true };
+      } catch (error: unknown) {
+        return { ok: false, error: authErrorMessage(error instanceof Error ? error.message : '') };
+      }
+    },
+    [supabase],
+  );
+
+  const dismissPasswordRecovery = useCallback(() => setShowPasswordRecovery(false), []);
+
+  // The auth client's own announcement of a reset link can fire before this screen is listening.
+  // The address the app was opened with is the second witness: once sign-in from the link has
+  // settled, open the sheet; if the link was dead, say so and offer the sign-in sheet.
+  const passwordResetLinkHandledRef = useRef(false);
+  useEffect(() => {
+    if (demoMode || !authReady || passwordResetLinkHandledRef.current) return;
+    const opened = openedFromPasswordResetLink();
+    if (!opened) return;
+    if (opened === 'recovery') {
+      if (!sessionUserId) return;
+      passwordResetLinkHandledRef.current = true;
+      setShowPasswordRecovery(true);
+      return;
+    }
+    passwordResetLinkHandledRef.current = true;
+    if (sessionUserId) return;
+    setUndoToast({ message: AUTH_RESET_COPY.linkExpired, showUndo: false, onUndo: () => setUndoToast(null) });
+    setAccountSheet('auth');
+  }, [authReady, demoMode, sessionUserId]);
 
   const signOut = useCallback(async () => {
     if (!supabase) return;
@@ -3275,6 +3344,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       signInWithPassword,
       signUpWithPassword,
       signInWithMagicLink,
+      requestPasswordReset,
+      updatePassword,
       signOut,
       pantry,
       recipes,
@@ -3364,6 +3435,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       accountUi: {
         sheet: accountSheet,
         showPostSignupSetup,
+        showPasswordRecovery,
+        dismissPasswordRecovery,
         openAuthSheet,
         openAccountSheet,
         closeSheet: closeAccountSheet,
@@ -3380,6 +3453,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }),
     [
       accountSheet,
+      showPasswordRecovery,
+      dismissPasswordRecovery,
       addPantryFromScan,
       addManualPantryItem,
       updatePantryItemEntry,
@@ -3416,6 +3491,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setDemoRole,
       setFeatureFlag,
       signInWithMagicLink,
+      requestPasswordReset,
+      updatePassword,
       signInWithPassword,
       signOut,
       signUpWithPassword,

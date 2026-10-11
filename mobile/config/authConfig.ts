@@ -52,6 +52,8 @@ export function authErrorMessage(raw: string | null | undefined): string {
     return AUTH_RESULT_COPY.alreadyRegistered;
   }
   if (lower.includes('email not confirmed')) return AUTH_RESULT_COPY.emailNotConfirmed;
+  if (lower.includes('different from the old password')) return AUTH_RESET_COPY.samePassword;
+  if (lower.includes('auth session missing')) return AUTH_RESET_COPY.linkExpired;
   if (lower.includes('password should be at least') || lower.includes('weak password')) {
     return AUTH_RESULT_COPY.weakPassword;
   }
@@ -65,4 +67,37 @@ export function authErrorMessage(raw: string | null | undefined): string {
     return AUTH_RESULT_COPY.offline;
   }
   return message;
+}
+
+/** "Forgot password": ask for a reset link by email, then choose a new password from that link. */
+export const AUTH_RESET_COPY = {
+  forgotLink: 'Forgot password?',
+  title: 'Reset your password',
+  blurb: 'Enter the email for your account and we will send you a link to choose a new password.',
+  sendButton: 'Email me a reset link',
+  backToSignIn: 'Back to sign in',
+  /** Said whether or not the address has an account, so nobody can use this to find out who does. */
+  sent: 'If that email has an account, a reset link is on its way. Open it on this device to choose a new password.',
+  missingEmail: 'Enter your email address.',
+  newPasswordTitle: 'Choose a new password',
+  newPasswordBlurb: 'You opened a password reset link. Enter a new password for your account.',
+  newPasswordLabel: 'New password',
+  confirmPasswordLabel: 'New password again',
+  mismatch: 'The two passwords are not the same.',
+  saveButton: 'Save new password',
+  notNow: 'Not now',
+  saved: 'Your password is changed.',
+  linkExpired: 'That reset link has expired or was already used. Ask for a new one from "Forgot password?".',
+  samePassword: 'Choose a password you have not used on this account before.',
+} as const;
+
+/**
+ * What the address the app was opened with says about a password reset link.
+ * 'recovery': a good reset link. 'expired': a reset link the server refused.
+ */
+export function passwordResetLinkState(hash: string, search: string): 'recovery' | 'expired' | null {
+  const text = `${hash}&${search}`;
+  if (/[#&?]type=recovery(&|$)/.test(text)) return 'recovery';
+  if (/[#&?]error_code=otp_expired(&|$)/.test(text) || /[#&?]error=access_denied(&|$)/.test(text)) return 'expired';
+  return null;
 }
