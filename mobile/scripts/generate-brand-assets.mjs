@@ -25,6 +25,8 @@ for (const source of [mascotPath, logoPath]) {
 const TRANSPARENT = { r: 0, g: 0, b: 0, alpha: 0 };
 const creamRgb = hexToRgb(brand.colors.brandCream);
 const iconBgRgb = hexToRgb(brand.colors.iconBackground);
+/** Width of the sticker's white die-cut ring, as a fraction of the icon size. */
+const STICKER_RING_RATIO = 0.024;
 
 function hexToRgb(hex) {
   const normalized = hex.replace('#', '');
@@ -48,8 +50,11 @@ function canvas(size, background) {
 /**
  * Square canvas with the mascot's face and tines in view and the handle
  * running off the bottom edge. `placement` is in fractions of the canvas size.
+ * `sticker` ({ cx, cy, r } in fractions) draws the banana sticker disc with its
+ * white die-cut ring behind the mascot (owner's choice, 2026-10-11: green tile,
+ * Forky on a yellow sticker).
  */
-async function mascotSquare(size, background, placement, { silhouette = false } = {}) {
+async function mascotSquare(size, background, placement, { silhouette = false, sticker = null } = {}) {
   const left = Math.round(size * placement.left);
   const top = Math.round(size * placement.top);
   const width = Math.round(size * placement.width);
@@ -66,10 +71,25 @@ async function mascotSquare(size, background, placement, { silhouette = false } 
       .png()
       .toBuffer();
   }
-  return canvas(size, background)
-    .composite([{ input: overlay, left, top }])
-    .png()
-    .toBuffer();
+  const layers = [];
+  if (sticker) {
+    const cx = size * sticker.cx;
+    const cy = size * sticker.cy;
+    const r = size * sticker.r;
+    const ring = size * STICKER_RING_RATIO;
+    layers.push({
+      input: Buffer.from(
+        `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}">` +
+          `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${brand.colors.iconStickerRing}"/>` +
+          `<circle cx="${cx}" cy="${cy}" r="${r - ring}" fill="${brand.colors.iconSticker}"/>` +
+          `</svg>`,
+      ),
+      left: 0,
+      top: 0,
+    });
+  }
+  layers.push({ input: overlay, left, top });
+  return canvas(size, background).composite(layers).png().toBuffer();
 }
 
 /** Whole mascot, centered on a transparent square. */
@@ -115,12 +135,19 @@ async function main() {
   /** Launchers crop maskable icons to a circle, so the face sits further in. */
   const maskablePlacement = { left: 0.27, top: 0.14, width: 0.46 };
 
-  const icon1024 = await mascotSquare(1024, { ...iconBgRgb, alpha: 1 }, iconPlacement);
-  const iconMaskable = await mascotSquare(1024, { ...iconBgRgb, alpha: 1 }, maskablePlacement);
+  /** Sticker discs: full icon, the maskable safe circle, and Android's inner two thirds. */
+  const iconSticker = { cx: 0.5, cy: 0.46, r: 0.37 };
+  const maskableSticker = { cx: 0.5, cy: 0.5, r: 0.3 };
+  const adaptiveSticker = { cx: 0.5, cy: 0.5, r: 0.27 };
+
+  const icon1024 = await mascotSquare(1024, { ...iconBgRgb, alpha: 1 }, iconPlacement, { sticker: iconSticker });
+  const iconMaskable = await mascotSquare(1024, { ...iconBgRgb, alpha: 1 }, maskablePlacement, {
+    sticker: maskableSticker,
+  });
   const splash512 = await mascotContained(512, 0.9);
   const markHeader = await mascotSquare(84, { ...creamRgb, alpha: 1 }, markPlacement);
 
-  const androidFg = await mascotSquare(1024, TRANSPARENT, adaptivePlacement);
+  const androidFg = await mascotSquare(1024, TRANSPARENT, adaptivePlacement, { sticker: adaptiveSticker });
   const androidBg = await sharp({
     create: { width: 1024, height: 1024, channels: 3, background: iconBgRgb },
   })

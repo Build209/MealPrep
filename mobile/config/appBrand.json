@@ -5,7 +5,9 @@
   "colors": {
     "brandCream": "#FCF8EC",
     "themePrimaryDark": "#163A26",
-    "iconBackground": "#1F4D33"
+    "iconBackground": "#1F4D33",
+    "iconSticker": "#FFD12E",
+    "iconStickerRing": "#FFFFFF"
   },
   "sourceMascot": "assets/brand/forkinator-mascot.png",
   "sourceLogo": "assets/brand/mealplanatic-logo-lockup.png",
