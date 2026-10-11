@@ -70,8 +70,9 @@ function RecipesUnifiedFeedCardInner({
   const hasIngredients = row.kind === 'kitchen' && row.recipe.ingredients.length > 0;
   const readyToCook = !matchPending && hasIngredients && row.match.missingCount === 0;
   // Pantry match pill ("You have 6 of 8") — same numbers and wording as the pantry badge helper.
+  // Nothing in the pantry matches: no sticker, the "Missing N items" line already says it.
   const pantryPill =
-    matchPending || matchFailed || row.match.totalIngredients === 0
+    matchPending || matchFailed || row.match.totalIngredients === 0 || row.match.matchedCount === 0
       ? null
       : row.match.missingCount === 0
         ? RECIPES_COPY.pantryOverlap.readyToCook

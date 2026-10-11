@@ -10,14 +10,14 @@ interface PantryStaplesInviteCardProps {
 
 export function PantryStaplesInviteCard({ onPick, onDismiss }: PantryStaplesInviteCardProps) {
   return (
-    <View className="rounded-[18px] border border-primary/25 bg-primary-light px-4 py-4">
+    <View className="rounded-[18px] border border-border bg-card px-4 py-4">
       <View className="flex-row items-start gap-3">
         <Text className="text-2xl" accessibilityElementsHidden importantForAccessibility="no">
           🧺
         </Text>
         <View className="flex-1">
-          <Text className="text-base font-extrabold text-primary-dark">{PANTRY_STAPLES_COPY.inviteTitle}</Text>
-          <Text className="mt-1 text-sm text-primary-dark/90">{PANTRY_STAPLES_COPY.inviteSubtitle}</Text>
+          <Text className="text-base font-extrabold text-ink">{PANTRY_STAPLES_COPY.inviteTitle}</Text>
+          <Text className="mt-1 text-sm text-muted">{PANTRY_STAPLES_COPY.inviteSubtitle}</Text>
           <Pressable onPress={onPick} className="mt-3 min-h-[44px] items-center justify-center rounded-full bg-primary px-4">
             <Text className="text-sm font-bold text-on-primary">{PANTRY_STAPLES_COPY.inviteCta}</Text>
           </Pressable>

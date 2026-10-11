@@ -153,8 +153,10 @@ export function PantryStorageScanButtons({
           <Text className="mt-0.5 text-sm leading-5 text-muted">{card.subtitle}</Text>
         </View>
         {showPlusBadge || badgeText ? (
-          <View className="shrink-0 rounded-[10px] bg-tomato px-[9px] py-1">
-            <Text className="text-xs font-extrabold text-on-tomato">{badgeText ?? PANTRY_SCAN_UI_COPY.scanCardPlusBadge}</Text>
+          <View className={`shrink-0 rounded-[10px] px-[9px] py-1 ${badgeText ? 'bg-ink' : 'bg-tomato'}`}>
+            <Text className={`text-xs font-extrabold ${badgeText ? 'text-banana' : 'text-on-tomato'}`}>
+              {badgeText ?? PANTRY_SCAN_UI_COPY.scanCardPlusBadge}
+            </Text>
           </View>
         ) : null}
       </Pressable>
