@@ -1190,6 +1190,94 @@ export default function HomeScreen() {
             statusMessage={homeRecipesRefresh.statusMessage}
             onPress={homeRecipesRefresh.onRefresh}
           />
+          {/* Creators lead the catalog, their icons always on screen (owner, 2026-10-11, 6:51 pm). */}
+          <RecipesTabCollapsibleSection
+            title={`${RECIPES_TAB_SURFACE_COPY.creatorsSectionHeading}. ${CREATOR_RECIPES_COPY.creatorsSectionTitle}`}
+            heading={RECIPES_TAB_SURFACE_COPY.creatorsSectionHeading}
+            expanded={tabSurface.sections.creators}
+            bubbleRowAlwaysVisible
+            onToggle={() => tabSurface.setCreatorsExpanded(!tabSurface.sections.creators)}
+            loading={tabSurface.sections.creators && creatorsLoading && creators.length === 0}
+            bubbleRow={
+              !selectedCreator ? (
+                <CreatorAvatarsRow
+                  slots={tabSurface.creatorSlots}
+                  onSelect={handleCreatorSlotPress}
+                  onImpression={(slot) =>
+                    tabSurface.logCreatorImpression(
+                      slot.creator.id,
+                      slot.position,
+                      slot.slotType,
+                    )
+                  }
+                />
+              ) : (
+                // The chosen creator's name and the way back sit with the creator's videos.
+                // They used to be drawn inside the import card at the top of Home, out of sight
+                // once the screen had scrolled down to the videos.
+                <View>
+                  <Pressable
+                    onPress={() => setSelectedCreator(null)}
+                    className="min-h-[44px] justify-center self-start"
+                    accessibilityRole="button"
+                    accessibilityLabel="Back to all creators"
+                  >
+                    <Text className="text-sm font-bold text-primary">← All creators</Text>
+                  </Pressable>
+                  {activeCreator ? (
+                    <Text className="mb-2 text-[15px] font-bold text-ink">{activeCreator.displayName}</Text>
+                  ) : null}
+                  {activeCreator && activeCreatorWebsite ? (
+                    <CreatorRecipeWebsiteLink website={activeCreatorWebsite} />
+                  ) : null}
+                </View>
+              )
+            }
+          >
+            {!selectedCreator ? (
+              <>
+                {creatorsLoading ? (
+                  <View className="flex-row items-center gap-2">
+                    <ActivityIndicator color={THEME.primary} size="small" />
+                    <Text className="text-xs text-muted">{CREATOR_RECIPES_COPY.loadingCreators}</Text>
+                  </View>
+                ) : null}
+                {!creatorsLoading && creatorsError ? (
+                  <Text className="text-xs text-muted">{creatorsError}</Text>
+                ) : null}
+                {!creatorsLoading && tabSurface.creatorSlots.length === 0 ? (
+                  <Text className="text-xs text-muted">{CREATOR_RECIPES_COPY.emptyCreators}</Text>
+                ) : null}
+              </>
+            ) : null}
+            <View className="flex-row flex-wrap justify-between">
+              {browseVideoModels.map((model) => (
+                <CreatorRecipesFeedCard
+                  key={model.videoId}
+                  grid
+                  model={model}
+                  saved={savedRecipes.isCreatorSaved(model.videoId, model.importedRecipe)}
+                  onToggleSave={() => savedRecipes.toggleCreatorVideo(model.video, model.importedRecipe)}
+                  saveDisabled={savedRecipes.isCreatorSavePending(model.videoId, model.importedRecipe)}
+                  onOpen={() => {
+                    openCreatorVideo(model.item);
+                  }}
+                  onCook={() => openCookSheetForCreator(model)}
+                />
+              ))}
+            </View>
+            {!selectedCreator && browseVideoModels.length === 0 && feedLoading ? (
+              <View className="flex-row items-center gap-2">
+                <ActivityIndicator color={THEME.primary} size="small" />
+                <Text className="text-xs text-muted">{CREATOR_RECIPES_COPY.loading}</Text>
+              </View>
+            ) : null}
+            {!selectedCreator &&
+            browseVideoModels.length === 0 &&
+            !feedLoading ? (
+              <Text className="text-sm text-muted">{CREATOR_RECIPES_COPY.emptyVideos}</Text>
+            ) : null}
+          </RecipesTabCollapsibleSection>
           <RecipesTabCollapsibleSection
             title={classicSectionToggleTitle}
             heading={classicSectionHeading}
@@ -1285,93 +1373,6 @@ export default function HomeScreen() {
                 <ActivityIndicator color={THEME.primary} size="small" />
                 <Text className="text-xs text-muted">{MEALDB_COPY.loading}</Text>
               </View>
-            ) : null}
-          </RecipesTabCollapsibleSection>
-
-          <RecipesTabCollapsibleSection
-            title={`${RECIPES_TAB_SURFACE_COPY.creatorsSectionHeading}. ${CREATOR_RECIPES_COPY.creatorsSectionTitle}`}
-            heading={RECIPES_TAB_SURFACE_COPY.creatorsSectionHeading}
-            expanded={tabSurface.sections.creators}
-            onToggle={() => tabSurface.setCreatorsExpanded(!tabSurface.sections.creators)}
-            loading={tabSurface.sections.creators && creatorsLoading && creators.length === 0}
-            bubbleRow={
-              !selectedCreator ? (
-                <CreatorAvatarsRow
-                  slots={tabSurface.creatorSlots}
-                  onSelect={handleCreatorSlotPress}
-                  onImpression={(slot) =>
-                    tabSurface.logCreatorImpression(
-                      slot.creator.id,
-                      slot.position,
-                      slot.slotType,
-                    )
-                  }
-                />
-              ) : (
-                // The chosen creator's name and the way back sit with the creator's videos.
-                // They used to be drawn inside the import card at the top of Home, out of sight
-                // once the screen had scrolled down to the videos.
-                <View>
-                  <Pressable
-                    onPress={() => setSelectedCreator(null)}
-                    className="min-h-[44px] justify-center self-start"
-                    accessibilityRole="button"
-                    accessibilityLabel="Back to all creators"
-                  >
-                    <Text className="text-sm font-bold text-primary">← All creators</Text>
-                  </Pressable>
-                  {activeCreator ? (
-                    <Text className="mb-2 text-[15px] font-bold text-ink">{activeCreator.displayName}</Text>
-                  ) : null}
-                  {activeCreator && activeCreatorWebsite ? (
-                    <CreatorRecipeWebsiteLink website={activeCreatorWebsite} />
-                  ) : null}
-                </View>
-              )
-            }
-          >
-            {!selectedCreator ? (
-              <>
-                {creatorsLoading ? (
-                  <View className="flex-row items-center gap-2">
-                    <ActivityIndicator color={THEME.primary} size="small" />
-                    <Text className="text-xs text-muted">{CREATOR_RECIPES_COPY.loadingCreators}</Text>
-                  </View>
-                ) : null}
-                {!creatorsLoading && creatorsError ? (
-                  <Text className="text-xs text-muted">{creatorsError}</Text>
-                ) : null}
-                {!creatorsLoading && tabSurface.creatorSlots.length === 0 ? (
-                  <Text className="text-xs text-muted">{CREATOR_RECIPES_COPY.emptyCreators}</Text>
-                ) : null}
-              </>
-            ) : null}
-            <View className="flex-row flex-wrap justify-between">
-              {browseVideoModels.map((model) => (
-                <CreatorRecipesFeedCard
-                  key={model.videoId}
-                  grid
-                  model={model}
-                  saved={savedRecipes.isCreatorSaved(model.videoId, model.importedRecipe)}
-                  onToggleSave={() => savedRecipes.toggleCreatorVideo(model.video, model.importedRecipe)}
-                  saveDisabled={savedRecipes.isCreatorSavePending(model.videoId, model.importedRecipe)}
-                  onOpen={() => {
-                    openCreatorVideo(model.item);
-                  }}
-                  onCook={() => openCookSheetForCreator(model)}
-                />
-              ))}
-            </View>
-            {!selectedCreator && browseVideoModels.length === 0 && feedLoading ? (
-              <View className="flex-row items-center gap-2">
-                <ActivityIndicator color={THEME.primary} size="small" />
-                <Text className="text-xs text-muted">{CREATOR_RECIPES_COPY.loading}</Text>
-              </View>
-            ) : null}
-            {!selectedCreator &&
-            browseVideoModels.length === 0 &&
-            !feedLoading ? (
-              <Text className="text-sm text-muted">{CREATOR_RECIPES_COPY.emptyVideos}</Text>
             ) : null}
           </RecipesTabCollapsibleSection>
         </>

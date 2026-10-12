@@ -7,6 +7,7 @@ export function RecipesTabCollapsibleSection({
   heading,
   headerAction,
   bubbleRowAbove = false,
+  bubbleRowAlwaysVisible = false,
   expanded,
   onToggle,
   bubbleRow,
@@ -21,6 +22,8 @@ export function RecipesTabCollapsibleSection({
   headerAction?: React.ReactNode;
   /** Show the chips/avatars above the heading instead of under it. */
   bubbleRowAbove?: boolean;
+  /** Keep the chips/avatars on screen while the section is folded (the creator icons on Home). */
+  bubbleRowAlwaysVisible?: boolean;
   expanded: boolean;
   onToggle: () => void;
   /** Horizontally scrollable chips/avatars; shown only while the section is open. */
@@ -28,9 +31,10 @@ export function RecipesTabCollapsibleSection({
   children?: React.ReactNode;
   loading?: boolean;
 }) {
+  const showBubbleRow = (expanded || bubbleRowAlwaysVisible) && Boolean(bubbleRow);
   return (
     <View className="mt-4">
-      {bubbleRowAbove && expanded && bubbleRow ? <View className="mb-3">{bubbleRow}</View> : null}
+      {bubbleRowAbove && showBubbleRow ? <View className="mb-3">{bubbleRow}</View> : null}
       <View className="flex-row items-center justify-between">
         <Pressable
           onPress={onToggle}
@@ -53,7 +57,7 @@ export function RecipesTabCollapsibleSection({
         {/* Folded, the row is only the name and its arrow, on one line; the link joins it once open. */}
         {expanded ? (headerAction ?? null) : null}
       </View>
-      {!bubbleRowAbove && expanded && bubbleRow ? <View className="mt-1">{bubbleRow}</View> : null}
+      {!bubbleRowAbove && showBubbleRow ? <View className="mt-1">{bubbleRow}</View> : null}
       {expanded && children ? <View className="mt-3">{children}</View> : null}
     </View>
   );

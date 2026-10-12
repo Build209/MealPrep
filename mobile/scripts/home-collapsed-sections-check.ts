@@ -1,6 +1,7 @@
 /**
- * Home catalog sections: both folded by default, showing only the name and an arrow; their chip
- * and avatar rows appear once a section is opened.
+ * Home catalog sections: both folded by default. Creators come first and keep their avatar row on
+ * screen while folded (owner, 2026-10-11, 6:51 pm: "creators first with the icons like before");
+ * the curated recipes are just the name and an arrow, their chips showing once opened.
  * Run from mobile/: npm run test:home-collapsed-sections
  */
 import assert from 'node:assert/strict';
@@ -34,11 +35,16 @@ const sectionSource = fs.readFileSync(
   'utf8',
 );
 assert.match(sectionSource, /bubbleRow/, 'collapsible section should accept bubbleRow');
-// A folded section is just its name and arrow; chips and avatars show once it is opened.
+// A folded section is just its name and arrow, unless it asks to keep its row on screen.
+assert.match(
+  sectionSource,
+  /const showBubbleRow = \(expanded \|\| bubbleRowAlwaysVisible\) && Boolean\(bubbleRow\);/,
+  'the chip row shows while the section is open, or always when the section asks for it',
+);
 assert.equal(
-  (sectionSource.match(/expanded && bubbleRow \? <View/g) ?? []).length,
+  (sectionSource.match(/showBubbleRow \? <View/g) ?? []).length,
   2,
-  'the chip row, above or below the heading, shows only while the section is open',
+  'the same rule applies above and below the heading',
 );
 assert.match(
   sectionSource,
@@ -50,6 +56,20 @@ const homeSource = fs.readFileSync(path.join(mobileRoot, 'app/(tabs)/index.tsx')
 assert.match(homeSource, /defaultRecipesTabSectionExpanded\(\)/, 'home should init the section defaults');
 assert.match(homeSource, /bubbleRow=\{[\s\S]*CategoryAvatarsRow/, 'classic bubbles in bubbleRow');
 assert.match(homeSource, /bubbleRow=\{[\s\S]*CreatorAvatarsRow/, 'creator bubbles in bubbleRow');
+const creatorsAt = homeSource.indexOf('RECIPES_TAB_SURFACE_COPY.creatorsSectionHeading}. ');
+const classicAt = homeSource.indexOf('title={classicSectionToggleTitle}');
+assert.ok(creatorsAt > 0 && classicAt > 0, 'both Home sections are present');
+assert.ok(creatorsAt < classicAt, 'creators come before the curated recipes (owner, 2026-10-11)');
+assert.match(
+  homeSource.slice(creatorsAt, classicAt),
+  /bubbleRowAlwaysVisible/,
+  'the creator icons stay on screen while the section is folded',
+);
+assert.doesNotMatch(
+  homeSource.slice(classicAt),
+  /bubbleRowAlwaysVisible/,
+  'the curated recipe chips still wait until that section is opened',
+);
 assert.doesNotMatch(
   homeSource,
   /readRecipesTabSectionExpanded/,
