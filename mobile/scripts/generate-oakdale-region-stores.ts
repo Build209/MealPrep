@@ -37,7 +37,7 @@ async function fetchOverpass(): Promise<unknown[]> {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
-        'User-Agent': '209MealPrep/1.0 store-fallback-generator (https://github.com/the209bbq/MealPrep)',
+        'User-Agent': '209MealPrep/1.0 store-fallback-generator (https://github.com/Build209/MealPrep)',
       },
       body: `data=${encodeURIComponent(query)}`,
     });

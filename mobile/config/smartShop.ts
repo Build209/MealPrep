@@ -17,7 +17,7 @@ export const SMART_SHOP_STORES = {
   specialtyShopTags: SPECIALTY_SHOP_TAGS,
   maxOverpassResults: 80,
   /** Native clients: Nominatim / Overpass usage policy User-Agent. */
-  httpUserAgent: '209MealPrep/1.0 Smart Shop (https://github.com/the209bbq/MealPrep)',
+  httpUserAgent: '209MealPrep/1.0 Smart Shop (https://github.com/Build209/MealPrep)',
   /** Web / fallback: Nominatim requires a contact email in the request (cannot set User-Agent in browsers). */
   nominatimContactEmail: 'smartshop@209mealprep.local',
   nominatimBaseUrl: 'https://nominatim.openstreetmap.org',

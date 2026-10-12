@@ -59,7 +59,7 @@ jobs:
               cp "$route.html" "$route/index.html"
             fi
           done
-          # Old app links: GitHub forwards the209bbq.github.io/MealPrep/app/* to /app/* here.
+          # Old /app/* links forward to the new paths. (The old the209bbq.github.io address stopped forwarding when the GitHub user was renamed to Build209.)
           redirect_page() {
             # $1 = output file, $2 = JS expression for the new path
             mkdir -p "$(dirname "$1")"
