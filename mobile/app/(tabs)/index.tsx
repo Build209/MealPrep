@@ -22,6 +22,8 @@ import { RecipeDetailSheet } from '../../components/recipes/RecipeDetailSheet';
 import { CreatorAvatarsRow } from '../../components/recipes/CreatorAvatarsRow';
 import { CreatorRecipeWebsiteLink } from '../../components/recipes/CreatorRecipeWebsiteLink';
 import { CategoryAvatarsRow } from '../../components/recipes/CategoryAvatarsRow';
+import { PantryRecipeCirclesRow } from '../../components/recipes/PantryRecipeCirclesRow';
+import { pickPantryCircleRows } from '../../lib/recipesTab/pantryCircles';
 import { RecipesTabCollapsibleSection } from '../../components/recipes/RecipesTabCollapsibleSection';
 import { CreatorRecipesFeedCard } from '../../components/recipes/CreatorRecipesFeedCard';
 import { CreatorRecipesFeedModeDropdown } from '../../components/recipes/CreatorRecipesFeedModeDropdown';
@@ -455,6 +457,13 @@ export default function HomeScreen() {
       discoverySuggestions: [],
     });
   }, [catalogKitchenRecipes, pantryRecipeMatches]);
+
+  // Option B (owner, 2026-10-11): recipes the pantry can make now, shown as circles on Home.
+  const pantryCircleRows = useMemo(() => {
+    if (pantryEmpty) return [];
+    return pickPantryCircleRows(filterRecipesTabRowsForDietPrefs(filterBaseRows, userDietPrefs));
+  }, [filterBaseRows, pantryEmpty, userDietPrefs]);
+  const showPantryCircles = pantryCircleRows.length > 0;
 
   const filteredRows = useMemo(() => {
     const narrowed = applyRecipesTabFilters(filterBaseRows, filters);
@@ -1293,21 +1302,35 @@ export default function HomeScreen() {
                 </Text>
               </Pressable>
             }
-            bubbleRowAbove
+            // With pantry picks the circles sit under the heading and stay on screen (option B);
+            // without them the category chips keep their old place above it, shown only when open.
+            bubbleRowAbove={!showPantryCircles}
+            bubbleRowAlwaysVisible={showPantryCircles}
             expanded={tabSurface.sections.classic}
             onToggle={() => tabSurface.setClassicExpanded(!tabSurface.sections.classic)}
             loading={tabSurface.sections.classic && (mealDbBlockingLoad || mealDbCategoriesLoading)}
             bubbleRow={
-              <CategoryAvatarsRow
-                chips={tabSurface.categoryChips}
-                onSelect={handleCategoryChipPress}
-                onPressIn={handleCategoryChipPressIn}
-                onImpression={(chip) =>
-                  tabSurface.logCategoryImpression(chip.category, chip.position)
-                }
-                selectedCategory={selectedClassicCategory}
-                onSelectAll={() => setSelectedClassicCategory(null)}
-              />
+              <View className="gap-3">
+                {showPantryCircles ? (
+                  <PantryRecipeCirclesRow
+                    rows={pantryCircleRows}
+                    onOpen={openDetail}
+                    onSeeAll={() => tabSurface.setClassicExpanded(true)}
+                  />
+                ) : null}
+                {!showPantryCircles || tabSurface.sections.classic ? (
+                  <CategoryAvatarsRow
+                    chips={tabSurface.categoryChips}
+                    onSelect={handleCategoryChipPress}
+                    onPressIn={handleCategoryChipPressIn}
+                    onImpression={(chip) =>
+                      tabSurface.logCategoryImpression(chip.category, chip.position)
+                    }
+                    selectedCategory={selectedClassicCategory}
+                    onSelectAll={() => setSelectedClassicCategory(null)}
+                  />
+                ) : null}
+              </View>
             }
           >
             {selectedClassicCategory ? (
