@@ -65,11 +65,14 @@ assert.match(
   /bubbleRowAlwaysVisible/,
   'the creator icons stay on screen while the section is folded',
 );
-assert.doesNotMatch(
+assert.match(
   homeSource.slice(classicAt),
-  /bubbleRowAlwaysVisible/,
-  'the curated recipe chips still wait until that section is opened',
+  /bubbleRowAlwaysVisible=\{showPantryCircles\}/,
+  'pantry recipe circles stay on screen while folded; the category chips still wait (option B, owner 2026-10-11)',
 );
+assert.match(homeSource.slice(classicAt), /PantryRecipeCirclesRow/, 'From your pantry shows recipe circles');
+assert.match(homeSource.slice(classicAt), /onOpen=\{openDetail\}/, 'tapping a circle opens that recipe');
+assert.match(homeSource.slice(classicAt), /onSeeAll=\{\(\) => tabSurface\.setClassicExpanded\(true\)\}/, 'See all opens the section');
 assert.doesNotMatch(
   homeSource,
   /readRecipesTabSectionExpanded/,
