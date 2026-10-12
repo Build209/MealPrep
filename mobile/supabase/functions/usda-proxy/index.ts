@@ -11,11 +11,10 @@ const USDA_FOOD = 'https://api.nal.usda.gov/fdc/v1/food';
 /** USDA rejects a single comma-joined value with parentheses; send repeated `dataType` params. */
 const DEFAULT_SEARCH_DATA_TYPES = ['Foundation', 'SR Legacy'];
 
-/** Production web app, the old GitHub Pages address, and common Expo web dev origins (Origin header has no path). */
+/** Production web app and common Expo web dev origins (Origin header has no path). */
 const ALLOWED_ORIGINS = new Set([
   'https://mealplanatic.app',
   'https://www.mealplanatic.app',
-  'https://the209bbq.github.io',
   'http://localhost:8081',
   'http://localhost:19006',
   'http://localhost:19000',

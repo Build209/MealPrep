@@ -1,7 +1,7 @@
 import appJson from '../app.json';
 
 /**
- * Public site origin. Hosted on GitHub Pages (repo: the209bbq/MealPrep) behind the
+ * Public site origin. Hosted on GitHub Pages (repo: Build209/MealPrep) behind the
  * custom domain, so the constant keeps its historical name.
  */
 export const GITHUB_PAGES_ORIGIN = 'https://mealplanatic.app';

@@ -20,7 +20,7 @@ import duckdb
 import requests
 
 S3_BUCKET = "s3://overturemaps-us-west-2"
-USER_AGENT = "MealPlanatic-stores-ingest/1.0 (https://github.com/the209bbq/MealPrep)"
+USER_AGENT = "MealPlanatic-stores-ingest/1.0 (https://github.com/Build209/MealPrep)"
 
 # Overture taxonomy.primary values (checked against release 2026-09-23.1).
 GROCERY_CATEGORIES = {
