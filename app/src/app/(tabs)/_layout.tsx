@@ -1,10 +1,24 @@
-import { Tabs } from 'expo-router';
-import { View } from 'react-native';
+import { Redirect, Tabs } from 'expo-router';
+import { ActivityIndicator, View } from 'react-native';
+import { useAuth } from '../../auth/AuthProvider';
 import { TopBar } from '../../ui/TopBar';
 import { colors, fonts, layout } from '../../theme/tokens';
 
-/** Four tabs, as in DESIGN.md: Home, Pantry, Grocery, Stores. Icons come with the tab screens. */
+/**
+ * Four tabs, as in DESIGN.md: Home, Pantry, Grocery, Stores. Icons come with the tab screens.
+ * The tabs need a session (no guest mode): signed out, or a build without server settings, goes to sign-in.
+ */
 export default function TabsLayout() {
+  const { ready, session } = useAuth();
+  if (!ready) {
+    return (
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.paper }}>
+        <ActivityIndicator color={colors.ink} accessibilityLabel="Loading" />
+      </View>
+    );
+  }
+  if (!session) return <Redirect href="/sign-in" />;
+
   return (
     <View style={{ flex: 1, backgroundColor: colors.paper }}>
       <TopBar />

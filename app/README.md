@@ -11,6 +11,9 @@ untouched until switch-over, when `mobile/` is deleted in the same release.
   screens read through queries and never keep their own copy of server data.
 - `src/data/`: the data layer (query keys, row models, optimistic mutations, `useIsOnline`).
   Rules in `src/data/README.md`.
+- `src/auth/`: sign-in, create account (18+ box), forgot password, sign out, and `AuthProvider`
+  (session from `onAuthStateChange`). The tabs need a session; signed out goes to `/sign-in`.
+  Rules and wording are in `logic.ts` and `copy.ts`, tested in `tests/auth-*.test.ts`.
 - One folder per feature as features arrive (`pantry/`, `grocery/`, `recipes/`, ...), no file over about 400 lines.
 
 ```bash
