@@ -120,7 +120,7 @@ test('nothing loaded yet: no optimistic change, no crash on error', async () => 
   const fake = fakeClient(undefined);
   const m = updater(fake);
   const ctx = await m.onMutate({ id: 'a', quantity: 9 });
-  assert.equal(ctx, undefined);
+  assert.equal(ctx, null);
   m.onError(new Error('no'), { id: 'a', quantity: 9 }, ctx);
   m.onSuccess({ id: 'a', quantity: 9 }, { id: 'a', quantity: 9 });
   assert.equal(fake.list(), undefined);

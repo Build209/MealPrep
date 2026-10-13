@@ -44,12 +44,12 @@ export function listMutation<T extends Identified, TVars, TResult>(options: List
     options.applyResult ?? ((list, result) => defaultApplyResult<T, TResult>(list, result));
 
   return {
-    onMutate: async (vars: TVars): Promise<ListMutationContext<T> | undefined> => {
+    onMutate: async (vars: TVars): Promise<ListMutationContext<T> | null> => {
       // Throwing here stops the mutation before anything changes on screen.
       if (isOnline && !isOnline()) throw offlineError();
       await queryClient.cancelQueries({ queryKey });
       const snapshot = queryClient.getQueryData<T[]>(queryKey);
-      if (!snapshot) return undefined; // nothing loaded yet: nothing to change optimistically
+      if (!snapshot) return null; // nothing loaded yet: nothing to change optimistically
       const c = change(vars);
       queryClient.setQueryData<T[]>(queryKey, c.apply(snapshot));
       // Read it back: structural sharing may store a different array than the one passed in,
@@ -58,7 +58,7 @@ export function listMutation<T extends Identified, TVars, TResult>(options: List
       return { snapshot, applied, change: c };
     },
 
-    onError: (_error: unknown, _vars: TVars, context: ListMutationContext<T> | undefined): void => {
+    onError: (_error: unknown, _vars: TVars, context: ListMutationContext<T> | null | undefined): void => {
       if (!context) return;
       queryClient.setQueryData<T[]>(queryKey, (current) =>
         rollback(current, context.snapshot, context.applied, context.change),
