@@ -1,0 +1,81 @@
+name: App phone preview (rebuild)
+
+# Builds the rebuilt app (app/) for the web, pointed at the LIVE Supabase project's public
+# settings, and stores the built files on the `app-preview` branch. A free static host
+# (see app/PREVIEW.md) serves that branch so the owner can open the app on a phone.
+#
+# It does NOT deploy anything itself and never touches GitHub Pages, `gh-pages`,
+# `preview-build` or `main`. The live site only ever comes from `main` (pages.yml).
+# On pull requests it only builds (to prove the build works); nothing is pushed.
+on:
+  push:
+    branches: [rebuild/v1]
+    paths:
+      - "app/**"
+      - ".github/workflows/app-preview.yml"
+  pull_request:
+    paths:
+      - "app/**"
+      - ".github/workflows/app-preview.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: app-preview-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install
+        working-directory: app
+        run: |
+          if [ -f package-lock.json ]; then npm ci; else npm install --no-audit --no-fund; fi
+      - name: Build the web app
+        working-directory: app
+        env:
+          # Public settings only: the URL and the publishable (anon) key, as in pages.yml.
+          EXPO_PUBLIC_SUPABASE_URL: https://okkwapgyadpaifpmkcex.supabase.co
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: sb_publishable_PCMqSfDjdX6J55lc97km1g_I7U5n-pD
+          EXPO_PUBLIC_APP_CHANNEL: preview
+          EXPO_PUBLIC_GIT_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          rm -rf dist
+          npm run export:web
+      - name: Add files for static hosts and check the build
+        working-directory: app/dist
+        run: |
+          set -euo pipefail
+          test -f index.html
+          head -c 1500 index.html; echo
+          # Any address (e.g. /pantry opened directly) falls back to the app.
+          cp index.html 404.html
+          printf '/* /index.html 200\n' > _redirects
+          touch .nojekyll
+          # Served from the site root: assets must be linked from "/", with no sub-folder prefix.
+          grep -q 'src="/_expo/static/js/web/' index.html
+          # The public settings and the preview label made it into the bundle.
+          grep -rqF 'okkwapgyadpaifpmkcex.supabase.co' _expo/static/js/web/
+          grep -rqF 'Preview build' _expo/static/js/web/
+          ls -la
+      - name: Store the build on the app-preview branch
+        if: github.event_name != 'pull_request'
+        working-directory: app/dist
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git init -q -b app-preview
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -q -m "App preview build of ${GITHUB_SHA} (${GITHUB_REF_NAME})"
+          git push -f "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" app-preview

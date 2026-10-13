@@ -67,6 +67,18 @@ test('sign-up sends the confirmation link to the live site and asks to confirm',
   assert.deepEqual(result, { ok: true, notice: AUTH_RESULT_COPY.confirmEmail });
 });
 
+test('sign-up can send the confirmation link to another address (the preview build)', async () => {
+  const { auth, calls } = fakeAuth({
+    signUp: { data: { session: null, user: { identities: [{ id: '1' }] } }, error: null },
+  });
+  await signUp(auth, 'cook@example.com', 'secret1', 'https://preview.example.dev/');
+  assert.deepEqual(calls[0]?.args[0], {
+    email: 'cook@example.com',
+    password: 'secret1',
+    options: { emailRedirectTo: 'https://preview.example.dev/' },
+  });
+});
+
 test('sign-up with an address that already has an account says so', async () => {
   const { auth } = fakeAuth({ signUp: { data: { session: null, user: { identities: [] } }, error: null } });
   assert.deepEqual(await signUp(auth, 'cook@example.com', 'secret1'), {
