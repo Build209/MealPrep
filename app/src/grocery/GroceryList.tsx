@@ -74,6 +74,9 @@ function Row({ item, first, disabled, onPress }: { item: GroceryItem; first: boo
       accessibilityLabel={groceryRowLabel(item)}
       accessibilityHint={ticked ? GROCERY_COPY.untickA11yHint : GROCERY_COPY.tickA11yHint}
       accessibilityState={{ checked: ticked, disabled }}
+      // react-native-web reads the aria-* props (accessibilityState alone does not reach the DOM).
+      aria-checked={ticked}
+      aria-disabled={disabled}
       disabled={disabled}
       onPress={onPress}
       style={({ pressed }) => ({
