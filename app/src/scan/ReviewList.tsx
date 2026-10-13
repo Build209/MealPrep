@@ -42,6 +42,8 @@ function KeepBox({ checked, item, onChange }: { checked: boolean; item: number; 
       accessibilityRole="checkbox"
       accessibilityLabel={`Add item ${item} to pantry`}
       accessibilityState={{ checked }}
+      // The web build reads aria-checked (accessibilityState alone renders no checked state there).
+      aria-checked={checked}
       onPress={() => onChange(!checked)}
       style={{ minHeight: touch.min, flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'flex-start' }}
     >
