@@ -3,7 +3,72 @@ import { colors, fonts, radius, touch, type as typeScale } from '../theme/tokens
 import { AppText } from '../ui/AppText';
 import { Card } from '../ui/Card';
 import { PLACE_LABELS, SCAN_PLACES, type ScanPlace } from './request';
-import type { ReviewRow, RowEdit } from './review';
+import type { PantryMatchRow } from '../kitchen/pantryMatch';
+import { formatQuantity, isIncluded, pantryStatusFor, parseQuantity, type ReviewRow, type RowEdit, type RowPantryStatus } from './review';
+
+/** What a row does to the pantry, in words (null for a plain new item). */
+export function statusLine(row: ReviewRow, status: RowPantryStatus): string | null {
+  const have = (s: { quantity: number; unit: string }) => `${formatQuantity(s.quantity)} ${s.unit}`;
+  switch (status.kind) {
+    case 'new':
+      return null;
+    case 'already':
+      return `You have ${have(status)} of ${status.name}. Tick to add it again anyway.`;
+    case 'top-up': {
+      const added = parseQuantity(row.quantityText);
+      return added === null
+        ? `Adds to the ${have(status)} of ${status.name} you have.`
+        : `Adds to the ${have(status)} of ${status.name} you have, making ${formatQuantity(status.quantity + added)} ${status.unit}.`;
+    }
+    case 'other-unit':
+      return `You have ${status.name} in ${status.unit}. This is saved as its own item.`;
+  }
+}
+
+function Badge({ text, tone }: { text: string; tone: 'have' | 'check' }) {
+  return (
+    <View style={{ backgroundColor: tone === 'have' ? colors.successLight : colors.warningLight, borderRadius: radius.pill, paddingHorizontal: 8, paddingVertical: 2 }}>
+      <AppText variant="label" color={tone === 'have' ? 'ink' : 'onWarning'}>
+        {text}
+      </AppText>
+    </View>
+  );
+}
+
+/** The keep tick: a real checkbox, 44px tall. */
+function KeepBox({ checked, item, onChange }: { checked: boolean; item: number; onChange: (value: boolean) => void }) {
+  return (
+    <Pressable
+      accessibilityRole="checkbox"
+      accessibilityLabel={`Add item ${item} to pantry`}
+      accessibilityState={{ checked }}
+      onPress={() => onChange(!checked)}
+      style={{ minHeight: touch.min, flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'flex-start' }}
+    >
+      <View
+        style={{
+          width: 22,
+          height: 22,
+          borderRadius: 6,
+          borderWidth: 2,
+          borderColor: colors.ink,
+          backgroundColor: checked ? colors.ink : colors.card,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        {checked ? (
+          <AppText variant="label" color="onPrimary" bold>
+            ✓
+          </AppText>
+        ) : null}
+      </View>
+      <AppText variant="secondary" bold>
+        Add to pantry
+      </AppText>
+    </Pressable>
+  );
+}
 
 const inputStyle = {
   minHeight: touch.min,
@@ -61,28 +126,36 @@ function PlaceChip({ place, selected, onPress, item }: { place: ScanPlace; selec
   );
 }
 
-function ReviewItem({ row, index, problem, onEdit, onRemove }: {
+function ReviewItem({ row, index, status, problem, onEdit, onRemove, onInclude }: {
   row: ReviewRow;
   index: number;
+  status: RowPantryStatus;
   problem?: string;
   onEdit: (change: RowEdit) => void;
   onRemove: () => void;
+  onInclude: (value: boolean) => void;
 }) {
   const n = index + 1;
+  const included = isIncluded(row, status);
+  const line = statusLine(row, status);
   return (
     <Card style={problem ? { borderColor: colors.danger } : undefined}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
         <AppText variant="label" color="muted">
           {`ITEM ${n}`}
         </AppText>
-        {row.needsCheck ? (
-          <View style={{ backgroundColor: colors.warningLight, borderRadius: radius.pill, paddingHorizontal: 8, paddingVertical: 2 }}>
-            <AppText variant="label" color="onWarning">
-              Check this
-            </AppText>
-          </View>
-        ) : null}
+        <View style={{ flexDirection: 'row', gap: 6, flexWrap: 'wrap' }}>
+          {status.kind === 'already' ? <Badge text="Already in your pantry" tone="have" /> : null}
+          {status.kind === 'top-up' ? <Badge text="Adds to what you have" tone="have" /> : null}
+          {row.needsCheck ? <Badge text="Check this" tone="check" /> : null}
+        </View>
       </View>
+      {line ? (
+        <AppText variant="secondary" color="muted">
+          {line}
+        </AppText>
+      ) : null}
+      <KeepBox checked={included} item={n} onChange={onInclude} />
       <LabeledInput label={`Name, item ${n}`} value={row.name} onChangeText={(name) => onEdit({ name })} />
       <View style={{ flexDirection: 'row', gap: 8 }}>
         <LabeledInput label={`Quantity, item ${n}`} value={row.quantityText} onChangeText={(quantityText) => onEdit({ quantityText })} numeric />
@@ -112,12 +185,15 @@ function ReviewItem({ row, index, problem, onEdit, onRemove }: {
   );
 }
 
-/** Every detected item, editable or removable, before anything is saved. */
+/** Every detected item, editable, tickable or removable, before anything is saved. */
 export function ReviewList(props: {
   rows: readonly ReviewRow[];
+  /** The pantry query's rows (server data), to show what is already there. */
+  pantry: readonly PantryMatchRow[];
   problems: Record<string, string>;
   onEdit: (key: string, change: RowEdit) => void;
   onRemove: (key: string) => void;
+  onInclude: (key: string, value: boolean) => void;
 }) {
   return (
     <View style={{ gap: 12 }}>
@@ -126,9 +202,11 @@ export function ReviewList(props: {
           key={row.key}
           row={row}
           index={index}
+          status={pantryStatusFor(row, props.pantry)}
           problem={props.problems[row.key]}
           onEdit={(change) => props.onEdit(row.key, change)}
           onRemove={() => props.onRemove(row.key)}
+          onInclude={(value) => props.onInclude(row.key, value)}
         />
       ))}
     </View>

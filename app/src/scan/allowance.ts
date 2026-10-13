@@ -40,12 +40,35 @@ export function allowanceFor(tier: ScanTier | null, used: number | null): Allowa
   return { state: 'capped', tier, limit, used: usedWhole, remaining: Math.max(0, limit - usedWhole) };
 }
 
-/** "Scan · 2 left this month", "Scan · none left this month", or just "Scan" when nothing is known. */
+/** "Scan · 2 left this month", "No scans left this month", or just "Scan" when nothing is known. */
 export function allowanceText(allowance: Allowance, base: string = 'Scan'): string {
   if (allowance.state !== 'capped') return base;
-  if (allowance.remaining <= 0) return `${base} · none left this month`;
+  if (allowance.remaining <= 0) return OUT_OF_SCANS_COPY.button;
   return `${base} · ${allowance.remaining} left this month`;
 }
+
+/** True only when the month's allowance is known to be used up. */
+export function isUsedUp(allowance: Allowance): allowance is Extract<Allowance, { state: 'capped' }> {
+  return allowance.state === 'capped' && allowance.remaining <= 0;
+}
+
+/**
+ * Where "See plans" goes. The new app has no plans screen until phase 4, so it opens the live
+ * app; there the plans are under the account button. (The live app has no plans route of its own.)
+ */
+export const LIVE_PLANS_URL = 'https://mealplanatic.app/';
+
+/** The out-of-scans sheet. Plain words, no pressure (compliance rule 11). */
+export const OUT_OF_SCANS_COPY = {
+  button: 'No scans left this month',
+  title: 'No scans left this month',
+  allowance: (limit: number) =>
+    `Your plan includes ${limit} photo ${limit === 1 ? 'scan' : 'scans'} a month. Shelf, fridge, spice rack and receipt photos share them.`,
+  reset: 'Your scans start again on the 1st. You can still add items by hand.',
+  plans: 'Paid plans include more scans. See plans opens the current MealPlanatic app, where plans are under your account.',
+  seePlans: 'See plans',
+  close: 'Close',
+} as const;
 
 /** A sentence for the scan screen, or null when there is nothing worth saying. */
 export function allowanceNote(allowance: Allowance): string | null {

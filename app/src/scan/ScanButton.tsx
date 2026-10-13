@@ -1,9 +1,11 @@
 import { useRouter } from 'expo-router';
+import { useState } from 'react';
 import { Pressable, View, type ViewStyle } from 'react-native';
 import { useScanAllowance } from '../data/scanUsage';
 import { colors, radius, touch } from '../theme/tokens';
 import { AppText } from '../ui/AppText';
-import { allowanceText } from './allowance';
+import { allowanceText, isUsedUp } from './allowance';
+import { ScanLimitSheet } from './ScanLimitSheet';
 
 /** A small drawn camera (no icon font in the app yet): body, viewfinder bump and lens, in tomato. */
 export function CameraIcon({ size = 20, color = colors.tomato }: { size?: number; color?: string }) {
@@ -71,11 +73,22 @@ export function ScanPill({ label, onPress, disabled, main, style }: ScanPillProp
 }
 
 /**
- * The Scan button with this month's allowance on it ("Scan · 2 left this month"). Opens the scan
- * screen unless `onPress` is given. Meant for the Pantry tab; Home carries it until then.
+ * The Scan button with this month's allowance on it ("Scan · 2 left this month"), on the Pantry
+ * tab. Opens the scan screen unless `onPress` is given. With no scans left it stays visible,
+ * reads "No scans left this month", and opens a sheet about the monthly allowance instead.
  */
 export function ScanButton({ label = 'Scan', onPress, main, style }: { label?: string; onPress?: () => void; main?: boolean; style?: ViewStyle }) {
   const router = useRouter();
   const allowance = useScanAllowance();
-  return <ScanPill label={allowanceText(allowance, label)} main={main} style={style} onPress={onPress ?? (() => router.push('/scan'))} />;
+  const [limitOpen, setLimitOpen] = useState(false);
+  const usedUp = isUsedUp(allowance);
+  const open = onPress ?? (() => router.push('/scan'));
+  return (
+    <>
+      <ScanPill label={allowanceText(allowance, label)} main={main} style={style} onPress={usedUp ? () => setLimitOpen(true) : open} />
+      {allowance.state === 'capped' && usedUp ? (
+        <ScanLimitSheet visible={limitOpen} limit={allowance.limit} onClose={() => setLimitOpen(false)} />
+      ) : null}
+    </>
+  );
 }

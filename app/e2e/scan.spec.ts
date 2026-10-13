@@ -5,7 +5,9 @@ import { adminClient, freshEmail } from './local-supabase';
  * Photo and receipt scanning, end to end against the local stack. The local stack runs no edge
  * functions (and the live pantry-vision must never be called from a test), so the request to
  * /functions/v1/pantry-vision is intercepted and answered here in the function's real shape.
- * Everything else (sign-in, the allowance read, the pantry insert) is the real local server.
+ * Everything else (sign-in, the allowance read, the pantry reads and writes) is the real local server.
+ * The Scan button lives on the Pantry tab. "See plans" opens the live app in a new tab; that page
+ * is answered here too, so no test ever loads the live site.
  */
 test.describe.configure({ mode: 'serial' });
 
@@ -89,13 +91,47 @@ async function choosePhoto(page: Page) {
 
 const period = () => new Date().toISOString().slice(0, 7);
 
+type SeedRow = { ingredient_id: string; name: string; category: string; quantity: number; unit: string; location: string };
+
+/** Puts rows straight into the person's pantry (service role: test setup only). */
+async function seedPantry(userId: string, rows: SeedRow[]) {
+  const { error } = await adminClient()
+    .from('pantry_items')
+    .insert(rows.map((row) => ({ ...row, user_id: userId })));
+  expect(error).toBeNull();
+}
+
+async function serverPantry(userId: string) {
+  const { data, error } = await adminClient()
+    .from('pantry_items')
+    .select('id, ingredient_id, name, quantity, unit, location')
+    .eq('user_id', userId)
+    .order('name');
+  expect(error).toBeNull();
+  return (data ?? []).map((r) => ({ ...r, quantity: Number(r.quantity) }));
+}
+
+function visionAnswer(items: Array<Record<string, unknown>>, kind: 'pantry' | 'receipt') {
+  return {
+    items,
+    model: 'gemini-3.8-flash',
+    usage: { isPlus: false, tier: 'free', limit: 3, remaining: 2 },
+    scanLocation: 'pantry',
+    kind,
+    cached: false,
+    itemCount: items.length,
+  };
+}
+
 test('allowance on the button, shelf scan, review edits, save writes the rows', async ({ page }) => {
   const { userId, accessToken } = await newSignedInUser(page, 'scanner');
 
   // One scan already used this month: a free account has 2 of 3 left.
   const seeded = await adminClient().from('photo_scan_usage').insert({ user_id: userId, period: period(), scans: 1 });
   expect(seeded.error).toBeNull();
-  await page.reload();
+  await expect(page.getByText('Scan your food')).toHaveCount(0); // the temporary Home card is gone
+  await page.goto('/pantry');
+  await expect(page.getByText('Your pantry is empty')).toBeVisible();
   const scanButton = page.getByRole('button', { name: 'Scan · 2 left this month' });
   await expect(scanButton).toBeVisible();
 
@@ -153,13 +189,44 @@ test('allowance on the button, shelf scan, review edits, save writes the rows', 
   ]);
 });
 
-test('allowance used up: a receipt scan shows the plain message and saves nothing', async ({ page }) => {
+test('no scans left: the button says so, a sheet explains the allowance, See plans opens the live app', async ({ page, context }) => {
   const { userId } = await newSignedInUser(page, 'usedup');
   const seeded = await adminClient().from('photo_scan_usage').insert({ user_id: userId, period: period(), scans: 3 });
   expect(seeded.error).toBeNull();
-  await page.reload();
-  const scanButton = page.getByRole('button', { name: 'Scan · none left this month' });
+  // The live app's page is answered here: a test never loads the live site.
+  const livePages: string[] = [];
+  await context.route('https://mealplanatic.app/**', async (route) => {
+    livePages.push(route.request().url());
+    await route.fulfill({ status: 200, contentType: 'text/html', body: '<!doctype html><title>stub</title>' });
+  });
+  const captured = await stubPantryVision(page, 500, { error: 'must not be called' });
+
+  await page.goto('/pantry');
+  const scanButton = page.getByRole('button', { name: 'No scans left this month' });
   await expect(scanButton).toBeVisible();
+  await scanButton.click();
+  await expect(page.getByText('Your plan includes 3 photo scans a month.', { exact: false })).toBeVisible();
+  await expect(page.getByText('Your scans start again on the 1st.', { exact: false })).toBeVisible();
+  await expect(page).toHaveURL(/\/pantry$/); // the sheet, not the scan screen
+
+  const opened = context.waitForEvent('page');
+  await page.getByRole('link', { name: 'See plans' }).click();
+  const plans = await opened;
+  await plans.waitForLoadState();
+  expect(plans.url()).toBe('https://mealplanatic.app/');
+  expect(livePages).toEqual(['https://mealplanatic.app/']);
+  await plans.close();
+  await expect(page).toHaveURL(/\/pantry$/); // the app stays where it was
+
+  await page.getByRole('button', { name: 'Close', exact: true }).last().click();
+  await expect(page.getByText('Your plan includes 3 photo scans a month.', { exact: false })).toHaveCount(0);
+  expect(captured).toHaveLength(0);
+});
+
+test('allowance used up: the refusal from the server on a receipt scan shows the plain message and saves nothing', async ({ page }) => {
+  const { userId } = await newSignedInUser(page, 'refused');
+  const seeded = await adminClient().from('photo_scan_usage').insert({ user_id: userId, period: period(), scans: 3 });
+  expect(seeded.error).toBeNull();
 
   const captured = await stubPantryVision(page, 403, {
     error: 'You have used your 3 free scans for this month. They reset on the 1st. A paid plan includes more.',
@@ -167,8 +234,8 @@ test('allowance used up: a receipt scan shows the plain message and saves nothin
     usage: { remaining: 0, limit: 3, isPlus: false, tier: 'free' },
   });
 
-  await scanButton.click();
-  await expect(page).toHaveURL(/\/scan$/);
+  // The scan screen is still reachable by its address; the server stays the judge.
+  await page.goto('/scan');
   await page.getByRole('radio', { name: 'Receipt', exact: true }).click();
   await choosePhoto(page);
 
@@ -180,4 +247,92 @@ test('allowance used up: a receipt scan shows the plain message and saves nothin
   const rows = await adminClient().from('pantry_items').select('id').eq('user_id', userId);
   expect(rows.error).toBeNull();
   expect(rows.data).toEqual([]);
+});
+
+test('shelf scan: an item already in the pantry is shown as already there and not duplicated', async ({ page }) => {
+  const { userId } = await newSignedInUser(page, 'shelfdupe');
+  await seedPantry(userId, [{ ingredient_id: 'eggs', name: 'Eggs', category: 'dairy', quantity: 6, unit: 'each', location: 'fridge' }]);
+  const [eggs] = await serverPantry(userId);
+
+  await stubPantryVision(
+    page,
+    200,
+    visionAnswer(
+      [
+        { name: 'eggs', quantity: 12, unit: 'each', category: 'dairy', storage: 'fridge', confidence: 0.9 },
+        { name: 'butter', quantity: 1, unit: 'pack', category: 'dairy', storage: 'fridge', confidence: 0.9 },
+      ],
+      'pantry',
+    ),
+  );
+
+  await page.goto('/pantry');
+  await expect(page.getByText('1 item', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Scan · 3 left this month' }).click();
+  await expect(page).toHaveURL(/\/scan$/);
+  await page.getByRole('radio', { name: 'Fridge', exact: true }).click();
+  await choosePhoto(page);
+
+  await expect(page.getByText('Check what we found (2)')).toBeVisible();
+  await expect(page.getByText('Already in your pantry', { exact: true })).toHaveCount(1);
+  await expect(page.getByRole('checkbox', { name: 'Add item 1 to pantry' })).not.toBeChecked();
+  await expect(page.getByRole('checkbox', { name: 'Add item 2 to pantry' })).toBeChecked();
+  await page.getByRole('button', { name: 'Save 1 item to pantry' }).click();
+  await expect(page.getByText('Saved 1 item to your pantry.')).toBeVisible();
+
+  expect(await serverPantry(userId)).toEqual([
+    { id: expect.any(String), ingredient_id: 'butter', name: 'Butter', quantity: 1, unit: 'pack', location: 'fridge' },
+    { ...eggs, quantity: 6 }, // untouched: the same row, the same quantity, no second Eggs row
+  ]);
+
+  // Back on the Pantry tab, the list is what the server has: two items.
+  await page.getByRole('button', { name: 'Done' }).click();
+  await expect(page).toHaveURL(/\/pantry$/);
+  await expect(page.getByText('2 items', { exact: true })).toBeVisible();
+});
+
+test('receipt scan: a bought item adds to the matching pantry row instead of making a second row', async ({ page }) => {
+  const { userId } = await newSignedInUser(page, 'receipttopup');
+  await seedPantry(userId, [
+    { ingredient_id: 'black-beans', name: 'Black Beans', category: 'dry_goods', quantity: 2, unit: 'can', location: 'pantry' },
+  ]);
+  const [beans] = await serverPantry(userId);
+
+  const captured = await stubPantryVision(
+    page,
+    200,
+    visionAnswer(
+      [
+        { name: 'black beans', quantity: 3, unit: 'can', category: 'dry_goods', storage: 'pantry', confidence: 0.9 },
+        { name: 'bananas', quantity: 6, unit: 'each', category: 'produce', storage: 'pantry', confidence: 0.9 },
+      ],
+      'receipt',
+    ),
+  );
+
+  await page.goto('/pantry');
+  await expect(page.getByText('1 item', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Scan · 3 left this month' }).click();
+  await expect(page).toHaveURL(/\/scan$/);
+  await page.getByRole('radio', { name: 'Receipt', exact: true }).click();
+  await choosePhoto(page);
+
+  await expect(page.getByText('Check what we found (2)')).toBeVisible();
+  expect(captured[0]!.body.action).toBe('receipt');
+  await expect(page.getByText('Adds to what you have', { exact: true })).toHaveCount(1);
+  await expect(page.getByText('making 5 can', { exact: false })).toBeVisible();
+  await page.getByRole('button', { name: 'Save 2 items to pantry' }).click();
+  await expect(page.getByText('Saved 1 item to your pantry and added to 1 item you already had.')).toBeVisible();
+
+  const rows = await serverPantry(userId);
+  expect(rows).toHaveLength(2);
+  expect(rows).toContainEqual({ ...beans, quantity: 5 }); // the same row id, 2 + 3
+  expect(rows).toContainEqual({
+    id: expect.any(String),
+    ingredient_id: 'bananas',
+    name: 'Bananas',
+    quantity: 6,
+    unit: 'each',
+    location: 'pantry',
+  });
 });

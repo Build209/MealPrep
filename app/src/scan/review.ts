@@ -1,8 +1,12 @@
 /**
  * The review list between a scan and the pantry: every detected item can be edited (name,
- * quantity, unit, place) or removed before anything is saved. Pure functions only
- * (tests/scan-review.test.ts). Saving goes through src/data/pantryScanSave.ts.
+ * quantity, unit, place), ticked or removed before anything is saved. Each row is matched
+ * against the pantry as the server has it (src/kitchen/pantryMatch.ts): shelf items already
+ * there are shown as such and left out unless the person adds them; receipt lines add to a
+ * matching row with the same unit. Pure functions only (tests/scan-review.test.ts).
+ * Saving goes through src/data/pantryScanSave.ts.
  */
+import { findAlreadyInPantry, matchReceiptLine, roundQuantity, type PantryMatchRow } from '../kitchen/pantryMatch';
 import type { DetectedItem, PantryCategory, ScanKind, ScanPlace } from './request';
 
 export type ReviewRow = {
@@ -16,6 +20,13 @@ export type ReviewRow = {
   confidence: number;
   /** Low model confidence: shown with "Check this". */
   needsCheck: boolean;
+  /** Which kind of photo the row came from: shelf rows skip what is in the pantry, receipt rows add to it. */
+  kind: ScanKind;
+  /**
+   * The person's tick, once they touch it. Left out, the row is kept unless it is a shelf item
+   * already in the pantry (see isIncluded).
+   */
+  include?: boolean;
 };
 
 /** Below this the old app dropped a detection as junk. */
@@ -66,6 +77,7 @@ export function toReviewRows(items: readonly DetectedItem[], kind: ScanKind, pla
       category: item.category,
       confidence: item.confidence,
       needsCheck: item.confidence < CHECK_CONFIDENCE,
+      kind,
     });
   });
   return rows;
@@ -75,6 +87,10 @@ export type RowEdit = Partial<Pick<ReviewRow, 'name' | 'quantityText' | 'unit' |
 
 export function editRow(rows: readonly ReviewRow[], key: string, edit: RowEdit): ReviewRow[] {
   return rows.map((row) => (row.key === key ? { ...row, ...edit, needsCheck: false } : row));
+}
+
+export function setIncluded(rows: readonly ReviewRow[], key: string, include: boolean): ReviewRow[] {
+  return rows.map((row) => (row.key === key ? { ...row, include } : row));
 }
 
 export function removeRow(rows: readonly ReviewRow[], key: string): ReviewRow[] {
@@ -109,31 +125,97 @@ export type NewPantryRow = {
   location: ScanPlace;
 };
 
-export type SavePlan = { ok: true; rows: NewPantryRow[] } | { ok: false; problems: Record<string, string> };
+/** An existing pantry row whose quantity a receipt raises: `quantity` is the new total. */
+export type PantryTopUp = { id: string; name: string; quantity: number; unit: string };
 
-/** Every row checked; either all of them become insert rows, or the problems are returned by row key. */
-export function planSave(userId: string, rows: readonly ReviewRow[]): SavePlan {
+/** What a review row means for the pantry as it is now (derived on every render, never stored). */
+export type RowPantryStatus =
+  | { kind: 'new' }
+  /** Shelf scan: this is already in the pantry. */
+  | { kind: 'already'; name: string; quantity: number; unit: string }
+  /** Receipt: saving adds the quantity to this pantry row. */
+  | { kind: 'top-up'; name: string; quantity: number; unit: string }
+  /** Receipt: the pantry has this in another unit, so it is saved as its own row. */
+  | { kind: 'other-unit'; name: string; quantity: number; unit: string };
+
+function savedName(row: Pick<ReviewRow, 'name'>): string {
+  return displayName(row.name).slice(0, 120);
+}
+
+export function pantryStatusFor(row: ReviewRow, pantry: readonly PantryMatchRow[]): RowPantryStatus {
+  const name = savedName(row);
+  if (!name) return { kind: 'new' };
+  if (row.kind === 'shelf') {
+    const found = findAlreadyInPantry(name, pantry);
+    return found ? { kind: 'already', name: found.name, quantity: found.quantity, unit: found.unit } : { kind: 'new' };
+  }
+  const match = matchReceiptLine({ name, ingredientId: ingredientIdFor(name), unit: row.unit }, pantry);
+  if (match.kind === 'new') return { kind: 'new' };
+  return { kind: match.kind, name: match.row.name, quantity: match.row.quantity, unit: match.row.unit };
+}
+
+/** Kept for saving: the person's tick, else everything except shelf items already in the pantry. */
+export function isIncluded(row: ReviewRow, status: RowPantryStatus): boolean {
+  return row.include ?? status.kind !== 'already';
+}
+
+export function includedCount(rows: readonly ReviewRow[], pantry: readonly PantryMatchRow[]): number {
+  return rows.filter((row) => isIncluded(row, pantryStatusFor(row, pantry))).length;
+}
+
+export type SavePlan =
+  | { ok: true; inserts: NewPantryRow[]; topUps: PantryTopUp[] }
+  | { ok: false; problems: Record<string, string> };
+
+/**
+ * Every kept row checked against the pantry as the server has it. Either all of them become
+ * inserts and top-ups, or the problems are returned by row key. Unticked rows are skipped.
+ * Several receipt lines for the same pantry row add up into one top-up.
+ */
+export function planSave(userId: string, rows: readonly ReviewRow[], pantry: readonly PantryMatchRow[] = []): SavePlan {
   const problems: Record<string, string> = {};
-  const out: NewPantryRow[] = [];
+  const inserts: NewPantryRow[] = [];
+  const topUps = new Map<string, PantryTopUp>();
   for (const row of rows) {
+    if (!isIncluded(row, pantryStatusFor(row, pantry))) continue;
     const problem = rowProblem(row);
     if (problem) {
       problems[row.key] = problem;
       continue;
     }
-    const name = displayName(row.name).slice(0, 120);
-    out.push({
+    const name = savedName(row);
+    const unit = row.unit.trim().slice(0, 32);
+    const quantity = parseQuantity(row.quantityText) as number;
+    if (row.kind === 'receipt') {
+      const match = matchReceiptLine({ name, ingredientId: ingredientIdFor(name), unit }, pantry);
+      if (match.kind === 'top-up') {
+        const prior = topUps.get(match.row.id);
+        const base = prior ? prior.quantity : match.row.quantity;
+        topUps.set(match.row.id, { id: match.row.id, name: match.row.name, unit: match.row.unit, quantity: roundQuantity(base + quantity) });
+        continue;
+      }
+    }
+    inserts.push({
       user_id: userId,
       ingredient_id: ingredientIdFor(name),
       name,
       category: row.category,
-      quantity: parseQuantity(row.quantityText) as number,
-      unit: row.unit.trim().slice(0, 32),
+      quantity,
+      unit,
       location: row.place,
     });
   }
   if (Object.keys(problems).length > 0) return { ok: false, problems };
-  return { ok: true, rows: out };
+  return { ok: true, inserts, topUps: [...topUps.values()] };
+}
+
+/** "Saved 2 items to your pantry." or, with receipt top-ups, what was added and what went up. */
+export function savedMessage(added: number, toppedUp: number): string {
+  const items = (n: number) => (n === 1 ? '1 item' : `${n} items`);
+  if (toppedUp === 0) return `Saved ${items(added)} to your pantry.`;
+  const had = toppedUp === 1 ? '1 item you already had' : `${toppedUp} items you already had`;
+  if (added === 0) return `Added to ${had}.`;
+  return `Saved ${items(added)} to your pantry and added to ${had}.`;
 }
 
 export function saveButtonLabel(count: number): string {

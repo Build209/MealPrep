@@ -10,7 +10,7 @@ import { Card } from '../ui/Card';
 import { Screen } from '../ui/Screen';
 import { allowanceNote } from './allowance';
 import { ReviewList } from './ReviewList';
-import { saveButtonLabel } from './review';
+import { includedCount, saveButtonLabel, savedMessage } from './review';
 import { ScanPill } from './ScanButton';
 import { useScanFlow, type ScanTarget } from './useScanFlow';
 
@@ -77,7 +77,8 @@ export function ScanScreen() {
 
   if (ready && !session) return <Redirect href="/sign-in" />;
 
-  const close = () => (router.canGoBack() ? router.back() : router.replace('/'));
+  const close = () => (router.canGoBack() ? router.back() : router.replace('/pantry'));
+  const keep = includedCount(flow.rows, flow.pantry);
   const note = allowanceNote(allowance);
   const { phase } = flow;
   const pickers = (
@@ -138,13 +139,20 @@ export function ScanScreen() {
             {`Check what we found (${flow.rows.length})`}
           </AppText>
           <AppText variant="secondary" color="muted">
-            Fix anything wrong and remove what you don't want. Nothing is saved until you tap Save.
+            Fix anything wrong and untick what you don't want. Nothing is saved until you tap Save.
           </AppText>
-          <ReviewList rows={flow.rows} problems={flow.problems} onEdit={flow.edit} onRemove={flow.remove} />
+          <ReviewList
+            rows={flow.rows}
+            pantry={flow.pantry}
+            problems={flow.problems}
+            onEdit={flow.edit}
+            onRemove={flow.remove}
+            onInclude={flow.include}
+          />
           <Button
-            label={flow.saving ? 'Saving...' : saveButtonLabel(flow.rows.length)}
+            label={flow.saving ? 'Saving...' : saveButtonLabel(keep)}
             main
-            disabled={flow.saving || flow.rows.length === 0}
+            disabled={flow.saving || keep === 0}
             onPress={flow.saveAll}
           />
           <Card>
@@ -161,7 +169,7 @@ export function ScanScreen() {
       {phase.name === 'saved' ? (
         <Card>
           <AppText variant="sectionTitle" bold accessibilityRole="alert">
-            {phase.count === 1 ? 'Saved 1 item to your pantry.' : `Saved ${phase.count} items to your pantry.`}
+            {savedMessage(phase.added, phase.toppedUp)}
           </AppText>
           <Button label="Scan another photo" kind="secondary" onPress={flow.reset} />
           <Button label="Done" onPress={close} />
