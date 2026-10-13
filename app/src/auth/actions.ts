@@ -23,14 +23,20 @@ export async function signIn(auth: AuthClient | null, email: string, password: s
 /**
  * Only called once the 18+ box is ticked (the button does not work before). The profile name
  * defaults to the part of the email before the @, done by the database's sign-up trigger.
+ * `redirectTo` is where the confirm link lands (the preview build passes its own address).
  */
-export async function signUp(auth: AuthClient | null, email: string, password: string): Promise<AuthActionResult> {
+export async function signUp(
+  auth: AuthClient | null,
+  email: string,
+  password: string,
+  redirectTo: string = AUTH_EMAIL_REDIRECT,
+): Promise<AuthActionResult> {
   if (!auth) return { ok: false, error: AUTH_RESULT_COPY.unavailable };
   try {
     const { data, error } = await auth.signUp({
       email: email.trim(),
       password,
-      options: { emailRedirectTo: AUTH_EMAIL_REDIRECT },
+      options: { emailRedirectTo: redirectTo },
     });
     if (error) return { ok: false, error: authErrorMessage(error.message) };
     return signUpOutcome({ session: data.session, user: data.user });

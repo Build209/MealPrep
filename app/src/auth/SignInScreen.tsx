@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
+import { parseChannel, signUpRedirect } from '../lib/channel';
+import { env } from '../lib/env';
 import { getSupabase } from '../lib/supabase';
 import { colors, layout, radius, space, touch } from '../theme/tokens';
 import { AppText } from '../ui/AppText';
@@ -8,9 +10,16 @@ import { Card } from '../ui/Card';
 import { TopBar } from '../ui/TopBar';
 import { requestPasswordReset, signIn, signUp } from './actions';
 import { AgeCheckbox } from './AgeCheckbox';
-import { AUTH_RESET_COPY, AUTH_RESULT_COPY, AUTH_SCREEN_COPY } from './copy';
+import { AUTH_EMAIL_REDIRECT, AUTH_RESET_COPY, AUTH_RESULT_COPY, AUTH_SCREEN_COPY } from './copy';
 import { Field } from './Field';
 import { canSubmit, submitBlocker, type AuthActionResult, type AuthMode } from './logic';
+
+/** Preview web builds send the "confirm your email" link back to the preview's own address. */
+const confirmLinkTarget = signUpRedirect(
+  parseChannel(env.appChannel),
+  (globalThis as { location?: { origin?: string } }).location?.origin,
+  AUTH_EMAIL_REDIRECT,
+);
 
 /**
  * Sign in, create an account, or ask for a password reset link. Once signed in, the
@@ -82,7 +91,7 @@ function AuthForm() {
         mode === 'sign-in'
           ? await signIn(auth, email, password)
           : mode === 'sign-up'
-            ? await signUp(auth, email, password)
+            ? await signUp(auth, email, password, confirmLinkTarget)
             : await requestPasswordReset(auth, email);
     } catch {
       result = { ok: false, error: AUTH_RESULT_COPY.generic };

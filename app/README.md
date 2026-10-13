@@ -25,6 +25,11 @@ npm run web          # local preview in a browser
 
 CI: `.github/workflows/app-ci.yml` (typecheck, tests, web build) on pull requests that touch `app/`.
 
+Phone preview: `.github/workflows/app-preview.yml` builds the web app against the live database on
+every push to `rebuild/v1` and stores it on the `app-preview` branch, with a small "Preview build"
+label (`EXPO_PUBLIC_APP_CHANNEL=preview`, logic in `src/lib/channel.ts`). How to open it on a phone:
+`PREVIEW.md`.
+
 End-to-end: `.github/workflows/app-e2e.yml` starts a local Supabase stack from `db/` (database, auth,
 REST; email confirmation off, local only), builds the web export against it, and runs the Playwright
 tests in `e2e/` in Chromium: signed-out goes to sign-in, create account with the 18+ box, sign out and
