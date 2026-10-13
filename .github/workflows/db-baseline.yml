@@ -1,0 +1,40 @@
+name: Database baseline
+
+# Builds a local Supabase database from db/supabase/migrations (the live schema baseline)
+# and runs db/tests/baseline_check.sql against it. Never connects to the live project.
+on:
+  pull_request:
+    paths:
+      - "db/**"
+      - ".github/workflows/db-baseline.yml"
+  push:
+    branches: [rebuild/v1]
+    paths:
+      - "db/**"
+      - ".github/workflows/db-baseline.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: db-baseline-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  baseline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Start local database (applies migrations)
+        run: supabase db start --workdir db
+      - name: Baseline checks
+        env:
+          DB_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
+        run: db/scripts/check-baseline.sh
+      - name: Stop local database
+        if: always()
+        run: supabase stop --workdir db --no-backup
