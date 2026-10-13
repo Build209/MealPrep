@@ -14,3 +14,43 @@ enabled = true
 
 [db.seed]
 enabled = false
+
+# ---------------------------------------------------------------------------------------------
+# Everything below is for the LOCAL stack only (CI end-to-end tests: .github/workflows/app-e2e.yml).
+# It never changes the live project; the live auth settings are set in the Supabase dashboard.
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[auth]
+enabled = true
+# The app's web build is served here during the e2e tests (app/e2e/serve.mjs).
+site_url = "http://127.0.0.1:4173"
+additional_redirect_urls = ["http://127.0.0.1:4173", "http://localhost:4173"]
+enable_signup = true
+
+[auth.email]
+enable_signup = true
+# Local only: tests sign up and sign in straight away, with no email to open.
+enable_confirmations = false
+
+# Not needed by the tests; switched off so the local stack starts faster. Storage stays on:
+# its service creates the storage schema the baseline's buckets and policies need.
+[studio]
+enabled = false
+
+[local_smtp]
+enabled = false
+
+[realtime]
+enabled = false
+
+[edge_runtime]
+enabled = false
+
+[analytics]
+enabled = false

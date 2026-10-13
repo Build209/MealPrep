@@ -2,3 +2,5 @@ node_modules/
 .expo/
 dist/
 *.tsbuildinfo
+playwright-report/
+test-results/

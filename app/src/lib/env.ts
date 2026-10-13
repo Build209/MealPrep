@@ -12,6 +12,15 @@ export const env = {
   gitSha: process.env.EXPO_PUBLIC_GIT_SHA ?? '',
 };
 
+/**
+ * A usable server address: https anywhere, or plain http only on this machine
+ * (the local Supabase stack that CI's end-to-end tests run against).
+ */
+export function isUsableSupabaseUrl(url: string): boolean {
+  if (url.startsWith('https://')) return true;
+  return /^http:\/\/(127\.0\.0\.1|localhost)(:\d+)?(\/|$)/.test(url);
+}
+
 export function isSupabaseConfigured(): boolean {
-  return env.supabaseUrl.startsWith('https://') && env.supabaseAnonKey.length > 0;
+  return isUsableSupabaseUrl(env.supabaseUrl) && env.supabaseAnonKey.length > 0;
 }

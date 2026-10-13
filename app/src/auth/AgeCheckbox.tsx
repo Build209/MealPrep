@@ -18,6 +18,8 @@ export function AgeCheckbox({ checked, onChange }: Props) {
       <Pressable
         accessibilityRole="checkbox"
         accessibilityState={{ checked }}
+        // react-native-web 0.21 ignores accessibilityState; aria-checked is what browsers and screen readers get.
+        aria-checked={checked}
         accessibilityLabel={AUTH_SCREEN_COPY.ageCheckbox}
         onPress={() => onChange(!checked)}
         style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: touch.min, paddingVertical: 6 }}

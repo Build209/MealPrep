@@ -29,3 +29,19 @@ Phone preview: `.github/workflows/app-preview.yml` builds the web app against th
 every push to `rebuild/v1` and stores it on the `app-preview` branch, with a small "Preview build"
 label (`EXPO_PUBLIC_APP_CHANNEL=preview`, logic in `src/lib/channel.ts`). How to open it on a phone:
 `PREVIEW.md`.
+
+End-to-end: `.github/workflows/app-e2e.yml` starts a local Supabase stack from `db/` (database, auth,
+REST; email confirmation off, local only), builds the web export against it, and runs the Playwright
+tests in `e2e/` in Chromium: signed-out goes to sign-in, create account with the 18+ box, sign out and
+back in, and row level security on the user's own profile and pantry rows. Every new feature adds a
+test there. Locally, with Docker and the Supabase CLI:
+
+```bash
+supabase start --workdir ../db
+supabase status -o env --workdir ../db   # API_URL, ANON_KEY, SERVICE_ROLE_KEY of the LOCAL stack
+export E2E_SUPABASE_URL=... E2E_SUPABASE_ANON_KEY=... E2E_SUPABASE_SERVICE_ROLE_KEY=...
+EXPO_PUBLIC_SUPABASE_URL=$E2E_SUPABASE_URL EXPO_PUBLIC_SUPABASE_ANON_KEY=$E2E_SUPABASE_ANON_KEY npm run export:web
+npx playwright install chromium && npm run e2e
+```
+
+The tests refuse any Supabase address that is not on this machine.
