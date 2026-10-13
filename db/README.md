@@ -8,7 +8,7 @@ new app's tests run against what is actually live.
 | Path | What it is |
 |---|---|
 | `supabase/migrations/20261013000000_live_baseline.sql` | The live schema of project `okkwapgyadpaifpmkcex`, read 2026-10-13 with read-only catalog queries. Public schema (29 tables, 28 functions, 46 policies, grants, triggers, comments), the trigger on `auth.users`, 5 storage buckets with 13 policies, 2 scheduled jobs. No data, no secrets. |
-| `supabase/config.toml` | Local Supabase settings for CI (PostgreSQL 17, like live). |
+| `supabase/config.toml` | Local Supabase settings for CI (PostgreSQL 17, like live). Local only: email confirmation off and unused services off, for the app's end-to-end tests (`.github/workflows/app-e2e.yml`). Never the live project's settings. |
 | `tests/baseline_check.sql` | Checks: structure counts, sign-up makes a free member, members cannot raise their own plan or role, each user sees only their own rows, allowance counters are server-only and stop at the limit, the plan follows the Stripe row, deleting an account removes kitchen data. Rolls back; leaves nothing. |
 | `tests/plain-postgres-stubs.sql` | Small stand-ins for Supabase's `auth` and `storage` schemas, to run the checks on a bare Postgres with no Docker. |
 | `scripts/check-baseline.sh` | Applies the baseline if needed, then runs the checks. Refuses hosted Supabase URLs. |

@@ -1,0 +1,109 @@
+name: New app end-to-end
+
+# Builds the rebuilt app's web export against a LOCAL Supabase stack (database + auth + REST,
+# schema from db/supabase/migrations) and runs the Playwright tests in app/e2e in Chromium.
+# Never connects to the live project: the URL and keys come from the local stack at run time.
+on:
+  pull_request:
+    paths:
+      - "app/**"
+      - "db/**"
+      - ".github/workflows/app-e2e.yml"
+  push:
+    branches: [rebuild/v1]
+    paths:
+      - "app/**"
+      - "db/**"
+      - ".github/workflows/app-e2e.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: app-e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      # Studio, storage, realtime, edge functions, analytics and the mail catcher are switched
+      # off in db/supabase/config.toml; email confirmation is off there too (local only).
+      - name: Start local Supabase (applies migrations)
+        run: supabase start --workdir db
+
+      - name: Read local URL and keys
+        run: |
+          supabase status -o env --workdir db > "$RUNNER_TEMP/supabase.env"
+          echo "Variables reported by supabase status (names only):"
+          cut -d= -f1 "$RUNNER_TEMP/supabase.env"
+          get() { grep -E "^$1=" "$RUNNER_TEMP/supabase.env" | head -n1 | cut -d= -f2- | sed -e 's/^"//' -e 's/"$//' || true; }
+          url="$(get API_URL)"
+          anon="$(get ANON_KEY)"; [ -n "$anon" ] || anon="$(get PUBLISHABLE_KEY)"
+          service="$(get SERVICE_ROLE_KEY)"; [ -n "$service" ] || service="$(get SECRET_KEY)"
+          if [ -z "$url" ] || [ -z "$anon" ] || [ -z "$service" ]; then
+            echo "Could not read API_URL / anon key / service key from supabase status." >&2
+            exit 1
+          fi
+          case "$url" in
+            http://127.0.0.1:*|http://localhost:*) ;;
+            *) echo "API_URL is not local: refusing." >&2; exit 1 ;;
+          esac
+          echo "::add-mask::$anon"
+          echo "::add-mask::$service"
+          {
+            echo "E2E_SUPABASE_URL=$url"
+            echo "E2E_SUPABASE_ANON_KEY=$anon"
+            echo "E2E_SUPABASE_SERVICE_ROLE_KEY=$service"
+          } >> "$GITHUB_ENV"
+          rm -f "$RUNNER_TEMP/supabase.env"
+          echo "Local API: $url"
+
+      - name: Install app dependencies
+        working-directory: app
+        run: |
+          if [ -f package-lock.json ]; then npm ci; else npm install --no-audit --no-fund; fi
+
+      - name: Install Chromium for Playwright
+        working-directory: app
+        run: npx playwright install --with-deps chromium
+
+      # Only the public (anon) key goes into the build, as in production.
+      - name: Web build against the local stack
+        working-directory: app
+        run: |
+          EXPO_PUBLIC_SUPABASE_URL="$E2E_SUPABASE_URL" \
+          EXPO_PUBLIC_SUPABASE_ANON_KEY="$E2E_SUPABASE_ANON_KEY" \
+          npm run export:web
+
+      - name: End-to-end tests
+        working-directory: app
+        run: npx playwright test
+
+      - name: Auth server log (on failure)
+        if: failure()
+        run: docker logs --tail 200 supabase_auth_mealplanatic-rebuild-db || true
+
+      - name: Upload Playwright report and traces
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            app/playwright-report
+            app/test-results
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Stop local Supabase
+        if: always()
+        run: supabase stop --workdir db --no-backup
