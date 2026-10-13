@@ -9,6 +9,8 @@ untouched until switch-over, when `mobile/` is deleted in the same release.
 - `src/ui/`: small shared pieces (text, button, card, screen, top bar).
 - `src/lib/`: the Supabase client and the query client. The server is the only source of truth:
   screens read through queries and never keep their own copy of server data.
+- `src/data/`: the data layer (query keys, row models, optimistic mutations, `useIsOnline`).
+  Rules in `src/data/README.md`.
 - One folder per feature as features arrive (`pantry/`, `grocery/`, `recipes/`, ...), no file over about 400 lines.
 
 ```bash
