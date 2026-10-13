@@ -9,6 +9,9 @@ untouched until switch-over, when `mobile/` is deleted in the same release.
 - `src/ui/`: small shared pieces (text, button, card, screen, top bar).
 - `src/lib/`: the Supabase client and the query client. The server is the only source of truth:
   screens read through queries and never keep their own copy of server data.
+- `src/auth/`: sign-in, create account (18+ box), forgot password, sign out, and `AuthProvider`
+  (session from `onAuthStateChange`). The tabs need a session; signed out goes to `/sign-in`.
+  Rules and wording are in `logic.ts` and `copy.ts`, tested in `tests/auth-*.test.ts`.
 - One folder per feature as features arrive (`pantry/`, `grocery/`, `recipes/`, ...), no file over about 400 lines.
 
 ```bash

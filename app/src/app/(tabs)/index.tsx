@@ -1,3 +1,4 @@
+import { SignOutCard } from '../../auth/SignOutCard';
 import { AppText } from '../../ui/AppText';
 import { Card } from '../../ui/Card';
 import { ComingSoon } from '../../ui/ComingSoon';
@@ -19,6 +20,7 @@ export default function HomeScreen() {
         </AppText>
       </Card>
       <ComingSoon phase={3} what="Recipes you can cook from your pantry." />
+      <SignOutCard />
     </Screen>
   );
 }
