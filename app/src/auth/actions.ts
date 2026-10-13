@@ -5,7 +5,7 @@
  */
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { AUTH_EMAIL_REDIRECT, AUTH_RESET_COPY, AUTH_RESULT_COPY } from './copy';
-import { authErrorMessage, signUpOutcome, thrownMessage, type AuthActionResult } from './logic';
+import { authErrorMessage, newPasswordBlocker, signUpOutcome, thrownMessage, type AuthActionResult } from './logic';
 
 export type AuthClient = SupabaseClient['auth'];
 
@@ -45,15 +45,43 @@ export async function signUp(
   }
 }
 
-/** Says the same thing whether or not the address has an account. */
-export async function requestPasswordReset(auth: AuthClient | null, email: string): Promise<AuthActionResult> {
+/**
+ * Says the same thing whether or not the address has an account. `redirectTo` is where the
+ * email's link lands (on the web, this app's own /reset-password screen: passwordResetRedirect).
+ */
+export async function requestPasswordReset(
+  auth: AuthClient | null,
+  email: string,
+  redirectTo: string = AUTH_EMAIL_REDIRECT,
+): Promise<AuthActionResult> {
   if (!auth) return { ok: false, error: AUTH_RESULT_COPY.unavailable };
   const trimmed = email.trim();
   if (!trimmed) return { ok: false, error: AUTH_RESET_COPY.missingEmail };
   try {
-    const { error } = await auth.resetPasswordForEmail(trimmed, { redirectTo: AUTH_EMAIL_REDIRECT });
+    const { error } = await auth.resetPasswordForEmail(trimmed, { redirectTo });
     if (error) return { ok: false, error: authErrorMessage(error.message) };
     return { ok: true, notice: AUTH_RESET_COPY.sent };
+  } catch (error: unknown) {
+    return { ok: false, error: authErrorMessage(thrownMessage(error)) };
+  }
+}
+
+/**
+ * Saves a new password for the signed-in person (a reset link signs them in first).
+ * Checks the same rules as sign-up first, so a bad password never reaches the server.
+ */
+export async function updatePassword(
+  auth: AuthClient | null,
+  password: string,
+  again: string,
+): Promise<AuthActionResult> {
+  if (!auth) return { ok: false, error: AUTH_RESULT_COPY.unavailable };
+  const blocker = newPasswordBlocker(password, again);
+  if (blocker) return { ok: false, error: blocker };
+  try {
+    const { error } = await auth.updateUser({ password });
+    if (error) return { ok: false, error: authErrorMessage(error.message) };
+    return { ok: true, notice: AUTH_RESET_COPY.saved };
   } catch (error: unknown) {
     return { ok: false, error: authErrorMessage(thrownMessage(error)) };
   }

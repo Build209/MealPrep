@@ -35,9 +35,11 @@ jobs:
       - uses: supabase/setup-cli@v1
         with:
           version: latest
+      - name: Supabase CLI version
+        run: supabase --version
 
-      # Studio, realtime, edge functions, analytics and the mail catcher are switched
-      # off in db/supabase/config.toml; email confirmation is off there too (local only).
+      # Studio, realtime, edge functions and analytics are switched off in db/supabase/config.toml;
+      # email confirmation is off there too, and emails go to the local mail catcher (local only).
       - name: Start local Supabase (applies migrations)
         run: supabase start --workdir db
 
@@ -58,20 +60,32 @@ jobs:
             http://127.0.0.1:*|http://localhost:*) ;;
             *) echo "API_URL is not local: refusing." >&2; exit 1 ;;
           esac
+          # The mail catcher's web address (name depends on the CLI version); default port 54324.
+          mail="$(get MAILPIT_URL)"; [ -n "$mail" ] || mail="$(get INBUCKET_URL)"; [ -n "$mail" ] || mail="http://127.0.0.1:54324"
+          case "$mail" in
+            http://127.0.0.1:*|http://localhost:*) ;;
+            *) echo "Mail catcher URL is not local: refusing." >&2; exit 1 ;;
+          esac
           echo "::add-mask::$anon"
           echo "::add-mask::$service"
           {
             echo "E2E_SUPABASE_URL=$url"
             echo "E2E_SUPABASE_ANON_KEY=$anon"
             echo "E2E_SUPABASE_SERVICE_ROLE_KEY=$service"
+            echo "E2E_MAIL_URL=$mail"
           } >> "$GITHUB_ENV"
           rm -f "$RUNNER_TEMP/supabase.env"
           echo "Local API: $url"
+          echo "Local mail catcher: $mail"
 
       - name: Install app dependencies
         working-directory: app
         run: |
           if [ -f package-lock.json ]; then npm ci; else npm install --no-audit --no-fund; fi
+
+      - name: TEMP Expo bundled versions
+        working-directory: app
+        run: node -e "const b=require('expo/bundledNativeModules.json');console.log('async-storage', b['@react-native-async-storage/async-storage'], 'expo-sqlite', b['expo-sqlite'], 'secure-store', b['expo-secure-store'])" || true
 
       - name: Install Chromium for Playwright
         working-directory: app
