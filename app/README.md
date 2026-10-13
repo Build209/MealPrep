@@ -14,6 +14,9 @@ untouched until switch-over, when `mobile/` is deleted in the same release.
 - `src/auth/`: sign-in, create account (18+ box), forgot password, sign out, and `AuthProvider`
   (session from `onAuthStateChange`). The tabs need a session; signed out goes to `/sign-in`.
   Rules and wording are in `logic.ts` and `copy.ts`, tested in `tests/auth-*.test.ts`.
+- `src/grocery/`: the Grocery tab (phase 2). The list by aisle, add, tick into the pantry with Undo,
+  Clear ticked. Ticking is one server call (`tick_grocery_item`, a new migration in `db/` that is not
+  on the live database until the owner approves it). Data hooks: `src/data/grocery.ts`, `groceryMutations.ts`.
 - One folder per feature as features arrive (`pantry/`, `grocery/`, `recipes/`, ...), no file over about 400 lines.
 
 ```bash

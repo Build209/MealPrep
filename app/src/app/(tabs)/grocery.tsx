@@ -1,10 +1,6 @@
-import { ComingSoon } from '../../ui/ComingSoon';
-import { Screen } from '../../ui/Screen';
+import { GroceryScreen } from '../../grocery/GroceryScreen';
 
-export default function GroceryScreen() {
-  return (
-    <Screen title="Grocery">
-      <ComingSoon phase={2} what="Your list. Tick an item and it moves into the pantry, with undo." />
-    </Screen>
-  );
+/** The Grocery tab. The screen lives in src/grocery/ (rebuild phase 2). */
+export default function GroceryRoute() {
+  return <GroceryScreen />;
 }
