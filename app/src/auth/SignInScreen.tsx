@@ -196,6 +196,7 @@ function ModeTab({ label, selected, onPress }: { label: string; selected: boolea
     <Pressable
       accessibilityRole="tab"
       accessibilityState={{ selected }}
+      aria-selected={selected}
       accessibilityLabel={label}
       onPress={onPress}
       style={{

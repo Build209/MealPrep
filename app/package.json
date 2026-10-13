@@ -8,7 +8,8 @@
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
     "test": "tsx --test tests/*.test.ts",
-    "export:web": "expo export -p web"
+    "export:web": "expo export -p web",
+    "e2e": "playwright test"
   },
   "dependencies": {
     "@expo/metro-runtime": "57.0.16",
@@ -29,6 +30,7 @@
     "react-native-web": "0.21.3"
   },
   "devDependencies": {
+    "@playwright/test": "1.56.0",
     "@types/node": "^22.10.0",
     "@types/react": "19.2.18",
     "babel-preset-expo": "57.0.13",
