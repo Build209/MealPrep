@@ -34,7 +34,8 @@ jobs:
           node-version: "22"
       - uses: supabase/setup-cli@v1
         with:
-          version: latest
+          # Pinned: the version CI installed as "latest" on 2026-10-13. Update on purpose, not by surprise.
+          version: 2.120.0
       - name: Supabase CLI version
         run: supabase --version
 
@@ -82,10 +83,6 @@ jobs:
         working-directory: app
         run: |
           if [ -f package-lock.json ]; then npm ci; else npm install --no-audit --no-fund; fi
-
-      - name: TEMP Expo bundled versions
-        working-directory: app
-        run: node -e "const b=require('expo/bundledNativeModules.json');console.log('async-storage', b['@react-native-async-storage/async-storage'], 'expo-sqlite', b['expo-sqlite'], 'secure-store', b['expo-secure-store'])" || true
 
       - name: Install Chromium for Playwright
         working-directory: app
