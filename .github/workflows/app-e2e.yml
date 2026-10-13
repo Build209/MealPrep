@@ -36,7 +36,7 @@ jobs:
         with:
           version: latest
 
-      # Studio, storage, realtime, edge functions, analytics and the mail catcher are switched
+      # Studio, realtime, edge functions, analytics and the mail catcher are switched
       # off in db/supabase/config.toml; email confirmation is off there too (local only).
       - name: Start local Supabase (applies migrations)
         run: supabase start --workdir db

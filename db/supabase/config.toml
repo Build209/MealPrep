@@ -38,14 +38,12 @@ enable_signup = true
 # Local only: tests sign up and sign in straight away, with no email to open.
 enable_confirmations = false
 
-# Not needed by the tests; switched off so the local stack starts faster.
+# Not needed by the tests; switched off so the local stack starts faster. Storage stays on:
+# its service creates the storage schema the baseline's buckets and policies need.
 [studio]
 enabled = false
 
-[inbucket]
-enabled = false
-
-[storage]
+[local_smtp]
 enabled = false
 
 [realtime]
