@@ -42,6 +42,13 @@ if [[ "$built" == "t" ]]; then
 else
   echo "Applying baseline..."
   psql_run -f "$baseline"
+  # Later migrations in this folder, in name order (supabase db start applies them itself).
+  for later in "$here"/supabase/migrations/*.sql; do
+    [[ "$(basename "$later")" == "20261013000000_live_baseline.sql" ]] && continue
+    echo "Applying $(basename "$later")..."
+    psql_run -f "$later"
+  done
 fi
 
 psql_run -f "$here/tests/baseline_check.sql"
+psql_run -f "$here/tests/grocery_tick_check.sql"

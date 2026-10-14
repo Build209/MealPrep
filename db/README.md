@@ -10,6 +10,8 @@ new app's tests run against what is actually live.
 | `supabase/migrations/20261013000000_live_baseline.sql` | The live schema of project `okkwapgyadpaifpmkcex`, read 2026-10-13 with read-only catalog queries. Public schema (29 tables, 28 functions, 46 policies, grants, triggers, comments), the trigger on `auth.users`, 5 storage buckets with 13 policies, 2 scheduled jobs. No data, no secrets. |
 | `supabase/config.toml` | Local Supabase settings for CI (PostgreSQL 17, like live). Local only: email confirmation off and unused services off, for the app's end-to-end tests (`.github/workflows/app-e2e.yml`). Never the live project's settings. |
 | `tests/baseline_check.sql` | Checks: structure counts, sign-up makes a free member, members cannot raise their own plan or role, each user sees only their own rows, allowance counters are server-only and stop at the limit, the plan follows the Stripe row, deleting an account removes kitchen data. Rolls back; leaves nothing. |
+| `supabase/migrations/20261014000000_grocery_tick.sql` | **Not on live yet; needs the owner's yes.** `tick_grocery_item` / `untick_grocery_item`: tick a grocery row into the pantry (or undo it) in one transaction, for the new app's Grocery tab. |
+| `tests/grocery_tick_check.sql` | Checks for those two functions: adds to the pantry once, undo reverses once, units never mix, other people's rows out of reach, anon refused. Rolls back. |
 | `tests/plain-postgres-stubs.sql` | Small stand-ins for Supabase's `auth` and `storage` schemas, to run the checks on a bare Postgres with no Docker. |
 | `scripts/check-baseline.sh` | Applies the baseline if needed, then runs the checks. Refuses hosted Supabase URLs. |
 
