@@ -24,7 +24,7 @@ const card = (page: Page, name: string, status: string) => page.getByRole('butto
 
 async function expectHome(page: Page) {
   await expect(page).toHaveURL(/^http:\/\/[^/]+\/$/);
-  await expect(page.getByRole('button', { name: 'Sign out' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Account', exact: true })).toBeVisible();
 }
 
 async function signIn(page: Page) {

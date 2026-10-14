@@ -22,9 +22,16 @@ async function expectSignInScreen(page: Page) {
 
 async function expectHome(page: Page) {
   await expect(page).toHaveURL(/^http:\/\/[^/]+\/$/);
+  await expect(page.getByRole('link', { name: 'Account', exact: true })).toBeVisible();
+}
+
+/** Account shows who is signed in; Sign out lives there. */
+async function signOutFromAccount(page: Page) {
+  await page.getByRole('link', { name: 'Account', exact: true }).click();
+  await expect(page).toHaveURL(/\/account$/);
+  await expect(page.getByTestId('account-email')).toHaveText(email);
   await expect(page.getByText('Signed in as')).toBeVisible();
-  await expect(page.getByText(email, { exact: true })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Sign out' })).toBeVisible();
+  await page.getByRole('button', { name: 'Sign out' }).click();
 }
 
 async function signInThroughUi(page: Page) {
@@ -79,7 +86,7 @@ test('create an account (18+ box required), land on Home, then sign out', async 
 
   await expectHome(page);
 
-  await page.getByRole('button', { name: 'Sign out' }).click();
+  await signOutFromAccount(page);
   await expectSignInScreen(page);
 });
 

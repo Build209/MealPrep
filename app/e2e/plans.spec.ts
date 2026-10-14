@@ -31,7 +31,7 @@ async function newSignedInUser(page: Page, label: string): Promise<{ userId: str
   await page.getByRole('textbox', { name: 'Email' }).fill(email);
   await page.getByLabel('Password', { exact: true }).fill(password);
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
-  await expect(page.getByText('Signed in as')).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Account', exact: true })).toBeVisible();
   const raw = await page.evaluate(() => {
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
@@ -82,14 +82,16 @@ const COMBOS = [
   { tier: 'Family', interval: 'Pay monthly', disclosure: 'MealPlanatic Family is $20 a month. It renews automatically every month until you cancel. Cancel any time in Account, Manage subscription.', button: 'Subscribe for $20 a month' },
 ];
 
-test('plans: Home links to plans; the renewal terms sit directly above every buy button, which states the price', async ({ page, context }) => {
+test('plans: Home, Account links to plans; the renewal terms sit directly above every buy button, which states the price', async ({ page, context }) => {
   await newSignedInUser(page, 'plans');
   const opened = await stubOutsidePages(context);
   const checkout = await stubBillingFunction(page, 'stripe-checkout', CHECKOUT_URL);
 
+  await page.getByRole('link', { name: 'Account', exact: true }).click();
   await page.getByRole('link', { name: 'Plans & usage' }).click();
   await expect(page).toHaveURL(/\/plans$/);
-  await expect(page.getByTestId('current-plan')).toHaveText('Free');
+  // Account stays mounted (hidden) under /plans and has its own plan card: match the visible one.
+  await expect(page.getByTestId('current-plan').filter({ visible: true })).toHaveText('Free');
   await expect(page.getByText('Free: 3 scans, 2 recipe imports and 5 Ask Forky questions a month.')).toBeVisible();
 
   // Nothing pre-chosen beyond the plan and period themselves, and no tick box anywhere on the screen.

@@ -56,3 +56,20 @@ export const ACCOUNT_DELETE_ERRORS = {
     'We could not cancel your MealPlanatic Plus subscription, so your account was not deleted. ' +
     'Try again in a few minutes, or cancel in Account, Manage subscription first.',
 } as const;
+
+/**
+ * Words on the Account screen (`/account`). Every line but the title is an existing line reused as
+ * is. The compliance-approved renewal line (src/plans/pricing.ts) says "Cancel any time in Account,
+ * Manage subscription.": this screen's title and its Manage subscription button keep that true, and
+ * tests/account-screen-copy.test.ts checks both still match that line.
+ */
+export const ACCOUNT_SCREEN_COPY = {
+  /** NEW: the page title, and Home's link to this screen. Matches "Account" in the renewal line. */
+  title: 'Account',
+  /** Same link text Home used before this screen existed. */
+  plansLink: 'Plans & usage',
+  /** Same words as the delete screen's button (LIVE, ACCOUNT_DELETE_COPY.deleteButton). */
+  deleteLink: ACCOUNT_DELETE_COPY.deleteButton,
+  /** Leaves the screen; same word as the plans and delete screens' Close. */
+  close: ACCOUNT_DELETE_COPY.close,
+} as const;

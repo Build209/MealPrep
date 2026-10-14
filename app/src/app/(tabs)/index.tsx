@@ -1,7 +1,6 @@
 import { useRouter } from 'expo-router';
 import { View } from 'react-native';
-import { ACCOUNT_DELETE_COPY } from '../../account/copy';
-import { SignOutCard } from '../../auth/SignOutCard';
+import { ACCOUNT_SCREEN_COPY } from '../../account/copy';
 import { CreatorVideosRow } from '../../creators/CreatorVideosRow';
 import { buildLine } from '../../lib/channel';
 import { env } from '../../lib/env';
@@ -17,7 +16,7 @@ const build = buildLine(env.gitSha);
 
 /**
  * Home: the ways into Search, Saved and Import, then "Cook from your pantry" (PRODUCT.md: recipes
- * someone can cook now come first), creator videos under it, then the account card.
+ * someone can cook now come first), creator videos under it, then the link to Account (plan, Manage subscription, sign out).
  */
 export default function HomeScreen() {
   const router = useRouter();
@@ -37,20 +36,10 @@ export default function HomeScreen() {
       <AppText
         bold
         accessibilityRole="link"
-        onPress={() => router.push('/plans')}
+        onPress={() => router.push('/account')}
         style={{ alignSelf: 'flex-start', textDecorationLine: 'underline', paddingVertical: 10 }}
       >
-        {'Plans & usage'}
-      </AppText>
-      <SignOutCard />
-      <AppText
-        variant="secondary"
-        color="muted"
-        accessibilityRole="link"
-        onPress={() => router.push('/delete-account')}
-        style={{ alignSelf: 'flex-start', textDecorationLine: 'underline', paddingVertical: 10 }}
-      >
-        {ACCOUNT_DELETE_COPY.deleteButton}
+        {ACCOUNT_SCREEN_COPY.title}
       </AppText>
       {build ? (
         <AppText variant="label" color="muted">
