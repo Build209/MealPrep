@@ -12,6 +12,8 @@ new app's tests run against what is actually live.
 | `tests/baseline_check.sql` | Checks: structure counts, sign-up makes a free member, members cannot raise their own plan or role, each user sees only their own rows, allowance counters are server-only and stop at the limit, the plan follows the Stripe row, deleting an account removes kitchen data. Rolls back; leaves nothing. |
 | `supabase/migrations/20261014000000_grocery_tick.sql` | **Not on live yet; needs the owner's yes.** `tick_grocery_item` / `untick_grocery_item`: tick a grocery row into the pantry (or undo it) in one transaction, for the new app's Grocery tab. |
 | `tests/grocery_tick_check.sql` | Checks for those two functions: adds to the pantry once, undo reverses once, units never mix, other people's rows out of reach, anon refused. Rolls back. |
+| `supabase/migrations/20261014030000_add_missing_to_grocery.sql` | **Not on live yet; needs the owner's yes.** `add_missing_to_grocery`: puts a recipe's missing ingredients on the grocery list in one transaction, adding to an open row of the same thing and unit, once per recipe. For the new app's recipe detail screen. |
+| `tests/add_missing_check.sql` | Checks for that function: merges into open rows of the same unit, ticked rows untouched, a repeat call adds nothing, a second recipe adds once, other people's lists out of reach, anon refused. Rolls back. |
 | `tests/plain-postgres-stubs.sql` | Small stand-ins for Supabase's `auth` and `storage` schemas, to run the checks on a bare Postgres with no Docker. |
 | `scripts/check-baseline.sh` | Applies the baseline if needed, then runs the checks. Refuses hosted Supabase URLs. |
 
