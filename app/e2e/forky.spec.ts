@@ -134,8 +134,9 @@ test('ask a question from the header: an answer with a recipe button that opens 
   await page.getByRole('button', { name: 'Open recipe: Forky test fried rice' }).click();
   await expect(page).toHaveURL(new RegExp(`/recipe/${routeId}$`));
   if (recipePageExists) {
-    // The recipe page (rebuild phase 3) shows the seeded recipe.
-    await expect(page.getByText('Forky test fried rice').first()).toBeVisible();
+    // The recipe page (rebuild phase 3) shows the seeded recipe. The chat stays mounted (hidden) underneath,
+    // so match the page's heading, as the recipe specs do.
+    await expect(page.getByRole('heading', { name: 'Forky test fried rice' })).toBeVisible();
   }
 });
 
