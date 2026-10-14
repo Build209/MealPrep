@@ -45,6 +45,7 @@ The server (Supabase) is the only source of truth. This folder is the only place
 | `savedRecipeRows.ts`, `savedRecipes.ts` | `user_saved_recipes`: list (old slug keys resolved to route ids), optimistic save/unsave, `useSaveToggle`. |
 | `creatorRows.ts`, `creators.ts` | Enabled creators and their videos (read only), recent row and `search_creator_videos`. |
 | `scanUsage.ts` | This month's photo scans used (own `photo_scan_usage` row) and `useScanAllowance()` for the Scan button. |
+| `recipeImport.ts` | Recipe import: imports used this month (own `recipe_import_usage` row, `useImportAllowance()`), photo/video uploads to `recipe-import-uploads`, and saving a reviewed import as the person's own `recipes` row (upsert on slug, as the old app). |
 
 Adding a table: add its Row type, app type, both mappers and column list to `rows.ts` (or a
 new `rows-<feature>.ts` once it nears 400 lines), add keys, then a `<feature>.ts` with hooks.

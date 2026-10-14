@@ -47,6 +47,10 @@ untouched until switch-over, when `mobile/` is deleted in the same release.
   - `/creators` and `CreatorVideosRow` (`src/creators/`): recent videos from enabled creators, read
     straight from `creator_videos`, with the old function's recipe-video rule (`videoFilter.ts`) and text
     cleaning (`videoText.ts`). Videos open outside the app, labelled "Watch on YouTube" in plain text.
+- `src/recipes/import/`: import a recipe (phase 3) at `/recipes/import`. Paste a link or recipe text, or use a
+  recipe photo or a saved video; the live `recipe-import` function reads it (unchanged; same request as the old app),
+  then a review form, then Save writes the person's own `recipes` row (is_master false, creator credit in source_*)
+  and opens `/recipe/r_<id>`. The Import button shows this month's imports left (limits from `src/scan/planTiers.ts`).
 - One folder per feature as features arrive (`pantry/`, `grocery/`, `recipes/`, ...), no file over about 400 lines.
 
 ```bash
