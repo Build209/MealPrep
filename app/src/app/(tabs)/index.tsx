@@ -1,34 +1,38 @@
 import { useRouter } from 'expo-router';
+import { View } from 'react-native';
 import { SignOutCard } from '../../auth/SignOutCard';
-import { AppText } from '../../ui/AppText';
-import { Card } from '../../ui/Card';
-import { ComingSoon } from '../../ui/ComingSoon';
-import { Screen } from '../../ui/Screen';
+import { CreatorVideosRow } from '../../creators/CreatorVideosRow';
 import { buildLine } from '../../lib/channel';
-import { env, isSupabaseConfigured } from '../../lib/env';
+import { env } from '../../lib/env';
+import { HomeActions } from '../../recipes/HomeActions';
+import { HomeFeed } from '../../recipes/HomeFeed';
+import { FEED_COPY } from '../../recipes/recipeLogic';
+import { space } from '../../theme/tokens';
+import { AppText } from '../../ui/AppText';
+import { Button } from '../../ui/Button';
+import { Screen } from '../../ui/Screen';
 
 const build = buildLine(env.gitSha);
 
+/**
+ * Home: the ways into Search, Saved and Import, then "Cook from your pantry" (PRODUCT.md: recipes
+ * someone can cook now come first), creator videos under it, then the account card.
+ */
 export default function HomeScreen() {
   const router = useRouter();
   return (
-    <Screen title="Home">
-      <Card>
-        <AppText variant="sectionTitle" bold>
-          The new MealPlanatic
-        </AppText>
-        <AppText color="muted">
-          This is the rebuild preview. Your real app is unchanged until switch-over.
-        </AppText>
-        <AppText variant="secondary" color="muted">
-          {isSupabaseConfigured() ? 'Connected settings found.' : 'No server settings in this build.'}
-        </AppText>
-        {build ? (
-          <AppText variant="label" color="muted">
-            {build}
-          </AppText>
-        ) : null}
-      </Card>
+    <Screen title={FEED_COPY.title}>
+      <HomeActions />
+      <HomeFeed />
+      <View style={{ gap: 4, marginTop: space.gap }}>
+        <CreatorVideosRow title={FEED_COPY.creatorsTitle} limit={12} />
+        <Button
+          label={FEED_COPY.creatorsSeeAll}
+          kind="quiet"
+          onPress={() => router.push('/creators')}
+          style={{ alignSelf: 'flex-start', paddingHorizontal: 0 }}
+        />
+      </View>
       <AppText
         bold
         accessibilityRole="link"
@@ -37,8 +41,12 @@ export default function HomeScreen() {
       >
         {'Plans & usage'}
       </AppText>
-      <ComingSoon phase={3} what="Recipes you can cook from your pantry." />
       <SignOutCard />
+      {build ? (
+        <AppText variant="label" color="muted">
+          {build}
+        </AppText>
+      ) : null}
     </Screen>
   );
 }
