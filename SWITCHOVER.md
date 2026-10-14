@@ -167,6 +167,34 @@ On the **new app's preview** (mealplanatic-preview.pages.dev, or wherever `app-p
 - The owner types the test card. The manager reads the database (read-only) after each step.
 - Done box: tick when the expected result is seen.
 
+### 2.0 What the phone pass checks for you (no phone needed)
+
+`.github/workflows/app-phone.yml` runs every end-to-end spec on an iPhone 15 and a Pixel 7 profile
+(Playwright device emulation, local Supabase stack, edge functions stubbed) plus a screen tour with
+screenshots and automatic checks: no sideways scroll, tap targets at least 44x44 px, no clipped
+text, tomato only for camera or money. Screenshots: artifact `phone-screens`, and the `phone-screens`
+branch after each push to `rebuild/v1` (see `app/README.md`). A row marked **auto** is covered there
+when that run is green; read its report before skipping the row.
+
+| Row | Covered by | Owner still does |
+|---|---|---|
+| 1 | **auto** (plans.spec + tour 17) | - |
+| 2, 3, 4, 5, 8, 10 | screens only (plans, account, delete specs with Stripe stubbed) | **live Stripe test purchase, cancel, decline, delete subscribed account + DB checks** |
+| 6 | **auto** for the app side (refusal sheets, "See plans"; functions stubbed) | - (server counting is the live functions' job; spot-check during row 9) |
+| 7 | **auto** (auth-and-data.spec, tour 02, 24) | - |
+| 9 | - | **real camera shelf + receipt scan and their cost; video import cost** |
+| F1-F4, F7-F16, F18, F19, F21, F23, F24, F26, F27 | **auto** (specs on both phones + tour) | - |
+| F5, F6 | flow with a test photo (scan.spec) + tour 08 | **real camera scan** (row 9) |
+| F17 | photo/link import flow (recipe-import.spec) | video import (row 9) |
+| F20 | tips that open by themselves are off under automation | **feel check** |
+| F22 | **auto** for ZIP and for browser location (stores.spec) | **native location permission prompt** on iOS and Android |
+| F25 | delete flow with the function stubbed (account-delete.spec) | row 8 |
+| all | - | **feel check**: scrolling, keyboard over fields, safe areas/notch, speed on a real phone; native camera/photo permission prompts |
+
+So the owner's list is: (1) real camera shelf + receipt scan with cost, (2) live Stripe test purchase
+rows with DB checks, (3) native permission prompts (camera, photos, location), (4) a feel check,
+(5) video import cost.
+
 ### 2a. The 10 go-live tests (from "Do list"), new app screens
 
 | # | What to do | Expected | DB check (manager) | Done |

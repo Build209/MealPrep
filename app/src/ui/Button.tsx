@@ -31,6 +31,8 @@ export function Button({ label, kind = 'primary', main, disabled, style, ...rest
       style={({ pressed }) => [
         {
           minHeight: main ? touch.main : touch.min,
+          // A short label with no side padding ("Back") must still be a 44px-wide target.
+          minWidth: touch.min,
           paddingHorizontal: 20,
           borderRadius: radius.pill,
           backgroundColor: l.bg,
