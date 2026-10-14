@@ -24,6 +24,10 @@ export const STORES_COPY = {
   zipInvalid: 'Enter a valid 5-digit US ZIP code.',
   locationDeniedHelp:
     'Location is off. Tap the lock icon in the address bar, open Permissions, and turn on Location — or enter a ZIP below.',
+  phoneLocationDeniedHelp: "Location is off for MealPlanatic. Turn it on in your phone's Settings, or enter a ZIP below.",
+  phoneServicesOff: 'Location services are turned off on this phone. Turn them on in Settings, or enter a ZIP below.',
+  phoneTimeout: "Couldn't find your location in time. Try again, or enter a ZIP below.",
+  phoneFailed: "Couldn't get your location. Try again, or enter a ZIP below.",
   zipOnlyHelp: 'Enter your ZIP code to see stores near you.',
   saveFailed: (message: string) => `Couldn't save your location. ${message}`,
   /** Old app wording. Compliance has an open question on the correct credit for Overture data (status doc, compliance item 4). */

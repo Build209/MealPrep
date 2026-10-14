@@ -1,14 +1,17 @@
-import type { GeoPermission } from './logic';
+import * as ExpoLocation from 'expo-location';
+import { STORES_COPY } from './copy';
+import { createPhoneLocation } from './deviceLocation';
 
 /**
- * Phones: not built yet. The old app uses expo-location here; the new app does not have that
- * package yet, so on phones the Stores tab offers the ZIP only. Adding expo-location (and its
- * permission text in app.json) is a follow-up.
+ * Phones: the device's location through expo-location (foreground only, the old app's package).
+ * The logic lives in deviceLocation.ts so it can be tested in Node without native code. The
+ * position is rounded to 2 decimals before the screen sees it, the same rule as web.
  */
-export async function queryGeoPermission(): Promise<GeoPermission> {
-  return 'unavailable';
-}
+const phone = createPhoneLocation(ExpoLocation);
 
-export async function requestDeviceLocation(): Promise<{ lat: number; lng: number } | null> {
-  return null;
-}
+export const queryGeoPermission = phone.queryGeoPermission;
+export const locateDevice = phone.locateDevice;
+export const requestDeviceLocation = phone.requestDeviceLocation;
+
+/** Shown on the card when location is refused: phones have Settings, not an address bar. */
+export const locationDeniedHelp: string = STORES_COPY.phoneLocationDeniedHelp;

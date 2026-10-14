@@ -19,7 +19,7 @@ import { Screen } from '../ui/Screen';
 import { STORES_COPY } from './copy';
 import { favoriteStoreKey } from './kroger';
 import { LocationPanel } from './LocationPanel';
-import { queryGeoPermission, requestDeviceLocation } from './location';
+import { locateDevice, locationDeniedHelp, queryGeoPermission } from './location';
 import {
   filterStoresList,
   isValidUsZip,
@@ -81,11 +81,18 @@ export function StoresScreen() {
   async function locateMe() {
     setLocationError(null);
     setLocating(true);
-    const position = await requestDeviceLocation();
+    const position = await locateDevice();
     setLocating(false);
-    if (!position) {
+    if (!position.ok) {
       // Refused or unavailable: the old app falls back to the ZIP with the "Location is off" help.
-      setPermission((await queryGeoPermission()) === 'unavailable' ? 'unavailable' : 'denied');
+      // Phones know why (refused, services off, timed out) and say so in plain words; web reports
+      // 'failed' with no message and keeps its old fallback.
+      if (position.problem === 'denied' || position.problem === 'unavailable') {
+        setPermission(position.problem);
+      } else if (position.problem === 'failed' && position.message === null) {
+        setPermission((await queryGeoPermission()) === 'unavailable' ? 'unavailable' : 'denied');
+      }
+      if (position.message) setLocationError(position.message);
       setPanelOpen(true);
       return;
     }
@@ -243,6 +250,7 @@ export function StoresScreen() {
           locating={locating}
           busy={locating || saveLocation.isPending || !online}
           error={locationError}
+          deniedHelp={locationDeniedHelp}
           onUseLocation={() => void locateMe()}
           onSaveZip={(zip) => void saveZip(zip)}
         />
