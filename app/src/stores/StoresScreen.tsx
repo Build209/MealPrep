@@ -200,6 +200,7 @@ export function StoresScreen() {
             label={showLocal ? STORES_COPY.hideLocalMarkets : `${STORES_COPY.moreLocalMarkets} (${visible.local.length})`}
             kind="secondary"
             accessibilityState={{ expanded: showLocal }}
+            aria-expanded={showLocal}
             onPress={() => setShowLocal((open) => !open)}
             style={{ alignSelf: 'flex-start' }}
           />

@@ -77,6 +77,9 @@ export function StoreCard({ store, favorite, onToggleFavorite, disabled }: Props
             accessibilityRole="checkbox"
             accessibilityLabel={STORES_COPY.favoriteA11y(name)}
             accessibilityState={{ checked: favorite, disabled: !!disabled }}
+            // react-native-web 0.21 reads the aria-* props (accessibilityState alone does not reach the DOM).
+            aria-checked={favorite}
+            aria-disabled={!!disabled}
             disabled={disabled}
             onPress={() => onToggleFavorite(store, !favorite)}
             style={({ pressed }) => ({
