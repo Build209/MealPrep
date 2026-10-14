@@ -32,6 +32,37 @@ untouched until switch-over, when `mobile/` is deleted in the same release.
   recipe buttons to `/recipe/<id>`, and the AI notice always on screen. The chat is kept in memory for the
   session only. Forky stands in the top bar (opens the chat) and shows short tips with the old app's
   backoff rules (`tipBackoff.ts`). Tips that open by themselves are off under browser automation.
+- `src/recipes/`: Home "Cook from your pantry" (phase 3) and the recipe detail (`/recipe/[id]`). Recipes come
+  from `recipes` (master + the person's own) and published `library_recipes` (`src/data/recipes.ts`), ranked
+  against the pantry with the old app's rules (`src/kitchen/recipeMatch.ts`, `recipeFeed.ts`, tested in
+  `tests/kitchen-recipe-*.test.ts`). Each card has a status sticker: leaf "Ready to cook" or banana "N missing".
+  Recipe ids: `r_<uuid>` (recipes) and `l_<uuid>` (library); build links with `recipeHref()`.
+  "Add N missing to grocery list" is one server call (`add_missing_to_grocery`, a new migration in `db/`, not on
+  the live database until the owner approves it) that merges into open grocery rows once per recipe.
+- Recipes, phase 3 (search, saved, creator videos):
+  - `/recipes/search` (`src/recipes/search/`): master and own recipes and published library recipes by
+    title or ingredient, plus creator videos from `search_creator_videos`. The recipe list is read once
+    and searched on the device (ingredients are jsonb, which PostgREST can't ilike). Merge order ported
+    from the old app: own recipes first, then recipes and videos taking turns, repeats dropped.
+    Recipes link to `/recipe/r_<uuid>` (recipes) or `/recipe/l_<uuid>` (library_recipes).
+  - `/recipes/saved` and `SaveButton` (`src/recipes/saved/`): the heart saves to `user_saved_recipes`
+    with the old app's keys (`kitchen:<slug or uuid>`, `kitchen:library-<slug>`, `creator:<video id>`),
+    so both apps read each other's saves until switch-over. For the recipe page:
+    `<SaveButton target={saveTargetForRecipe(...)} />`.
+  - `/creators` and `CreatorVideosRow` (`src/creators/`): recent videos from enabled creators, read
+    straight from `creator_videos`, with the old function's recipe-video rule (`videoFilter.ts`) and text
+    cleaning (`videoText.ts`). Videos open outside the app, labelled "Watch on YouTube" in plain text.
+- Recipes wired together (phase 3): Home (`src/app/(tabs)/index.tsx`) starts with links to Search and
+  Saved and a secondary "Import a recipe" button (`src/recipes/HomeActions.tsx`), then the pantry feed,
+  then `CreatorVideosRow` with "See all creator videos" (`/creators`). The recipe page has the heart
+  (`SaveButton`) for recipes and library rows: `saveableFromAppRecipe()` (`src/data/savedRecipeRows.ts`)
+  turns the page's `AppRecipe` into the same save target search builds, so both hearts write and find
+  one `user_saved_recipes` row (checked in `tests/recipe-save-bridge.test.ts`). Saving an import opens
+  `/recipe/r_<id>`. End to end: `e2e/recipes-wiring.spec.ts` (import, page, save, Saved, search).
+- `src/recipes/import/`: import a recipe (phase 3) at `/recipes/import`. Paste a link or recipe text, or use a
+  recipe photo or a saved video; the live `recipe-import` function reads it (unchanged; same request as the old app),
+  then a review form, then Save writes the person's own `recipes` row (is_master false, creator credit in source_*)
+  and opens `/recipe/r_<id>`. The Import button shows this month's imports left (limits from `src/scan/planTiers.ts`).
 - One folder per feature as features arrive (`pantry/`, `grocery/`, `recipes/`, ...), no file over about 400 lines.
 
 ```bash
