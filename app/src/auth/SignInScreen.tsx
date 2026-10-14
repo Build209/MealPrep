@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { Platform, Pressable, ScrollView, View } from 'react-native';
+import { accountWasJustDeleted, clearAccountDeleted } from '../account/afterDelete';
+import { ACCOUNT_DELETE_COPY } from '../account/copy';
 import { parseChannel, signUpRedirect } from '../lib/channel';
 import { env } from '../lib/env';
 import { getSupabase } from '../lib/supabase';
@@ -69,7 +71,8 @@ function AuthForm() {
   const [ageConfirmed, setAgeConfirmed] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
+  // Just came from deleting the account (src/account/DeleteAccountScreen.tsx): say it worked.
+  const [notice, setNotice] = useState<string | null>(() => (accountWasJustDeleted() ? ACCOUNT_DELETE_COPY.deleted : null));
 
   const form = { email, password, ageConfirmed };
   const blocker = submitBlocker(mode, form);
@@ -79,6 +82,7 @@ function AuthForm() {
   function clearMessages() {
     setError(null);
     setNotice(null);
+    clearAccountDeleted();
   }
 
   function switchMode(next: AuthMode) {

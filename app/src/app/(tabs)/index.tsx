@@ -1,5 +1,6 @@
 import { useRouter } from 'expo-router';
 import { View } from 'react-native';
+import { ACCOUNT_DELETE_COPY } from '../../account/copy';
 import { SignOutCard } from '../../auth/SignOutCard';
 import { CreatorVideosRow } from '../../creators/CreatorVideosRow';
 import { buildLine } from '../../lib/channel';
@@ -42,6 +43,15 @@ export default function HomeScreen() {
         {'Plans & usage'}
       </AppText>
       <SignOutCard />
+      <AppText
+        variant="secondary"
+        color="muted"
+        accessibilityRole="link"
+        onPress={() => router.push('/delete-account')}
+        style={{ alignSelf: 'flex-start', textDecorationLine: 'underline', paddingVertical: 10 }}
+      >
+        {ACCOUNT_DELETE_COPY.deleteButton}
+      </AppText>
       {build ? (
         <AppText variant="label" color="muted">
           {build}
