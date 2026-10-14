@@ -1,10 +1,9 @@
-import { ComingSoon } from '../../ui/ComingSoon';
-import { Screen } from '../../ui/Screen';
+import { PantryScreen } from '../../pantry/PantryScreen';
 
-export default function PantryScreen() {
-  return (
-    <Screen title="Pantry">
-      <ComingSoon phase={1} what="Your shelves, photo scan and receipt scan." />
-    </Screen>
-  );
+/**
+ * The Pantry tab. The screen lives in src/pantry/. The Scan entry point plugs into
+ * PantryScreen's `headerActions` and `emptyActions` slots (rebuild phase 1, helper B).
+ */
+export default function PantryRoute() {
+  return <PantryScreen />;
 }
