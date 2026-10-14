@@ -7,6 +7,7 @@ import { useGroceryItems } from '../data/grocery';
 import { useAddMissingToGrocery } from '../data/recipeMutations';
 import { missingAlreadyOnList } from '../data/recipeRows';
 import { servingsAndTime, useRecipe, type AppRecipe } from '../data/recipes';
+import { saveableFromAppRecipe, saveTargetForRecipe } from '../data/savedRecipes';
 import { groceryLinesForMissing, matchRecipe, recipeStatus } from '../kitchen/recipeFeed';
 import type { IngredientStatusLine } from '../kitchen/recipeMatch';
 import { colors, radius, space, touch } from '../theme/tokens';
@@ -15,6 +16,7 @@ import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { Screen } from '../ui/Screen';
 import { addMissingMessage, DETAIL_COPY, ingredientRowText } from './recipeLogic';
+import { SaveButton } from './saved/SaveButton';
 import { StatusSticker } from './StatusSticker';
 
 function messageOf(error: unknown): string {
@@ -103,6 +105,11 @@ export function RecipeDetailScreen({ id }: { id: string }) {
   const match = useMemo(() => (recipe.data && pantry.data ? matchRecipe(recipe.data, pantry.data) : null), [recipe.data, pantry.data]);
   const lines = useMemo(() => (match && pantry.data ? groceryLinesForMissing(match, pantry.data) : []), [match, pantry.data]);
   const onList = recipe.data && grocery.data ? missingAlreadyOnList(recipe.data.id, lines, grocery.data) : false;
+  // The heart: same saved row as the search heart (user_saved_recipes, old app's keys).
+  const saveTarget = useMemo(() => {
+    const saveable = recipe.data ? saveableFromAppRecipe(recipe.data) : null;
+    return saveable ? saveTargetForRecipe(saveable) : null;
+  }, [recipe.data]);
 
   if (ready && !session) return <Redirect href="/sign-in" />;
 
@@ -165,10 +172,13 @@ export function RecipeDetailScreen({ id }: { id: string }) {
         />
       ) : null}
 
-      <View style={{ gap: 6 }}>
-        <AppText color="muted">{servingsAndTime(r)}</AppText>
-        {match ? <StatusSticker status={recipeStatus(match)} /> : null}
-        <Credit recipe={r} />
+      <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: space.gap }}>
+        <View style={{ flex: 1, gap: 6 }}>
+          <AppText color="muted">{servingsAndTime(r)}</AppText>
+          {match ? <StatusSticker status={recipeStatus(match)} /> : null}
+          <Credit recipe={r} />
+        </View>
+        {saveTarget ? <SaveButton target={saveTarget} /> : null}
       </View>
 
       {match ? (

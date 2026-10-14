@@ -13,8 +13,8 @@ type Props = {
 };
 
 /**
- * A sideways row of recent recipe videos from enabled creators (creator_videos). For Home (placed in
- * a follow-up) and /creators. It bleeds past the right gutter to show there is more (DESIGN.md layout).
+ * A sideways row of recent recipe videos from enabled creators (creator_videos). For Home (under the
+ * pantry feed) and /creators. It bleeds past the right gutter to show there is more (DESIGN.md layout).
  */
 export function CreatorVideosRow({ title = 'From recipe creators', limit = 24 }: Props) {
   const videos = useRecentCreatorVideos(limit);

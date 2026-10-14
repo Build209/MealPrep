@@ -53,6 +53,11 @@ export type AppRecipe = {
   id: string;
   source: RecipeSource;
   rowId: string;
+  /**
+   * The row's slug (recipes: may be null; library: always set). Not used for links; the old
+   * app's saved-recipe keys are built from it (saveableFromAppRecipe in savedRecipeRows.ts).
+   */
+  slug: string | null;
   name: string;
   description: string;
   servings: number;
@@ -194,6 +199,7 @@ export function recipeFromRow(row: RecipeRow): AppRecipe {
     id: recipeRouteId('recipes', row.id),
     source: 'recipes',
     rowId: row.id,
+    slug: text(row.slug) || null,
     name: text(row.name) || 'Untitled recipe',
     description: text(row.description),
     servings: Math.max(1, num(row.servings) ?? 1),
@@ -213,6 +219,7 @@ export function libraryRecipeFromRow(row: LibraryRecipeRow): AppRecipe {
     id: recipeRouteId('library', row.id),
     source: 'library',
     rowId: row.id,
+    slug: text(row.slug) || null,
     name: text(row.title) || text(row.dish_name) || 'Untitled recipe',
     description: text(row.dish_name),
     servings: Math.max(1, num(row.servings) ?? 1),

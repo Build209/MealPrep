@@ -79,10 +79,12 @@ test('sign up; Home shows the feed links and asks for pantry food', async ({ pag
   for (const [name, href] of [
     ['Search recipes', '/recipes/search'],
     ['Saved', '/recipes/saved'],
-    ['Import a recipe', '/recipes/import'],
   ]) {
     await expect(page.getByRole('link', { name, exact: true })).toHaveAttribute('href', href);
   }
+  // Import is a secondary button (it spends an import only after a further tap on the next page).
+  await page.getByRole('button', { name: 'Import a recipe', exact: true }).click();
+  await expect(page).toHaveURL(/\/recipes\/import$/);
 });
 
 test('feed statuses, detail have/missing, add missing to grocery once', async ({ page }) => {

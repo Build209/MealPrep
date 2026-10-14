@@ -2,7 +2,16 @@ import { cleanVideoTitle, imageAddress, watchLink } from '../creators/videoText'
 import type { CreatorVideo } from './creatorRows';
 import { DataError } from './errors';
 import type { ListChange } from './listOps';
-import { LEGACY_LIBRARY_PREFIX, asUuid, isUuid, parseRecipeRouteId, type SearchableRecipe } from './recipeSearchRows';
+import type { AppRecipe } from './recipeRows';
+import {
+  LEGACY_LIBRARY_PREFIX,
+  asUuid,
+  isUuid,
+  parseRecipeRouteId,
+  recipeRouteId,
+  type RecipeTable,
+  type SearchableRecipe,
+} from './recipeSearchRows';
 
 /**
  * Saved recipes (user_saved_recipes in db/supabase/migrations/20261013000000_live_baseline.sql),
@@ -129,6 +138,39 @@ export function saveTargetForRecipe(recipe: SaveableRecipe): SaveTarget {
       appRoute: recipe.routeId,
     },
     link: { kind: 'recipe', routeId: recipe.routeId },
+  };
+}
+
+/**
+ * The recipe page's AppRecipe (src/data/recipeRows.ts, source 'recipes' | 'library') as a
+ * SaveableRecipe (table 'recipes' | 'library_recipes'). Both sides use the same route ids
+ * (r_<uuid> / l_<uuid>); the old app's id comes from the slug exactly as search builds it
+ * (searchableFromRecipeRow / searchableFromLibraryRow), so a heart on the page and in search
+ * write and find the same ref_key. Null when it can't be saved (a library row without a slug,
+ * which search also leaves out).
+ */
+export function saveableFromAppRecipe(
+  recipe: Pick<AppRecipe, 'source' | 'rowId' | 'slug' | 'name' | 'description' | 'servings' | 'minutes' | 'imageUrl' | 'ingredients' | 'steps'>,
+): SaveableRecipe | null {
+  const uuid = asUuid(recipe.rowId);
+  if (!uuid) return null;
+  const slug = (recipe.slug ?? '').trim();
+  const table: RecipeTable = recipe.source === 'library' ? 'library_recipes' : 'recipes';
+  const legacyId = table === 'recipes' ? slug || uuid : slug ? `${LEGACY_LIBRARY_PREFIX}${slug}` : '';
+  if (!legacyId) return null;
+  return {
+    routeId: recipeRouteId(table, uuid),
+    table,
+    uuid,
+    legacyId,
+    title: recipe.name,
+    imageUrl: recipe.imageUrl,
+    subtitle: '',
+    description: recipe.description,
+    servings: recipe.servings,
+    minutes: recipe.minutes,
+    ingredients: recipe.ingredients.map((i) => ({ name: i.name, quantity: i.quantity, unit: i.unit })),
+    steps: recipe.steps,
   };
 }
 

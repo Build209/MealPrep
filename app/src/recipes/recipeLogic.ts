@@ -23,6 +23,8 @@ export const FEED_COPY = {
   searchLink: 'Search recipes',
   savedLink: 'Saved',
   importLink: 'Import a recipe',
+  creatorsTitle: 'From recipe creators',
+  creatorsSeeAll: 'See all creator videos',
 } as const;
 
 export const DETAIL_COPY = {

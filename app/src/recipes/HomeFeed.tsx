@@ -1,35 +1,15 @@
-import { Link, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useMemo } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { usePantryItems } from '../data';
 import { useRecipes } from '../data/recipes';
 import { rankRecipeFeed } from '../kitchen/recipeFeed';
-import { colors, space, touch } from '../theme/tokens';
+import { colors, space } from '../theme/tokens';
 import { AppText } from '../ui/AppText';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { FEED_COPY } from './recipeLogic';
 import { RecipeCard } from './RecipeCard';
-
-/** Plain links to the other recipe screens (built in their own pull requests). */
-function RecipeLinks() {
-  const links = [
-    { href: '/recipes/search', label: FEED_COPY.searchLink },
-    { href: '/recipes/saved', label: FEED_COPY.savedLink },
-    { href: '/recipes/import', label: FEED_COPY.importLink },
-  ] as const;
-  return (
-    <View style={{ flexDirection: 'row', flexWrap: 'wrap', columnGap: space.groupGap, rowGap: 4 }}>
-      {links.map((link) => (
-        <Link key={link.href} href={link.href} style={{ minHeight: touch.min, justifyContent: 'center', paddingVertical: 10 }}>
-          <AppText bold style={{ textDecorationLine: 'underline' }}>
-            {link.label}
-          </AppText>
-        </Link>
-      ))}
-    </View>
-  );
-}
 
 function SectionTitle({ children }: { children: string }) {
   return (
@@ -87,8 +67,6 @@ export function HomeFeed() {
 
   return (
     <View style={{ gap: space.groupGap }}>
-      <RecipeLinks />
-
       <View style={{ gap: space.gap }}>
         <SectionTitle>{FEED_COPY.cookTitle}</SectionTitle>
         {pantryEmpty ? (

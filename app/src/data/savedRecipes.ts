@@ -22,6 +22,7 @@ import {
 import { requireClient, requireUserId, useSessionUserId } from './session';
 
 export {
+  saveableFromAppRecipe,
   saveTargetForCreatorVideo,
   saveTargetForRecipe,
   saveTargetFromSaved,

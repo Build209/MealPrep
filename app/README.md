@@ -47,6 +47,13 @@ untouched until switch-over, when `mobile/` is deleted in the same release.
   - `/creators` and `CreatorVideosRow` (`src/creators/`): recent videos from enabled creators, read
     straight from `creator_videos`, with the old function's recipe-video rule (`videoFilter.ts`) and text
     cleaning (`videoText.ts`). Videos open outside the app, labelled "Watch on YouTube" in plain text.
+- Recipes wired together (phase 3): Home (`src/app/(tabs)/index.tsx`) starts with links to Search and
+  Saved and a secondary "Import a recipe" button (`src/recipes/HomeActions.tsx`), then the pantry feed,
+  then `CreatorVideosRow` with "See all creator videos" (`/creators`). The recipe page has the heart
+  (`SaveButton`) for recipes and library rows: `saveableFromAppRecipe()` (`src/data/savedRecipeRows.ts`)
+  turns the page's `AppRecipe` into the same save target search builds, so both hearts write and find
+  one `user_saved_recipes` row (checked in `tests/recipe-save-bridge.test.ts`). Saving an import opens
+  `/recipe/r_<id>`. End to end: `e2e/recipes-wiring.spec.ts` (import, page, save, Saved, search).
 - `src/recipes/import/`: import a recipe (phase 3) at `/recipes/import`. Paste a link or recipe text, or use a
   recipe photo or a saved video; the live `recipe-import` function reads it (unchanged; same request as the old app),
   then a review form, then Save writes the person's own `recipes` row (is_master false, creator credit in source_*)

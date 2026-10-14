@@ -5,7 +5,7 @@ import { Button } from '../ui/Button';
 import { Screen } from '../ui/Screen';
 import { CreatorVideosRow } from './CreatorVideosRow';
 
-/** /creators: the creator videos row on its own page, until Home places it. */
+/** /creators: the creator videos row on its own page, also reached from "See all creator videos" on Home. */
 export function CreatorsScreen() {
   const { ready, session } = useAuth();
   const router = useRouter();
