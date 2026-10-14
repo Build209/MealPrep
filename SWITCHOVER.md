@@ -121,7 +121,7 @@ These test the live functions. Deleting `mobile/` drops them silently.
 
 ### 1c. Database (owner's yes for each)
 
-- [ ] `add_missing_to_grocery` (`db/supabase/migrations/20261014030000_add_missing_to_grocery.sql`) is **NOT on live**.
+- [x] `add_missing_to_grocery` (`db/supabase/migrations/20261014030000_add_missing_to_grocery.sql`) is on live (applied 2026-10-14 with the owner's yes).
       The new recipe page's "Add N missing to grocery list" calls it. Apply before the release, or that button fails for everyone.
 - [ ] Already on live 2026-10-14: `tick_grocery_item` / `untick_grocery_item`, `recipes_read` (master + own).
 - [ ] Daily caps (spec phase 4): migration file only, not built. Decide: block the release or ship after.
@@ -177,7 +177,7 @@ On the **new app's preview** (mealplanatic-preview.pages.dev, or wherever `app-p
 | F10 | Clear ticked | Tick two, "Clear ticked". | Both gone from the list. | rows removed / closed | [ ] |
 | F11 | Recipe feed | Home > "Cook from your pantry". | Cards with "Ready to cook" (leaf) or "N missing" (banana). | none | [ ] |
 | F12 | Recipe page | Open a card. | Ingredients, steps, heart. | none | [ ] |
-| F13 | Add missing to grocery | On a recipe with missing items: "Add N missing to grocery list". Press again. | Items on the list once; the second press adds nothing. **Needs `add_missing_to_grocery` on live (1c).** | rows merged, once per recipe | [ ] |
+| F13 | Add missing to grocery | On a recipe with missing items: "Add N missing to grocery list". Press again. | Items on the list once; the second press adds nothing. | rows merged, once per recipe | [ ] |
 | F14 | Search | Home > Search: a title, then an ingredient. | Own recipes first, then recipes and creator videos mixed, no repeats. | none | [ ] |
 | F15 | Saved | Heart a recipe; open Home > Saved. Unheart. | Shows in Saved; gone after unheart. | `user_saved_recipes` row added / removed | [ ] |
 | F16 | Import from link | Home > Import a recipe > paste a recipe link > review > Save. | Opens the new recipe page; imports-left drops by 1. | own `recipes` row, `is_master = false`, source credit | [ ] |
@@ -230,13 +230,12 @@ For each, compliance ticks the box:
 
 1. **Owner:** all of section 2 ticked; section 3 signed off. Open items closed or accepted in writing.
 2. **Manager:** confirms every PR into `rebuild/v1` is merged and green: the `main`-into-`rebuild/v1` update (1a), the switch-over PR (1b), account deletion.
-3. **Owner:** applies `add_missing_to_grocery` on live (1c), if not done.
-4. **Owner:** Supabase Redirect URLs (1d).
-5. **Manager:** opens the final PR `rebuild/v1` into `main`. In the same PR: `mobile/` deleted, functions in `supabase/functions`, new `pages.yml`, CI changes. Lists the last `main` commit before the merge (the rollback point).
-6. **Manager:** all checks green on that PR's head.
-7. **Owner:** merges, at a quiet hour (no live paying customers yet per status; confirm).
-8. Pages workflow runs on push to `main`. **Manager** watches it to green (about 3 to 5 minutes).
-9. Edge functions are **not** redeployed by the merge. Live functions keep running as they are. No function change is part of this release.
+3. **Owner:** Supabase Redirect URLs (1d).
+4. **Manager:** opens the final PR `rebuild/v1` into `main`. In the same PR: `mobile/` deleted, functions in `supabase/functions`, new `pages.yml`, CI changes. Lists the last `main` commit before the merge (the rollback point).
+5. **Manager:** all checks green on that PR's head.
+6. **Owner:** merges, at a quiet hour (no live paying customers yet per status; confirm).
+7. Pages workflow runs on push to `main`. **Manager** watches it to green (about 3 to 5 minutes).
+8. Edge functions are **not** redeployed by the merge. Live functions keep running as they are. No function change is part of this release.
 
 ---
 
@@ -275,7 +274,7 @@ Database changes already on live, checked against the old app:
 
 - `tick_grocery_item` / `untick_grocery_item` (`20261014000000_grocery_tick.sql`): new functions only. The old app does not call them. Safe.
 - `recipes_read` master + own (`20261014080000_recipes_read_own.sql`): the migration notes both apps already query master + own. Old app unaffected. (Checked in the migration comment, not by running the old app.)
-- `add_missing_to_grocery` (if applied in 1c): new function only. Old app does not call it. Safe.
+- `add_missing_to_grocery` (applied 2026-10-14): new function only. Old app does not call it. Safe.
 - Saved recipes use the same `user_saved_recipes` keys in both apps, so saves made in the new app show in the old one.
 
 Rollback keeps `supabase/functions` in the reverted state too, so the deploy workflow points at `mobile/` again. That is fine.
@@ -301,7 +300,7 @@ From the spec and the "Do list". None needs code.
 1. **Function sources live in `mobile/`.** Deleting `mobile/` without the move in 1b loses the only copy of 14 live functions and breaks the deploy workflow.
 2. **Guard tests skip silently.** Six `app/tests` read `mobile/` files and skip when they are missing, and 17 function checks run only in the old `mobile` CI job. Prices and renewal wording could drift with CI still green.
 3. **`/delete-account` and the legal pages.** The privacy page promises `/delete-account`; the new app does not have it yet. `terms.html` and `privacy.html` must be copied into `app/public`.
-4. **`add_missing_to_grocery` is not on live.** A shipped button would fail.
+4. ~~`add_missing_to_grocery` is not on live.~~ Done 2026-10-14.
 5. **Renewal wording says "Account, Manage subscription"**, and the new app has no Account screen. Compliance decision needed.
 
 Also: PR #260 is on `main` but not on `rebuild/v1` (1a); the old service worker on users' phones (1b); no admin screen in the new app (old `/admin` route disappears; not verified what the owner still uses it for).
