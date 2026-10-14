@@ -1,8 +1,8 @@
 -- Rebuild phase 2 (Grocery): tick a grocery item into the pantry, and undo it, in ONE step on
 -- the server.
 --
--- NOT APPLIED TO LIVE. Local stacks (CI, `supabase start`) run it; the live project needs the
--- owner's yes first (db/README.md rules, charter).
+-- Applied to live on 2026-10-14 with the owner's yes (as migration "grocery_tick"; the live copy
+-- has the same code with the explanatory comments inside the function bodies left out).
 --
 -- Why a function: the old app added ticked items to its local copy of the pantry and then synced
 -- it, which saved different rows from the ones on screen and sometimes added or took out stock

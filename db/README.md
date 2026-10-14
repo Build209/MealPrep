@@ -31,6 +31,14 @@ DB_URL=postgresql://postgres:postgres@127.0.0.1:54322/postgres db/scripts/check-
 createdb scratch && DB_URL=postgresql:///scratch db/scripts/check-baseline.sh --plain
 ```
 
+## Later migrations and whether they are on live
+
+| File | On live? |
+|---|---|
+| `20261014000000_grocery_tick.sql` | Yes, 2026-10-14 (owner's yes). Live function bodies omit the in-body comments. |
+| `20261014030000_add_missing_to_grocery.sql` | No. Needs the owner's yes. |
+| `20261014080000_recipes_read_own.sql` | Yes, 2026-10-14 (owner's yes): signed-in people read master + own recipes only. |
+
 ## Rules
 
 - **Never apply the baseline to the live project.** Everything in it already exists there.
