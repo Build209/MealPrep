@@ -27,6 +27,19 @@ untouched until switch-over, when `mobile/` is deleted in the same release.
   rules (`src/kitchen/pantryMatch.ts`): shelf items already there are shown as "Already in your pantry"
   and left unticked; receipt lines add to a matching row with the same unit. With no scans left the
   button says so and opens a sheet about the monthly allowance, with "See plans" (the live app for now).
+- Recipes, phase 3 (search, saved, creator videos):
+  - `/recipes/search` (`src/recipes/search/`): master and own recipes and published library recipes by
+    title or ingredient, plus creator videos from `search_creator_videos`. The recipe list is read once
+    and searched on the device (ingredients are jsonb, which PostgREST can't ilike). Merge order ported
+    from the old app: own recipes first, then recipes and videos taking turns, repeats dropped.
+    Recipes link to `/recipe/r_<uuid>` (recipes) or `/recipe/l_<uuid>` (library_recipes).
+  - `/recipes/saved` and `SaveButton` (`src/recipes/saved/`): the heart saves to `user_saved_recipes`
+    with the old app's keys (`kitchen:<slug or uuid>`, `kitchen:library-<slug>`, `creator:<video id>`),
+    so both apps read each other's saves until switch-over. For the recipe page:
+    `<SaveButton target={saveTargetForRecipe(...)} />`.
+  - `/creators` and `CreatorVideosRow` (`src/creators/`): recent videos from enabled creators, read
+    straight from `creator_videos`, with the old function's recipe-video rule (`videoFilter.ts`) and text
+    cleaning (`videoText.ts`). Videos open outside the app, labelled "Watch on YouTube" in plain text.
 - One folder per feature as features arrive (`pantry/`, `grocery/`, `recipes/`, ...), no file over about 400 lines.
 
 ```bash
