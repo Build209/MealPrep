@@ -1,7 +1,6 @@
 -- Rebuild phase 3 (Recipes): "Add N missing to grocery list" in ONE step on the server.
 --
--- NOT APPLIED TO LIVE. Local stacks (CI, `supabase start`) run it; the live project needs the
--- owner's yes first (db/README.md rules, charter).
+-- Applied to live on 2026-10-14 with the owner's yes (as migration add_missing_to_grocery).
 --
 -- Why a function: the old app merged missing ingredients into its local copy of the grocery list
 -- and synced it (mobile/lib/recipeMatch/groceryFromMissing.ts), so two devices or a double tap
