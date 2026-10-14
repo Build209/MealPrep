@@ -329,7 +329,7 @@ screen('06', 'pantry-list', 'none', 'Pantry, list view', async (page) => {
 screen('07', 'pantry-empty', 'none', 'Pantry, empty (second account)', async (page) => {
   await signIn(page, seed.emptyEmail);
   await page.goto('/pantry');
-  await expect(page.getByText('Your pantry is empty')).toBeVisible();
+  await expect(page.getByText('Your pantry is empty').filter({ visible: true })).toBeVisible();
 });
 
 screen('08', 'scan', 'camera', 'the scan screen (no camera in the browser)', async (page) => {

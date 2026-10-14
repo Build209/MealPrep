@@ -75,7 +75,7 @@ test('sign up; Home shows the feed links and asks for pantry food', async ({ pag
   await expectHome(page);
 
   await expect(page.getByRole('heading', { name: 'Cook from your pantry' })).toBeVisible();
-  await expect(page.getByText('Your pantry is empty')).toBeVisible();
+  await expect(page.getByText('Your pantry is empty').filter({ visible: true })).toBeVisible();
   for (const [name, href] of [
     ['Search recipes', '/recipes/search'],
     ['Saved', '/recipes/saved'],

@@ -1,7 +1,7 @@
 import Feather from '@expo/vector-icons/Feather';
 import { Redirect, Tabs } from 'expo-router';
 import type { ComponentProps } from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, View, type ColorValue } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../auth/AuthProvider';
 import { TopBar } from '../../ui/TopBar';
@@ -9,18 +9,19 @@ import { useReducedMotion } from '../../ui/useReducedMotion';
 import { colors, fonts, layout } from '../../theme/tokens';
 
 type IconName = ComponentProps<typeof Feather>['name'];
+type IconColor = ComponentProps<typeof Feather>['color'];
 
 /**
  * A line icon above the tab's label. Ink when active, muted when not (never tomato). Hidden from
  * screen readers: the tab is already named by its label, so the icon must not be announced twice.
  */
 function tabIcon(name: IconName, route: string) {
-  return function TabIcon({ color }: { color: string; focused: boolean; size: number }) {
+  return function TabIcon({ color }: { color: ColorValue; focused: boolean; size: number }) {
     return (
       <Feather
         name={name}
         size={22}
-        color={color}
+        color={color as IconColor}
         testID={`tab-icon-${route}`}
         aria-hidden
         accessibilityElementsHidden

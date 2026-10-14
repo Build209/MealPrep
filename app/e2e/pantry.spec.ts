@@ -67,7 +67,7 @@ test('sign up, then the pantry starts empty and points to Add item', async ({ pa
   await expectHome(page);
 
   await page.goto('/pantry');
-  await expect(page.getByText('Your pantry is empty')).toBeVisible();
+  await expect(page.getByText('Your pantry is empty').filter({ visible: true })).toBeVisible();
   await expect(addButton(page)).toBeEnabled();
 });
 
@@ -75,7 +75,7 @@ test('add, see, edit quantity, delete and undo; the server agrees after a reload
   await signIn(page);
   const userId = await appUserId(page);
   await page.goto('/pantry');
-  await expect(page.getByText('Your pantry is empty')).toBeVisible();
+  await expect(page.getByText('Your pantry is empty').filter({ visible: true })).toBeVisible();
 
   // Add an item.
   await addButton(page).click();
@@ -130,7 +130,7 @@ test('offline: changes are blocked with the offline message', async ({ page, con
   await expect(page.getByText('1 item', { exact: true })).toBeVisible();
 
   await context.setOffline(true);
-  await expect(page.getByText("You're offline. Changes need a connection.")).toBeVisible();
+  await expect(page.getByText("You're offline. Changes need a connection.").filter({ visible: true })).toBeVisible();
   await expect(addButton(page)).toBeDisabled();
   await context.setOffline(false);
   await expect(addButton(page)).toBeEnabled();
