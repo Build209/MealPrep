@@ -43,7 +43,8 @@ createdb scratch && DB_URL=postgresql:///scratch db/scripts/check-baseline.sh --
 | `20261014030000_add_missing_to_grocery.sql` | Yes, 2026-10-14 (owner's yes). |
 | `20261014080000_recipes_read_own.sql` | Yes, 2026-10-14 (owner's yes): signed-in people read master + own recipes only. |
 | `20261014090000_daily_caps.sql` | No. Needs the owner's yes and compliance review. |
-| `20261014100000_db_hardening.sql` | No. File ready; needs the owner's yes. |
+| `20261014100000_db_hardening.sql` | Yes, 2026-10-14 (owner's yes). |
+| `20261014110000_scan_photo_retention.sql` | Yes, 2026-10-14 (owner's yes): #260, daily job `scan-photos-retention-daily` at 10:23 UTC. |
 
 ## Rules
 
