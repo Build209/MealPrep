@@ -41,6 +41,9 @@ The server (Supabase) is the only source of truth. This folder is the only place
 | `recipeRows.ts` | Recipe rows (`recipes`, `library_recipes`) mapped to one `AppRecipe`; the recipe id scheme `r_<uuid>` / `l_<uuid>` (`recipeHref`, `parseRecipeRouteId`); the add-missing answer. Pure. |
 | `recipes.ts` | `useRecipes()` (master + own + published library) and `useRecipe(id)`. Read-only. |
 | `recipeMutations.ts` | `useAddMissingToGrocery()`: one call to `add_missing_to_grocery`; the server's grocery rows go into the grocery query. |
+| `recipeSearchRows.ts`, `recipeSearch.ts` | Recipes search reads (master + own `recipes`, published `library_recipes`), detail route ids `r_<uuid>` / `l_<uuid>`. |
+| `savedRecipeRows.ts`, `savedRecipes.ts` | `user_saved_recipes`: list (old slug keys resolved to route ids), optimistic save/unsave, `useSaveToggle`. |
+| `creatorRows.ts`, `creators.ts` | Enabled creators and their videos (read only), recent row and `search_creator_videos`. |
 | `scanUsage.ts` | This month's photo scans used (own `photo_scan_usage` row) and `useScanAllowance()` for the Scan button. |
 
 Adding a table: add its Row type, app type, both mappers and column list to `rows.ts` (or a
