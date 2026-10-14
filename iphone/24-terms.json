@@ -1,0 +1,69 @@
+{
+  "project": "iphone",
+  "engine": "webkit",
+  "order": "24",
+  "screen": "terms",
+  "route": "/terms.html",
+  "purpose": "none",
+  "viewport": "393x659",
+  "screenshots": [
+    "iphone/24-terms.png"
+  ],
+  "checks": {
+    "noSidewaysScroll": true,
+    "tapTargets": true,
+    "textFits": true,
+    "tomatoRule": true
+  },
+  "sidewaysScroll": {
+    "scrollWidth": 393,
+    "innerWidth": 393
+  },
+  "tapTargetIssues": [],
+  "tapTargetAllowed": [
+    {
+      "text": "Privacy Policy",
+      "role": "a",
+      "width": 99.6,
+      "height": 17,
+      "why": "inline-link"
+    },
+    {
+      "text": "support@mealplanatic.app",
+      "role": "a",
+      "width": 190.6,
+      "height": 17,
+      "why": "inline-link"
+    },
+    {
+      "text": "YouTube Terms of Service",
+      "role": "a",
+      "width": 186.5,
+      "height": 17,
+      "why": "inline-link"
+    },
+    {
+      "text": "account deletion page",
+      "role": "a",
+      "width": 156.6,
+      "height": 17,
+      "why": "inline-link"
+    },
+    {
+      "text": "support@mealplanatic.app",
+      "role": "a",
+      "width": 190.6,
+      "height": 17,
+      "why": "inline-link"
+    }
+  ],
+  "clippedText": [],
+  "truncatedText": [],
+  "offscreenControls": [],
+  "tomato": [],
+  "tomatoViolations": [],
+  "notes": [
+    "Static legal page (public/terms.html), not an app screen."
+  ],
+  "reportOnly": {}
+}
