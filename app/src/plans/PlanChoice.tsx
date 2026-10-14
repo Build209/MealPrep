@@ -77,6 +77,7 @@ export function PlanChoice() {
               accessibilityRole="radio"
               accessibilityLabel={INTERVAL_LABELS[option]}
               accessibilityState={{ checked: selected, disabled: busy }}
+              aria-checked={selected}
               style={{
                 flex: 1,
                 minHeight: touch.min,
@@ -108,6 +109,7 @@ export function PlanChoice() {
               accessibilityRole="radio"
               accessibilityLabel={tierRowLabel(option, interval)}
               accessibilityState={{ checked: selected, disabled: busy }}
+              aria-checked={selected}
               style={{
                 minHeight: 72,
                 flexDirection: 'row',

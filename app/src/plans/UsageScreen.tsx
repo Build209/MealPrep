@@ -76,7 +76,7 @@ export function UsageScreen() {
       {error ? (
         <>
           <AppText variant="secondary" color="danger" bold accessibilityRole="alert">
-            {error.message || USAGE_COPY.loadError}
+            {error instanceof Error && error.message ? error.message : USAGE_COPY.loadError}
           </AppText>
           <Button
             kind="secondary"
