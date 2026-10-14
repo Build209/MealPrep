@@ -116,3 +116,18 @@ npx playwright install chromium && npm run e2e
 ```
 
 The tests refuse any Supabase address that is not on this machine.
+
+Site tests: `e2e-site/` checks the whole GitHub Pages site (`scripts/build-site.sh` output in `site/`)
+served the way Pages serves it (`e2e-site/serve-pages.mjs`: unknown addresses get `404.html` with
+status 404, folders get a trailing slash). Covered: `/` opens the app; deep links (`/pantry`,
+`/recipes/search`, `/delete-account`, ...) open the app on that route; the legal pages at
+`/terms.html`, `/privacy.html`, `/terms/`, `/privacy/`; the redirect stubs; `/209/`; and the
+service-worker clean-up (a stand-in of the old worker, `e2e-site/fixtures/old-sw.js`, is installed at
+`/sw.js` and then replaced by the site's `sw.js`). Chromium only. Built with dummy Supabase settings;
+every request off the machine is blocked. CI: job `site-e2e` in `.github/workflows/site-build.yml`.
+
+```bash
+EXPO_PUBLIC_SUPABASE_URL=https://e2e-site-dummy.supabase.co EXPO_PUBLIC_SUPABASE_ANON_KEY=dummy \
+  bash scripts/build-site.sh
+npx playwright install chromium && npx playwright test -c e2e-site
+```
