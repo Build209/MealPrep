@@ -5,7 +5,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { isLowQualityFeedVideo, isRecipeLikeVideo } from '../src/creators/videoFilter';
 
-// The old app's checks (mobile/scripts/creator-video-filter-check.ts), unchanged.
+// The old app's checks (now supabase/scripts/creator-video-filter-check.ts), unchanged.
 
 const JUNK_TITLES = [
   'I Tried 100 Years of Spicy Challenges',
@@ -90,9 +90,9 @@ test('feed rule: junk is low quality, recipes are not; a Short needs a dish', ()
 });
 
 // The old app's manual hide list: the title rule should catch most of what was hidden by hand
-// (the new app can't read the hide list itself). Read from mobile/ while it exists.
-const fixture = path.join(process.cwd(), '..', 'mobile', 'supabase', 'functions', 'creator-videos', 'fixtures', 'manual-hide-videos.json');
-test('catches at least 85% of the old manual hides', { skip: !fs.existsSync(fixture) && 'old app fixture not present' }, () => {
+// (the new app can't read the hide list itself). The list lives with the creator-videos function.
+const fixture = path.join(__dirname, '..', '..', 'supabase', 'functions', 'creator-videos', 'fixtures', 'manual-hide-videos.json');
+test('catches at least 85% of the old manual hides', () => {
   const hides = JSON.parse(fs.readFileSync(fixture, 'utf8')) as { title: string }[];
   assert.ok(hides.length >= 200);
   const caught = hides.filter((row) => !isRecipeLikeVideo(row.title, '')).length;

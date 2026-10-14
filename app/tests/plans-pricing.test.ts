@@ -155,16 +155,23 @@ test('compliance rule 11: no pressure or savings wording, "free" only about the 
 
 // The LIVE lines are copied from the old app, which compliance saw with the tier build (#252).
 const mobile = join(__dirname, '..', '..', 'mobile');
-const skip = !existsSync(join(mobile, 'config', 'pricing.ts')) && 'old app removed';
+const functions = join(__dirname, '..', '..', 'supabase', 'functions');
 
-test('LIVE wording is still word for word in the old app', { skip }, () => {
+/** Old-app file: repoint or snapshot at switch-over (SWITCHOVER.md 1b). Missing is a failure, never a skip. */
+function readOldApp(rel: string): string {
+  const file = join(mobile, rel);
+  assert.ok(existsSync(file), `mobile/${rel} is gone: repoint or snapshot this check (SWITCHOVER.md 1b)`);
+  return readFileSync(file, 'utf8');
+}
+
+test('LIVE wording is still word for word in the old app', () => {
   const src = [
     'config/pricing.ts',
     'config/account.ts',
     'components/account/AccountPlanSection.tsx',
     'lib/billing/pricing.ts',
   ]
-    .map((f) => readFileSync(join(mobile, f), 'utf8'))
+    .map((f) => readOldApp(f))
     .join('\n');
   const live = [
     PLANS_COPY.benefit,
@@ -196,12 +203,12 @@ test('LIVE wording is still word for word in the old app', { skip }, () => {
   for (const line of live) assert.ok(src.includes(line), `not found in the old app: ${line}`);
 });
 
-test('renewal terms match the server wording the consent record names', { skip }, () => {
-  const server = readFileSync(join(mobile, 'supabase', 'functions', '_shared', 'billingText.ts'), 'utf8');
+test('renewal terms match the server wording the consent record names', () => {
+  const server = readFileSync(join(functions, '_shared', 'billingText.ts'), 'utf8');
   assert.match(server, /DISCLOSURE_VERSION = '2026-10-11\.1'/, 'disclosure version changed: re-check this screen with compliance');
   assert.ok(server.includes("`${TIER_NAMES[tier]} is ${price} ${period.a}. It renews automatically ${period.every} until you cancel. ` +"));
   assert.ok(server.includes("'Cancel any time in Account, Manage subscription.'"));
-  const prices = readFileSync(join(mobile, 'config', 'pricing.ts'), 'utf8');
+  const prices = readOldApp('config/pricing.ts');
   for (const [tier, m, y] of [
     ['plus', 499, 5388],
     ['pro', 899, 9384],

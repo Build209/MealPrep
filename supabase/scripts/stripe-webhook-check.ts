@@ -8,7 +8,7 @@ import {
   constantTimeEqual,
   parseStripeSignatureHeader,
   verifyStripeSignature,
-} from '../supabase/functions/stripe-webhook/signature.ts';
+} from '../functions/stripe-webhook/signature.ts';
 import {
   asUuid,
   consentRowFromCheckoutSession,
@@ -20,9 +20,9 @@ import {
   stripeId,
   subscriptionIdFromInvoice,
   subscriptionRowFromStripe,
-} from '../supabase/functions/stripe-webhook/subscriptionState.ts';
+} from '../functions/stripe-webhook/subscriptionState.ts';
 
-const mobileRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const supabaseRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SECRET = 'whsec_test_secret_for_unit_checks';
 const USER = '3f2b8c1e-9d4a-4b6f-8a21-0c5d7e9f1a2b';
 
@@ -201,12 +201,8 @@ function testStatusRules(): void {
     assert.equal(isPlusActiveStatus(status), false, String(status));
   }
 
-  // The SQL that derives the plan must use the same list.
-  const migration = fs.readFileSync(
-    path.join(mobileRoot, 'supabase/migrations/20261009020000_billing_subscriptions.sql'),
-    'utf8',
-  );
-  assert.match(migration, /b\.status in \('active', 'trialing', 'past_due'\)/);
+  // The SQL that derives the plan must use the same list: checked against the old migration in
+  // mobile/scripts/stripe-webhook-mobile-check.ts.
 
   assert.equal(isHandledEventType('checkout.session.completed'), true);
   assert.equal(isHandledEventType('customer.subscription.deleted'), true);
@@ -340,7 +336,7 @@ async function testDeletedAccountLink(): Promise<void> {
 
 function testSourceRules(): void {
   const index = fs.readFileSync(
-    path.join(mobileRoot, 'supabase/functions/stripe-webhook/index.ts'),
+    path.join(supabaseRoot, 'functions/stripe-webhook/index.ts'),
     'utf8',
   );
   // Signature is verified on the raw body before the event is parsed.

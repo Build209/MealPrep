@@ -46,8 +46,10 @@ test('type scale has exactly the six DESIGN.md sizes and nothing under 12', () =
 });
 
 // Until switch-over, the live app's theme file is the source of truth for colours.
+// Old-app file: repoint or snapshot at switch-over (SWITCHOVER.md 1b). Missing is a failure, never a skip.
 const liveTheme = join(__dirname, '..', '..', 'mobile', 'config', 'theme.colors.json');
-test('colours match the live theme file', { skip: !existsSync(liveTheme) && 'old app removed' }, () => {
+test('colours match the live theme file', () => {
+  assert.ok(existsSync(liveTheme), 'mobile/config/theme.colors.json is gone: repoint or snapshot this check (SWITCHOVER.md 1b)');
   const live = JSON.parse(readFileSync(liveTheme, 'utf8')) as Record<string, string>;
   const sameName: Array<keyof typeof colors> = [
     'paper', 'sand', 'card', 'border', 'ink', 'muted', 'primary', 'onPrimary', 'banana', 'onBanana',

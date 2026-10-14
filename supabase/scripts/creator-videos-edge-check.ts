@@ -2,11 +2,11 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { loadCreatorListVideoRows } from '../supabase/functions/creator-videos/creatorListVisibility.ts';
+import { loadCreatorListVideoRows } from '../functions/creator-videos/creatorListVisibility.ts';
 
-const mobileRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const supabaseRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const indexSource = fs.readFileSync(
-  path.join(mobileRoot, 'supabase/functions/creator-videos/index.ts'),
+  path.join(supabaseRoot, 'functions/creator-videos/index.ts'),
   'utf8',
 );
 

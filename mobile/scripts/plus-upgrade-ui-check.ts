@@ -26,7 +26,7 @@ import {
   checkoutReturnUrls,
   formatPrice,
   renewalDisclosure,
-} from '../supabase/functions/_shared/billingText.ts';
+} from '../../supabase/functions/_shared/billingText.ts';
 
 const mobileRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (rel: string) => fs.readFileSync(path.join(mobileRoot, rel), 'utf8');

@@ -10,16 +10,13 @@ import {
   SCAN_PHOTO_BUCKET,
   SCAN_RETENTION_DAYS,
   secretsMatch,
-} from '../supabase/functions/_shared/scanRetention.ts';
-import { SCAN_PHOTOS } from '../config/scanPhotos.ts';
+} from '../functions/_shared/scanRetention.ts';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (rel: string) => fs.readFileSync(path.join(root, rel), 'utf8');
 
-// Same bucket and window as the app and the privacy page.
-assert.equal(SCAN_PHOTO_BUCKET, SCAN_PHOTOS.bucketId);
-assert.equal(SCAN_RETENTION_DAYS, SCAN_PHOTOS.retentionDays);
-assert.match(read('public/privacy.html'), /<strong>30 days<\/strong>/);
+// Same bucket and window as the app and the privacy page: checked in
+// mobile/scripts/scan-photo-retention-mobile-check.ts while those live in mobile/.
 
 // Paths.
 assert.equal(isScanPhotoObjectPath('aaaa-bbbb/pantry/1700000000000.jpg'), true);
@@ -39,22 +36,13 @@ assert.equal(secretsMatch('', ''), false, 'an unset secret must refuse every cal
 assert.equal(secretsMatch('abc123', ''), false);
 
 // Function: refuses without the secret, removes through the Storage API, logs no paths.
-const fn = read('supabase/functions/scan-photo-retention/index.ts');
+const fn = read('functions/scan-photo-retention/index.ts');
 assert.match(fn, /secretsMatch\(expected, provided\)/);
 assert.match(fn, /storage\.from\(SCAN_PHOTO_BUCKET\)\.remove\(paths\)/);
 assert.match(fn, /list_expired_scan_photos/);
 assert.doesNotMatch(fn, /console\.log\([^)]*paths/);
 
-// Migration: service role only, never under 30 days, no SQL delete on storage, daily job.
-const sql = read('supabase/migrations/20261013030000_scan_photo_retention.sql');
-assert.match(sql, /revoke all on function public\.list_expired_scan_photos\(integer, integer\) from public, anon, authenticated/);
-assert.match(sql, /grant execute on function public\.list_expired_scan_photos\(integer, integer\) to service_role/);
-assert.match(sql, /greatest\(p_days, 30\)/);
-assert.match(sql, /security definer/);
-assert.match(sql, /set search_path = ''/);
-assert.doesNotMatch(sql, /^\s*delete\s+from\s+storage\.objects/im);
-assert.match(sql, /'scan-photos-retention-daily'/);
-assert.match(sql, /\/functions\/v1\/scan-photo-retention/);
+// Migration (mobile/supabase/migrations): checked in mobile/scripts/scan-photo-retention-mobile-check.ts.
 
 // Deploy workflow knows the function and leaves gateway JWT checks off for it (cron sends no token).
 const workflow = read('../.github/workflows/deploy-function.yml');

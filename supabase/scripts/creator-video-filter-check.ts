@@ -1,10 +1,11 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import {
   isRecipeLikeVideo,
   matchesQuickFeed,
-} from '../supabase/functions/creator-videos/recipeVideoFilter.ts';
+} from '../functions/creator-videos/recipeVideoFilter.ts';
 
 const JUNK_TITLES = [
   'I Tried 100 Years of Spicy Challenges',
@@ -106,8 +107,8 @@ assert.equal(
 );
 
 const fixturePath = path.join(
-  process.cwd(),
-  'supabase/functions/creator-videos/fixtures/manual-hide-videos.json',
+  path.dirname(fileURLToPath(import.meta.url)),
+  '../functions/creator-videos/fixtures/manual-hide-videos.json',
 );
 assert.ok(fs.existsSync(fixturePath), 'manual-hide fixture should exist');
 const manualHides = JSON.parse(fs.readFileSync(fixturePath, 'utf8')) as Array<{

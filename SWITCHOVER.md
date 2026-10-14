@@ -2,7 +2,7 @@
 
 Moving mealplanatic.app from the old app (`mobile/`, on `main`) to the new app (`app/`, on `rebuild/v1`).
 
-**Nothing in this list is done yet.** Written 2026-10-14 from the repo, read-only.
+Written 2026-10-14 from the repo, read-only. **Done so far:** the edge function move in 1b (branch `rebuild/functions-home`). Everything else is still open.
 
 Who does what:
 
@@ -35,47 +35,59 @@ Marked **(not verified)** = read in code or docs but not tried.
 
 **Live edge function sources: move, do not delete.**
 
-- [ ] `git mv mobile/supabase/functions supabase/functions` (new root `supabase/` folder).
+- [x] `git mv mobile/supabase/functions supabase/functions` (new root `supabase/` folder; branch `rebuild/functions-home`). No function code changed.
   - All 14 functions: ask-forky, creator-videos, delete-user-account, kroger-deals, library-generate,
     pantry-vision, recipe-import, recipeapi-proxy, stripe-checkout, stripe-portal, stripe-webhook,
-    usda-proxy, viral-recipes, scan-photo-retention (after 1a).
-  - Plus `_shared/` and `creator-videos/fixtures/`.
-- [ ] `.github/workflows/deploy-function.yml`: change `working-directory: mobile` to the repo root
-      (it runs `test -f supabase/functions/$FUNCTION_NAME/index.ts`, then `supabase functions deploy`).
+    usda-proxy, viral-recipes, scan-photo-retention.
+  - Plus `_shared/` and `creator-videos/fixtures/`. There was no `mobile/supabase/config.toml` to move; `db/supabase/` is untouched.
+  - See `supabase/README.md`.
+- [x] `.github/workflows/deploy-function.yml`: `working-directory: mobile` removed, so the deploy step runs from the repo root
+      (`test -f supabase/functions/$FUNCTION_NAME/index.ts`, then `supabase functions deploy`). Still manual, still main only.
+      `supabase/scripts/deploy-workflow-check.ts` fails if the choices and the folders drift apart or the step points at `mobile/` again.
+- [ ] **Until the release, `main` still deploys from `mobile/supabase/functions`.** Any function change that lands on `main`
+      before then must be ported to `supabase/functions/` on `rebuild/v1` (the 1a merge will show it as a conflict or a re-added `mobile/supabase/functions` file).
 - [ ] After the release, deploy ONE harmless function from `main` with the workflow to prove the new path works (owner, Actions tab). (not verified)
-- [ ] `mobile/supabase/functions-bundled/` (pasteable bundles, made by `mobile/scripts/bundle-edge-function.mjs`): keep the script with the functions or drop both. Owner's call.
+- [ ] `mobile/supabase/functions-bundled/` (pasteable bundles, made by `mobile/scripts/bundle-edge-function.mjs`, now reading `supabase/functions/`): keep the script with the functions or drop both. Owner's call.
 
 **Old migrations and SQL: history only.**
 
 - [ ] Move `mobile/supabase/migrations/` (51 files after 1a) and the loose `mobile/supabase/*.sql` + `seed-data/` to `supabase/history/` (or rely on git history; owner's call).
 - [ ] Add `20261013030000_scan_photo_retention.sql` to `db/supabase/migrations/` (renamed after the baseline date) once it is on live, and mark it in `db/README.md`.
 
-**Function checks that live in `mobile/scripts/` and run in old CI (`ci.yml`, job `mobile`).**
-These test the live functions. Deleting `mobile/` drops them silently.
+**Function checks: moved to `supabase/scripts/`, run by `.github/workflows/functions-ci.yml`.**
 
-- [ ] Move the function checks next to the functions and give them a CI job:
-  `ask-forky-allowance-check`, `ask-forky-check`, `creator-list-visibility-check`, `creator-recipes-check`,
-  `creator-video-filter-check`, `creator-video-sanitizer-check`, `creator-videos-edge-check`,
-  `delete-account-billing-check`, `pantry-vision-gemini-budget-check`, `pantry-vision-gemini-inline-check`,
-  `pantry-vision-handler-check`, `pantry-vision-merge-inline-check`, `plan-tiers-check`,
-  `recipe-import-check`, `stripe-checkout-check`, `stripe-webhook-check`, `scan-photo-retention-check`.
-  - `plus-upgrade-ui-check` and the `viral-recipes-*` scripts also read function files; check each.
-  - Note: `scripts/plan-tiers-check.ts` is at `mobile/scripts/`, not at the root.
+- [x] Moved (`git mv`) with the functions, runnable without `mobile/` (`cd supabase && npm test`):
+  `creator-list-visibility-check`, `creator-video-filter-check`, `creator-video-sanitizer-check`, `creator-videos-edge-check`,
+  `pantry-vision-gemini-budget-check`, `pantry-vision-gemini-inline-check`, `pantry-vision-merge-inline-check`,
+  `pantry-vision-handler-check`, `viral-recipes-relevance-check`, `recipe-import-check`, `ask-forky-check`, `plan-tiers-check`,
+  `stripe-webhook-check`, `stripe-checkout-check`, `delete-account-billing-check`, `scan-photo-retention-check`
+  (plus `viral-recipes-live-sample`, manual, not in CI, and the new `deploy-workflow-check`).
+- [x] The parts of those checks that read old-app files (`mobile/config`, `mobile/lib`, `mobile/components`, `mobile/public/*.html`,
+  `mobile/supabase/migrations`) were split into `mobile/scripts/*-mobile-check.ts` (and `pantry-vision-crop-layout-check.ts`).
+  The old `mobile` CI job runs both halves, so nothing it checked before is lost.
+- [ ] At the release those `*-mobile-check` halves go with `mobile/`. Worth keeping on the new side:
+  the terms/privacy page checks (`plan-tiers-mobile-check`, `delete-account-billing-mobile-check`, `stripe-checkout-mobile-check`,
+  `scan-photo-retention-mobile-check`, `ask-forky-mobile-check`): repoint them at `app/public/*.html` once the pages are copied there.
+  The migration checks are history (`db/` is the source of truth).
+- Stay in `mobile/scripts/` (old-app UI, not function checks): `ask-forky-allowance-check`, `creator-recipes-check`, `plus-upgrade-ui-check`
+  (imports repointed to `../../supabase/functions/`).
 
-**`app/` tests that read files in `mobile/`.** Each one SKIPS quietly when `mobile/` is gone, so CI stays green while the guard is lost.
+**`app/` tests that read files in `mobile/`.** None of them skip any more.
 
-| Test | Reads | Fix |
+| Test | Reads | Status |
 |---|---|---|
-| `app/tests/scan-planTiers.test.ts` | `mobile/supabase/functions/_shared/planTiers.ts` | point at `supabase/functions/_shared/planTiers.ts` |
-| `app/tests/recipe-import-allowance.test.ts` | same file | same |
-| `app/tests/forky-request.test.ts` | `.../ask-forky/index.ts`, `_shared/askForkyText.ts`, `mobile/config/askForky.ts` | point the first two at `supabase/functions/`; the AI-notice check against `mobile/config` can retire |
-| `app/tests/plans-pricing.test.ts` | `_shared/billingText.ts`, `mobile/config/pricing.ts` and 3 more old-app files | point the renewal-wording check at `supabase/functions/_shared/billingText.ts`; the old-app wording check can retire |
-| `app/tests/creators-video-filter.test.ts` | `.../creator-videos/fixtures/manual-hide-videos.json` | point at the moved fixture |
-| `app/tests/tokens.test.ts` | `mobile/config/theme.colors.json` | retire, or copy the file into `app/` |
+| `app/tests/scan-planTiers.test.ts` | `supabase/functions/_shared/planTiers.ts` | [x] repointed |
+| `app/tests/recipe-import-allowance.test.ts` | same file | [x] repointed |
+| `app/tests/creators-video-filter.test.ts` | `supabase/functions/creator-videos/fixtures/manual-hide-videos.json` | [x] repointed |
+| `app/tests/forky-request.test.ts` | `supabase/functions/ask-forky/index.ts`, `_shared/askForkyText.ts`; `mobile/config/askForky.ts` | [x] function files repointed; [ ] AI-notice check still reads `mobile/config` |
+| `app/tests/plans-pricing.test.ts` | `supabase/functions/_shared/billingText.ts`; `mobile/config/pricing.ts` and 3 more old-app files | [x] billingText repointed; [ ] old-app wording and prices still read `mobile/` |
+| `app/tests/account-copy.test.ts` | `supabase/functions/delete-user-account/index.ts`; `mobile/config/account.ts` and 3 more old-app files | [x] function repointed (own test); [ ] old-app wording still reads `mobile/` |
+| `app/tests/tokens.test.ts` | `mobile/config/theme.colors.json` | [ ] still reads `mobile/` |
 
-- [ ] Fix each test above in the switch-over PR.
-- [ ] Then make a missing file a FAILURE, not a skip, for the function-contract tests (`planTiers`, `billingText`, `ask-forky`). Otherwise a wrong path hides a real price or wording drift.
-- [ ] `grep -rn "mobile" app/ .github/ db/` comes back with comments only.
+- [x] A missing file is now a FAILURE, not a skip, in all seven tests.
+- [ ] **Repoint or snapshot at switch-over:** the four `[ ]` rows above read old-app files and will FAIL once `mobile/` is deleted.
+  In the switch-over PR, for each: snapshot the old values into `app/tests/fixtures/` (or retire the check, owner's call). Do not reintroduce a skip.
+- [ ] `grep -rn "mobile" app/ .github/ db/` comes back with comments only (after the row above).
 - [ ] No code in `app/src` imports from `mobile/` (checked 2026-10-14: comments only).
 
 **Static legal pages: same URLs after the switch.**
