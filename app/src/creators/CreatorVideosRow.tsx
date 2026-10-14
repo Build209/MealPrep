@@ -35,7 +35,7 @@ export function CreatorVideosRow({ title = 'From recipe creators', limit = 24 }:
       ) : videos.isError ? (
         <View style={{ gap: 8 }}>
           <AppText variant="secondary" color="danger" accessibilityRole="alert">
-            {videos.error.message}
+            {videos.error instanceof Error ? videos.error.message : "Couldn't load creator videos."}
           </AppText>
           <Button label="Try again" kind="secondary" onPress={() => void videos.refetch()} style={{ alignSelf: 'flex-start' }} />
         </View>

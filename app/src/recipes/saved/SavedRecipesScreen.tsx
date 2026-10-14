@@ -82,7 +82,7 @@ export function SavedRecipesScreen() {
       ) : saved.isError ? (
         <Card>
           <AppText color="danger" bold accessibilityRole="alert">
-            {saved.error.message}
+            {saved.error instanceof Error ? saved.error.message : "Couldn't load your saved recipes."}
           </AppText>
           <Button label="Try again" kind="secondary" onPress={() => void saved.refetch()} />
         </Card>
