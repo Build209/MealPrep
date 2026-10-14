@@ -8,7 +8,6 @@
 -- Server functions using the service role are not affected (they bypass row level security).
 -- Approved by the owner on 2026-10-14. Applied to live the same day.
 
-drop policy if exists recipes_read on public.recipes;
-
-create policy recipes_read on public.recipes as permissive for select to authenticated
+-- ALTER (not drop + create) is what ran on live: same policy name, command and permissive mode.
+alter policy recipes_read on public.recipes to authenticated
   using (is_master or created_by = (select auth.uid()));
