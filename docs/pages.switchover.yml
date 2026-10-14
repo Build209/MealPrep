@@ -1,0 +1,64 @@
+# PROPOSED replacement for .github/workflows/pages.yml at the switch-over (SWITCHOVER.md, 1b).
+# GitHub does not run this file here (it is not under .github/workflows/).
+# The switch-over PR copies it over pages.yml:
+#   cp docs/pages.switchover.yml .github/workflows/pages.yml && git rm docs/pages.switchover.yml
+# Builds the NEW app (app/) and assembles the whole site with app/scripts/build-site.sh, which
+# keeps every public address today's pages.yml serves (see the script's header).
+name: Deploy GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install
+        working-directory: app
+        # Switch to plain `npm ci` once app/package-lock.json is committed.
+        run: |
+          if [ -f package-lock.json ]; then npm ci; else npm install --no-audit --no-fund; fi
+      - name: Typecheck and unit tests
+        working-directory: app
+        run: |
+          npm run typecheck
+          npm test
+      - name: Build the site
+        env:
+          # Public settings only (URL and publishable key), as today.
+          # No EXPO_PUBLIC_APP_CHANNEL: unset = no "Preview build" label.
+          EXPO_PUBLIC_SUPABASE_URL: https://okkwapgyadpaifpmkcex.supabase.co
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: sb_publishable_PCMqSfDjdX6J55lc97km1g_I7U5n-pD
+          EXPO_PUBLIC_GIT_SHA: ${{ github.sha }}
+        # Fails if index.html, 404.html, the legal pages, /209/, the redirect stubs,
+        # the clean-up service worker or CNAME are missing.
+        run: bash app/scripts/build-site.sh
+      - name: Upload static site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: app/site
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
