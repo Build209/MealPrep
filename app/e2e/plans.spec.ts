@@ -90,7 +90,8 @@ test('plans: Home, Account links to plans; the renewal terms sit directly above 
   await page.getByRole('link', { name: 'Account', exact: true }).click();
   await page.getByRole('link', { name: 'Plans & usage' }).click();
   await expect(page).toHaveURL(/\/plans$/);
-  await expect(page.getByTestId('current-plan')).toHaveText('Free');
+  // Account stays mounted (hidden) under /plans and has its own plan card: match the visible one.
+  await expect(page.getByTestId('current-plan').filter({ visible: true })).toHaveText('Free');
   await expect(page.getByText('Free: 3 scans, 2 recipe imports and 5 Ask Forky questions a month.')).toBeVisible();
 
   // Nothing pre-chosen beyond the plan and period themselves, and no tick box anywhere on the screen.
