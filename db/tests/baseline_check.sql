@@ -14,19 +14,24 @@ do $$
 declare
   n int;
 begin
-  select count(*) into n from pg_class c where c.relnamespace = 'public'::regnamespace and c.relkind = 'r';
+  select count(*) into n from pg_class c where c.relnamespace = 'public'::regnamespace and c.relkind = 'r'
+    -- Added by a later migration in this folder (checked in daily_caps_check.sql), not live yet.
+    and c.relname not in ('daily_usage');
   if n <> 29 then raise exception 'expected 29 public tables, found %', n; end if;
 
   select count(*) into n from pg_class c where c.relnamespace = 'public'::regnamespace and c.relkind = 'r' and not c.relrowsecurity;
   if n <> 0 then raise exception '% public tables have row level security off', n; end if;
 
-  select count(*) into n from pg_policies where schemaname = 'public';
+  select count(*) into n from pg_policies where schemaname = 'public'
+    and policyname not in ('daily_usage_select_own');
   if n <> 46 then raise exception 'expected 46 public policies, found %', n; end if;
 
   select count(*) into n from pg_proc p where p.pronamespace = 'public'::regnamespace
     and not exists (select 1 from pg_depend d where d.objid = p.oid and d.deptype = 'e')
-    -- Added by later migrations in this folder (checked in their own test files), not live yet.
-    and p.proname not in ('tick_grocery_item', 'untick_grocery_item', 'add_missing_to_grocery');
+    -- Added by later migrations in this folder (checked in their own test files), not in the
+    -- 2026-10-13 baseline.
+    and p.proname not in ('tick_grocery_item', 'untick_grocery_item', 'add_missing_to_grocery',
+                          'daily_cap_for', 'take_daily_use', 'give_back_daily_use');
   if n <> 28 then raise exception 'expected 28 public functions, found %', n; end if;
 
   if not exists (select 1 from pg_trigger where tgname = 'on_auth_user_created' and tgrelid = 'auth.users'::regclass) then
