@@ -13,6 +13,8 @@ type Props = {
   locating: boolean;
   busy: boolean;
   error: string | null;
+  /** "Location is off" help: browser wording on web, Settings wording on phones. */
+  deniedHelp?: string;
   onUseLocation: () => void;
   onSaveZip: (zip: string) => void;
 };
@@ -21,7 +23,7 @@ type Props = {
  * "Find stores near you": use the device's location, or type a ZIP (the old app's pre-prompt and
  * location sheet in one card). Location off or not available: ZIP only, with the old help text.
  */
-export function LocationPanel({ permission, initialZip, locating, busy, error, onUseLocation, onSaveZip }: Props) {
+export function LocationPanel({ permission, initialZip, locating, busy, error, deniedHelp, onUseLocation, onSaveZip }: Props) {
   const [zip, setZip] = useState(initialZip);
   const canLocate = permission !== 'unavailable' && permission !== 'denied';
 
@@ -35,7 +37,7 @@ export function LocationPanel({ permission, initialZip, locating, busy, error, o
       ) : null}
       {permission === 'denied' ? (
         <AppText variant="secondary" color="muted">
-          {STORES_COPY.locationDeniedHelp}
+          {deniedHelp ?? STORES_COPY.locationDeniedHelp}
         </AppText>
       ) : null}
       {permission === 'unavailable' ? (

@@ -1,3 +1,5 @@
+import { STORES_COPY } from './copy';
+import type { LocateResult } from './deviceLocation';
 import { roundCoordsForPrivacy, type GeoPermission } from './logic';
 
 /**
@@ -30,3 +32,15 @@ export function requestDeviceLocation(): Promise<{ lat: number; lng: number } | 
     );
   });
 }
+
+/**
+ * The tap on "Use my location". The browser gives no reliable reason for a failure here, so web
+ * reports 'failed' with no message and the screen falls back to the ZIP exactly as before.
+ */
+export async function locateDevice(): Promise<LocateResult> {
+  const position = await requestDeviceLocation();
+  return position ? { ok: true, ...position } : { ok: false, problem: 'failed', message: null };
+}
+
+/** Shown on the card when location is refused in the browser. */
+export const locationDeniedHelp: string = STORES_COPY.locationDeniedHelp;
