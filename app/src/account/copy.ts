@@ -5,7 +5,7 @@
  *  - mobile/config/account.ts (ACCOUNT_SHEET_COPY: the button and the confirm step)
  *  - mobile/app/delete-account.tsx (the page: title, what is deleted, signed-out line, help line)
  *  - mobile/lib/account/deleteAccount.ts (the error lines)
- *  - mobile/supabase/functions/delete-user-account/index.ts (CANCEL_FAILED, the server's own words)
+ *  - supabase/functions/delete-user-account/index.ts (CANCEL_FAILED, the server's own words)
  * tests/account-copy.test.ts checks they are still in those files. Lines marked NEW are written for
  * the rebuild and have not been through compliance yet.
  */

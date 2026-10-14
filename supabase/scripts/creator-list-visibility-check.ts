@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {
   channelIdsWithVisibleFeedVideos,
   isVisibleInCreatorFeed,
-} from '../supabase/functions/creator-videos/creatorListVisibility.ts';
+} from '../functions/creator-videos/creatorListVisibility.ts';
 
 const overrides = new Map<string, 'hide' | 'show'>([
   ['hidden1', 'hide'],

@@ -1,0 +1,22 @@
+{
+  "name": "mealplanatic-supabase",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Checks for the live Supabase edge functions in supabase/functions. Run by .github/workflows/functions-ci.yml.",
+  "scripts": {
+    "test:creator-videos": "tsx scripts/creator-video-filter-check.ts && tsx scripts/creator-video-sanitizer-check.ts && tsx scripts/creator-list-visibility-check.ts && tsx scripts/creator-videos-edge-check.ts",
+    "test:viral-recipes": "tsx scripts/viral-recipes-relevance-check.ts",
+    "test:viral-recipes-live": "tsx scripts/viral-recipes-live-sample.ts",
+    "test:recipe-import": "tsx scripts/recipe-import-check.ts",
+    "test:pantry-vision": "tsx scripts/pantry-vision-gemini-inline-check.ts && tsx scripts/pantry-vision-gemini-budget-check.ts && tsx scripts/pantry-vision-merge-inline-check.ts && tsx scripts/pantry-vision-handler-check.ts",
+    "test:ask-forky": "tsx scripts/ask-forky-check.ts",
+    "test:billing": "tsx scripts/stripe-webhook-check.ts && tsx scripts/stripe-checkout-check.ts && tsx scripts/delete-account-billing-check.ts && tsx scripts/plan-tiers-check.ts",
+    "test:plan-tiers": "tsx scripts/plan-tiers-check.ts",
+    "test:scan-photo-retention": "tsx scripts/scan-photo-retention-check.ts",
+    "test:deploy-workflow": "tsx scripts/deploy-workflow-check.ts",
+    "test": "npm run test:deploy-workflow && npm run test:creator-videos && npm run test:viral-recipes && npm run test:recipe-import && npm run test:pantry-vision && npm run test:ask-forky && npm run test:billing && npm run test:scan-photo-retention"
+  },
+  "devDependencies": {
+    "tsx": "4.23.12"
+  }
+}

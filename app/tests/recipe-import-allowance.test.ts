@@ -1,7 +1,7 @@
 /// <reference types="node" />
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
   importAllowanceFor,
@@ -14,10 +14,9 @@ import {
 } from '../src/recipes/import/allowance';
 import { PLAN_TIERS, TIER_LIMITS } from '../src/scan/planTiers';
 
-const livePath = join(__dirname, '..', '..', 'mobile', 'supabase', 'functions', '_shared', 'planTiers.ts');
-const skip = !existsSync(livePath) && 'old app removed';
+const livePath = join(__dirname, '..', '..', 'supabase', 'functions', '_shared', 'planTiers.ts');
 
-test('import limits are the numbers the live recipe-import function enforces', { skip }, () => {
+test('import limits are the numbers the live recipe-import function enforces', () => {
   const live = readFileSync(livePath, 'utf8');
   for (const tier of PLAN_TIERS) {
     const line = new RegExp(`^\\s*${tier}: \\{ scans: \\d+, imports: (\\d+),`, 'm').exec(live);

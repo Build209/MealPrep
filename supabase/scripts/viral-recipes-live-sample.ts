@@ -10,7 +10,7 @@ import {
   collectCategoryCandidates,
   estimateRefreshQuotaUnits,
   TARGET_PER_CATEGORY,
-} from '../supabase/functions/viral-recipes/youtubeDiscovery.ts';
+} from '../functions/viral-recipes/youtubeDiscovery.ts';
 
 const apiKey = process.env.YOUTUBE_API_KEY?.trim() ?? '';
 

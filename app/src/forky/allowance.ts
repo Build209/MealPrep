@@ -1,6 +1,6 @@
 /**
  * The Ask Forky allowance shown on the chat screen, worked out the way the live ask-forky function
- * does (forkyAllowance in mobile/supabase/functions/_shared/askForkyText.ts): tier from
+ * does (forkyAllowance in supabase/functions/_shared/askForkyText.ts): tier from
  * profiles.plan + plan_tier, an admin account gets the largest allowance (Family), the limit from
  * planTiers.ts, the used count from this month's forky_chat_usage row. Pure (tests/forky-allowance.test.ts).
  *

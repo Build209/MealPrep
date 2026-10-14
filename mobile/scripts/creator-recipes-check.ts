@@ -8,7 +8,7 @@ import { getCreatorVideosUrl, isCreatorRecipesConfigured } from '../config/appCo
 import { compareCreatorsByFitAndSubscribers, creatorFitSortRank } from '../lib/creatorVideos/fitOrder';
 import { parseSubscriberDisplayString } from '../lib/creatorVideos/parseSubscribers';
 import { mergeRecipeSearchResults } from '../lib/recipes/mergeSearchResults';
-import { isRecipeLikeVideo } from '../supabase/functions/creator-videos/recipeVideoFilter.ts';
+import { isRecipeLikeVideo } from '../../supabase/functions/creator-videos/recipeVideoFilter.ts';
 import fs from 'node:fs';
 import path from 'node:path';
 import { creatorWebsiteForChannel } from '../config/creatorWebsites';

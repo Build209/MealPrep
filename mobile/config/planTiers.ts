@@ -2,7 +2,7 @@
  * Plan tiers and their monthly limits, as the app shows them.
  *
  * The server enforces the real numbers (supabase/functions/_shared/planTiers.ts) and the terms
- * page prints them; scripts/plan-tiers-check.ts fails if the three ever disagree. A change here
+ * page prints them; scripts/plan-tiers-mobile-check.ts fails if the three ever disagree. A change here
  * is a change to what customers were promised: tell compliance first.
  */
 export const PAID_TIERS = ['plus', 'pro', 'family'] as const;

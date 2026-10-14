@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { askForkyQuestionsLeft, askForkyTier } from '../lib/forky/askForkyAllowance';
-import { forkyAllowance } from '../supabase/functions/_shared/askForkyText';
+import { forkyAllowance } from '../../supabase/functions/_shared/askForkyText';
 
 const now = new Date('2026-10-11T12:00:00Z');
 

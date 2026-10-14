@@ -3,7 +3,7 @@ import {
   dedupeVideoUpsertRows,
   stripInvalidUnicode,
   truncateByCodePoints,
-} from '../supabase/functions/creator-videos/videoSanitizer.ts';
+} from '../functions/creator-videos/videoSanitizer.ts';
 
 const emoji = '🍳🔥';
 const long = 'a'.repeat(498) + emoji + 'bc';

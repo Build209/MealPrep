@@ -1,6 +1,6 @@
 /**
  * Which creator videos are recipes. Ported unchanged from the old app's creator-videos function
- * (mobile/supabase/functions/creator-videos/recipeVideoFilter.ts), minus the budget and quick feed
+ * (supabase/functions/creator-videos/recipeVideoFilter.ts), minus the budget and quick feed
  * helpers the new app does not use. The old function ran this on the server before sending the feed;
  * the new app reads creator_videos directly (public read for enabled creators), so it runs here.
  * Checks: tests/creators-video-filter.test.ts (the old creator-video-filter-check cases).
