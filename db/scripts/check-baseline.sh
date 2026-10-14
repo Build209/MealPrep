@@ -52,4 +52,5 @@ fi
 
 psql_run -f "$here/tests/baseline_check.sql"
 psql_run -f "$here/tests/grocery_tick_check.sql"
+psql_run -f "$here/tests/recipes_read_check.sql"
 psql_run -f "$here/tests/add_missing_check.sql"
