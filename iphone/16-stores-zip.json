@@ -1,0 +1,42 @@
+{
+  "project": "iphone",
+  "engine": "webkit",
+  "order": "16",
+  "screen": "stores-zip",
+  "route": "/stores",
+  "purpose": "none",
+  "viewport": "393x659",
+  "screenshots": [
+    "iphone/16-stores-zip.png"
+  ],
+  "checks": {
+    "noSidewaysScroll": true,
+    "tapTargets": true,
+    "textFits": true,
+    "tomatoRule": true
+  },
+  "sidewaysScroll": {
+    "scrollWidth": 393,
+    "innerWidth": 393
+  },
+  "tapTargetIssues": [],
+  "tapTargetAllowed": [],
+  "clippedText": [],
+  "truncatedText": [],
+  "offscreenControls": [],
+  "tomato": [
+    {
+      "text": "Plan",
+      "tag": "h1",
+      "props": [
+        "color"
+      ],
+      "context": "brand"
+    }
+  ],
+  "tomatoViolations": [],
+  "notes": [
+    "GPS (\"Use my location\") needs the native permission prompt: owner list."
+  ],
+  "reportOnly": {}
+}
