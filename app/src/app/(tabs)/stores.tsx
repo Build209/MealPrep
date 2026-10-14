@@ -1,10 +1,6 @@
-import { ComingSoon } from '../../ui/ComingSoon';
-import { Screen } from '../../ui/Screen';
+import { StoresScreen } from '../../stores/StoresScreen';
 
-export default function StoresScreen() {
-  return (
-    <Screen title="Stores">
-      <ComingSoon phase={5} what="Stores near you and their weekly ads." />
-    </Screen>
-  );
+/** The Stores tab. The screen lives in src/stores/ (rebuild phase 5). */
+export default function StoresRoute() {
+  return <StoresScreen />;
 }
