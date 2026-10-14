@@ -1,7 +1,7 @@
 import Feather from '@expo/vector-icons/Feather';
 import { Redirect, Tabs } from 'expo-router';
 import type { ComponentProps } from 'react';
-import { ActivityIndicator, View, type ColorValue } from 'react-native';
+import { ActivityIndicator, Platform, View, type ColorValue } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../auth/AuthProvider';
 import { TopBar } from '../../ui/TopBar';
@@ -40,7 +40,8 @@ function tabIcon(name: IconName, route: string) {
  * - Home, Pantry and Grocery mount right after sign-in (lazy: false), so switching is instant and
  *   their lists are already loaded (TanStack Query dedupes; staleTime in src/lib/queryClient.ts).
  *   Stores stays lazy: it may locate the device on open, which must wait until the person opens it.
- * - A short cross-fade between tabs (150 ms), off when the person asks for reduced motion.
+ * - A short cross-fade between tabs (150 ms) on phones, off with reduced motion. The web build
+ *   switches tabs instantly (each tab screen fades in once when it first mounts, src/ui/Screen.tsx).
  */
 export default function TabsLayout() {
   const { ready, session } = useAuth();
@@ -63,7 +64,9 @@ export default function TabsLayout() {
         screenOptions={{
           headerShown: false,
           lazy: false,
-          animation: reduceMotion ? 'none' : 'fade',
+          // Not on the web: there the fade keeps the other tabs in the page at opacity 0, where screen
+          // readers and keyboards still reach them. Without it, hidden tabs are display: none.
+          animation: reduceMotion || Platform.OS === 'web' ? 'none' : 'fade',
           tabBarActiveTintColor: colors.ink,
           tabBarInactiveTintColor: colors.muted,
           tabBarStyle: {

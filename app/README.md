@@ -91,8 +91,9 @@ untouched until switch-over, when `mobile/` is deleted in the same release.
   `src/lib/viewport.ts` adds `viewport-fit=cover` so iPhone Safari reports the home-indicator inset. Screens
   above the tabs get the top and bottom insets from the stack. Home, Pantry and Grocery mount right after
   sign-in (`lazy: false`, so switching is instant; Stores stays lazy because it may locate the device on open).
-  Tabs cross-fade (150 ms), phone stacks fade, web screens fade in (160 ms, `src/ui/Screen.tsx`); all off with
-  reduced motion. Phone tour test "tab bar: icons over labels, on screen, above the safe area".
+  On phones tabs cross-fade (150 ms) and stack screens fade; on the web tabs switch instantly (a fade there
+  would leave hidden tabs reachable by screen readers at opacity 0) and screens fade in once on open (160 ms,
+  `src/ui/Screen.tsx`); all off with reduced motion. Phone tour test "tab bar: icons over labels, on screen, above the safe area".
 - One folder per feature as features arrive (`pantry/`, `grocery/`, `recipes/`, ...), no file over about 400 lines.
 
 ```bash
