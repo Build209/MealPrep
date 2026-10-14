@@ -68,7 +68,7 @@ export function HomeFeed() {
         <AppText bold>{FEED_COPY.loadError}</AppText>
         {error ? (
           <AppText variant="secondary" color="muted">
-            {error.message}
+            {error instanceof Error ? error.message : String(error)}
           </AppText>
         ) : null}
         <Button

@@ -123,10 +123,10 @@ export function RecipeDetailScreen({ id }: { id: string }) {
       <Screen title={notFound ? DETAIL_COPY.notFoundTitle : 'Recipe'}>
         {backButton}
         <Card>
-          <AppText>{notFound ? recipe.error?.message : DETAIL_COPY.loadError}</AppText>
+          <AppText>{notFound ? messageOf(recipe.error) : DETAIL_COPY.loadError}</AppText>
           {!notFound && recipe.error ? (
             <AppText variant="secondary" color="muted">
-              {recipe.error.message}
+              {messageOf(recipe.error)}
             </AppText>
           ) : null}
           {notFound ? (
@@ -203,7 +203,7 @@ export function RecipeDetailScreen({ id }: { id: string }) {
         </View>
       ) : pantry.error ? (
         <AppText variant="secondary" color="muted">
-          {pantry.error.message}
+          {messageOf(pantry.error)}
         </AppText>
       ) : null}
 

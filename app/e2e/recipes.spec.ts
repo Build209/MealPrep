@@ -151,13 +151,13 @@ test('feed statuses, detail have/missing, add missing to grocery once', async ({
   await card(page, tacoName, '3 missing').click();
   await expect(page).toHaveURL(new RegExp(`/recipe/r_${tacoId}$`));
   await expect(page.getByRole('heading', { name: tacoName })).toBeVisible();
-  await expect(page.getByText('4 servings · 30 min')).toBeVisible();
+  await expect(page.getByText('4 servings · 30 min', { exact: true }).filter({ visible: true })).toBeVisible(); // Home stays mounted underneath
   await expect(page.getByLabel('Tortillas, 8 each, You have it', { exact: true })).toBeVisible();
   await expect(page.getByLabel('Ground beef, 1 lb, Need ½ lb more', { exact: true })).toBeVisible();
   await expect(page.getByLabel('Cilantro, 1 bunch, Missing', { exact: true })).toBeVisible();
   await expect(page.getByLabel('Lime, 2 each, Missing', { exact: true })).toBeVisible();
-  await expect(page.getByText('Brown the beef.')).toBeVisible();
-  await expect(page.getByText(/verify before you cook/)).toBeVisible();
+  await expect(page.getByText('Brown the beef.', { exact: true }).filter({ visible: true })).toBeVisible();
+  await expect(page.getByText(/verify before you cook/).filter({ visible: true })).toBeVisible();
 
   // Add the missing items: two new rows, the lime row grows from 1 to 3.
   await page.getByRole('button', { name: 'Add 3 missing to grocery list', exact: true }).click();
