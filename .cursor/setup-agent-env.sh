@@ -12,8 +12,8 @@ if ! command -v supabase >/dev/null 2>&1; then
 fi
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-cd "${ROOT}/mobile"
-npm ci
+cd "${ROOT}/app"
+if [ -f package-lock.json ]; then npm ci; else npm install --no-audit --no-fund; fi
 
 if [[ -n "${SUPABASE_ACCESS_TOKEN:-}" ]]; then
   PROJECT_REF="${SUPABASE_PROJECT_REF:-okkwapgyadpaifpmkcex}"

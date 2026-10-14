@@ -154,17 +154,18 @@ test('compliance rule 11: no pressure or savings wording, "free" only about the 
 });
 
 // The LIVE lines are copied from the old app, which compliance saw with the tier build (#252).
-const mobile = join(__dirname, '..', '..', 'mobile');
+// Snapshot of the old app's files (mobile/ is deleted): tests/fixtures/old-app/README.md.
+const oldApp = join(__dirname, 'fixtures', 'old-app');
 const functions = join(__dirname, '..', '..', 'supabase', 'functions');
 
-/** Old-app file: repoint or snapshot at switch-over (SWITCHOVER.md 1b). Missing is a failure, never a skip. */
+/** Old-app file, read from the snapshot (`config/pricing.ts` -> `config_pricing.ts.txt`). Missing is a failure, never a skip. */
 function readOldApp(rel: string): string {
-  const file = join(mobile, rel);
-  assert.ok(existsSync(file), `mobile/${rel} is gone: repoint or snapshot this check (SWITCHOVER.md 1b)`);
+  const file = join(oldApp, `${rel.replace(/\//g, '_')}.txt`);
+  assert.ok(existsSync(file), `old-app snapshot of ${rel} is missing (tests/fixtures/old-app)`);
   return readFileSync(file, 'utf8');
 }
 
-test('LIVE wording is still word for word in the old app', () => {
+test('LIVE wording is still word for word in the old app (snapshot)', () => {
   const src = [
     'config/pricing.ts',
     'config/account.ts',

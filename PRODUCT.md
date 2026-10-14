@@ -2,7 +2,7 @@
 
 <!-- impeccable:product-schema 1 -->
 
-Scope: the MealPlanatic app in `mobile/` and its web build at https://mealplanatic.app. The 209 Meal Prep ordering site in `New/` is a different product and is not covered here.
+Scope: the MealPlanatic app in `app/` (the old app in `mobile/` was deleted at the switch-over) and its web build at https://mealplanatic.app. The 209 Meal Prep ordering site in `New/` is a different product and is not covered here.
 
 Status: draft written by the design session on 2026-10-10 from the project's status, design, research and compliance docs. The owner confirms or corrects it in the pull request that adds it. Lines marked "Open" are undecided; do not design as if they were settled.
 
@@ -44,7 +44,7 @@ The pantry is filled by camera, not by typing: a photo of a shelf or a grocery r
 
 ## Brand Commitments
 
-- Name: MealPlanatic, with "Plan" in the accent colour. Mascot: Forky McForkface, a cartoon fork (`mobile/assets/forkinator/`, `mobile/assets/brand/`).
+- Name: MealPlanatic, with "Plan" in the accent colour. Mascot: Forky McForkface, a cartoon fork (`app/assets/forky/`; the old app's `mobile/assets/forkinator/` and `mobile/assets/brand/` are in git history).
 - The owner approved the colour scheme, the Figtree typeface and the pill-and-card shapes on 2026-10-08 (see DESIGN.md). They are binding; refine within them, do not replace them.
 - Voice: plain, friendly, short. Says what a button does. No hype.
 

@@ -1,14 +1,13 @@
 name: New app (rebuild)
 
 # Typecheck, unit tests and a web build for the rebuilt app in app/.
-# The old app in mobile/ keeps its own workflow (ci.yml).
 on:
   pull_request:
     paths:
       - "app/**"
       - ".github/workflows/app-ci.yml"
   push:
-    branches: [rebuild/v1]
+    branches: [rebuild/v1, main]
     paths:
       - "app/**"
       - ".github/workflows/app-ci.yml"

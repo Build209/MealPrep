@@ -240,7 +240,7 @@ function fakeStripe(state: {
   assert.match(workflow, /- delete-user-account/, 'delete-user-account is deployable from the workflow');
 
   // Terms and privacy pages (compliance handoff 1, items 5 and 7): checked in
-  // mobile/scripts/delete-account-billing-mobile-check.ts while the pages live in mobile/public.
+  // scripts/legal-pages-check.ts (app/public/terms.html, privacy.html).
 
   console.log('delete-account-billing-check: ok');
 })().catch((error) => {

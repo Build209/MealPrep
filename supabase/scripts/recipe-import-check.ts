@@ -236,6 +236,6 @@ assert.equal(
   'https://www.example.com/images/dish.jpg',
 );
 
-// The old app's client half (lib/recipeImport, the import box, the share target): mobile/scripts/recipe-import-mobile-check.ts.
+// The old app's client half (lib/recipeImport, the import box, the share target): the old app's recipe-import-mobile-check (retired with mobile/ at the switch-over).
 
 console.log('OK: recipe-import checks passed');
