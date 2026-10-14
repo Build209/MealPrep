@@ -2,7 +2,7 @@
  * Cleaning creator video text before it reaches the screen, and the watch link.
  *
  * Titles and descriptions come from the video site through the creator-videos refresh job. The old
- * job cleaned them before saving (mobile/supabase/functions/creator-videos/videoSanitizer.ts:
+ * job cleaned them before saving (supabase/functions/creator-videos/videoSanitizer.ts:
  * no NUL bytes, no lone surrogates, cut by code point so emoji are never split). Rows saved before
  * that fix, or by hand, may not be clean, so the app cleans again on read with the same rules.
  * Checks: tests/creators-video-text.test.ts.

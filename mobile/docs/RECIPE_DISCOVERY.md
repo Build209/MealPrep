@@ -17,7 +17,7 @@ This runs the kitchen catalog import first, then recipe-discovery RLS policies. 
 1. **Edge Functions → Secrets** → add **`RECIPEAPI_KEY`** = your `sk_live_…` key from [recipeapi.io](https://recipeapi.io).
 2. **Edge Functions → Deploy a new function → Via Editor**
 3. Name: **`recipeapi-proxy`**
-4. Paste the full contents of **`mobile/supabase/functions/recipeapi-proxy/index.ts`** (single file, no extra imports).
+4. Paste the full contents of **`supabase/functions/recipeapi-proxy/index.ts`** (single file, no extra imports).
 5. Leave **Verify JWT** **enabled** (default). The app sends the signed-in user’s access token; the gateway validates it before the function runs.
 6. Deploy.
 

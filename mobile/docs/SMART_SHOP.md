@@ -12,7 +12,7 @@ Smart Shop finds **nearby grocery stores** (OpenStreetMap) and compares prices f
 
 3. **Supabase secrets** — `KROGER_CLIENT_ID`, `KROGER_CLIENT_SECRET`
 
-4. **Paste-deploy** `mobile/supabase/functions/kroger-deals/index.ts` as function `kroger-deals` with **Verify JWT ON**.
+4. **Paste-deploy** `supabase/functions/kroger-deals/index.ts` as function `kroger-deals` with **Verify JWT ON**.
 
 No GitHub Pages env changes beyond existing `EXPO_PUBLIC_SUPABASE_URL` / anon key.
 

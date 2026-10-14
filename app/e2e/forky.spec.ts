@@ -6,7 +6,7 @@ import { adminClient, freshEmail } from './local-supabase';
 /**
  * Ask Forky, end to end against the local stack. The local stack runs no edge functions (and the
  * live ask-forky must never be called from a test), so the request to /functions/v1/ask-forky is
- * intercepted and answered here in the function's real shape (mobile/supabase/functions/ask-forky).
+ * intercepted and answered here in the function's real shape (supabase/functions/ask-forky).
  * Sign-in, the allowance read (forky_chat_usage), the pantry and the recipe reads are the real
  * local server.
  */

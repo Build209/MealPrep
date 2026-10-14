@@ -5,7 +5,7 @@
  * The function is live and must not change. Pure functions only (tests/forky-request.test.ts);
  * api.ts does the fetch.
  *
- * Function contract (mobile/supabase/functions/ask-forky/index.ts):
+ * Function contract (supabase/functions/ask-forky/index.ts):
  *   Request:  { question, history: [{role,text}], pantry: [{name,amount?,expiresOn?}],
  *               recipes: [{id,title,have?,total?,missing?}], household?: {size?, ...} }
  *   200 { answer, recipeIds, offTopic, safetyNote, remaining, limit, isPlus, tier }

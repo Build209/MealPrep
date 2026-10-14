@@ -6,7 +6,7 @@
  * mobile/lib/billing/client.ts). Prices come from TIER_PRICE_CENTS in src/scan/planTiers.ts, the
  * verbatim copy of the table the live stripe-checkout function checks Stripe's price against, so
  * the price said here is the price charged. The renewal sentence must stay word for word the same
- * as `renewalDisclosure` in mobile/supabase/functions/_shared/billingText.ts (DISCLOSURE_VERSION
+ * as `renewalDisclosure` in supabase/functions/_shared/billingText.ts (DISCLOSURE_VERSION
  * 2026-10-11.1), which is what the customer's consent record names.
  */
 import { PLANS_COPY, SUBSCRIPTION_STATUS_COPY } from './copy';

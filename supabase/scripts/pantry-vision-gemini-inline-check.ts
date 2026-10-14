@@ -7,7 +7,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
-const fnDir = join(scriptDir, '../supabase/functions/pantry-vision');
+const fnDir = join(scriptDir, '../functions/pantry-vision');
 
 const BEGIN = '// BEGIN GEMINI_ORCHESTRATION';
 const END = '// END GEMINI_ORCHESTRATION';

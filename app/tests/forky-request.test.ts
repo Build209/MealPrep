@@ -16,11 +16,11 @@ import {
   type ForkyContext,
 } from '../src/forky/request';
 
-const mobile = join(__dirname, '..', '..', 'mobile');
-const functionPath = join(mobile, 'supabase', 'functions', 'ask-forky', 'index.ts');
-const sharedPath = join(mobile, 'supabase', 'functions', '_shared', 'askForkyText.ts');
-const oldCopyPath = join(mobile, 'config', 'askForky.ts');
-const skip = !existsSync(functionPath) && 'old app removed';
+const functions = join(__dirname, '..', '..', 'supabase', 'functions');
+const functionPath = join(functions, 'ask-forky', 'index.ts');
+const sharedPath = join(functions, '_shared', 'askForkyText.ts');
+// Old-app file: repoint or snapshot at switch-over (SWITCHOVER.md 1b). Missing is a failure, never a skip.
+const oldCopyPath = join(__dirname, '..', '..', 'mobile', 'config', 'askForky.ts');
 
 const context: ForkyContext = {
   pantry: [
@@ -172,7 +172,7 @@ test('the asker posts once and returns the answer; refusals become ForkyErrors',
   await assert.rejects(unset({ question: 'q', history: [], context, accessToken: 't' }), (e: unknown) => e instanceof ForkyError && e.kind === 'unavailable');
 });
 
-test('the live function still speaks this contract', { skip }, () => {
+test('the live function still speaks this contract', () => {
   const source = readFileSync(functionPath, 'utf8');
   for (const code of ['UNAUTHENTICATED', 'FEATURE_OFF', 'LIMIT_REACHED', 'BAD_REQUEST', 'UPSTREAM_ERROR', 'NOT_CONFIGURED']) {
     assert.ok(source.includes(`'${code}'`), code);
@@ -181,7 +181,7 @@ test('the live function still speaks this contract', { skip }, () => {
   assert.match(source, /claim_forky_message/);
 });
 
-test('the safety words are the function\'s own', { skip }, () => {
+test('the safety words are the function\'s own', () => {
   const shared = readFileSync(sharedPath, 'utf8');
   const app = readFileSync(join(__dirname, '..', 'src', 'forky', 'request.ts'), 'utf8');
   const pick = (text: string) => /const SAFETY_WORDS =\s*(\/.+\/i);/.exec(text)?.[1];
@@ -189,7 +189,8 @@ test('the safety words are the function\'s own', { skip }, () => {
   assert.equal(pick(app), pick(shared));
 });
 
-test('the AI notice is the old app\'s, word for word (chatbot disclosure and rule 9)', { skip }, () => {
+test('the AI notice is the old app\'s, word for word (chatbot disclosure and rule 9)', () => {
+  assert.ok(existsSync(oldCopyPath), 'mobile/config/askForky.ts is gone: repoint or snapshot this check (SWITCHOVER.md 1b)');
   const old = readFileSync(oldCopyPath, 'utf8');
   const quoted = /aiNotice:\s*'([^']+)'/.exec(old)?.[1];
   assert.ok(quoted, 'aiNotice found in mobile/config/askForky.ts');

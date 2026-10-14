@@ -5,7 +5,7 @@ import {
   estimateRefreshQuotaUnits,
   isMostlyEnglishTitle,
   passesRecipeRelevanceFilter,
-} from '../supabase/functions/viral-recipes/youtubeDiscovery.ts';
+} from '../functions/viral-recipes/youtubeDiscovery.ts';
 
 assert.ok(estimateRefreshQuotaUnits() <= 1500, 'refresh should stay under ~1500 quota units');
 

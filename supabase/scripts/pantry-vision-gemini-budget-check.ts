@@ -1,6 +1,6 @@
 /**
  * Unit checks for pantry-vision Gemini time budget and model ordering.
- * Run from mobile/: npm run test:pantry-vision-gemini
+ * Run from supabase/: npm run test:pantry-vision
  */
 import assert from 'node:assert/strict';
 import {
@@ -13,7 +13,7 @@ import {
   orderModelsForAttempt,
   parseGeminiRequestTimeoutMs,
   shouldRetrySameModelAfterError,
-} from '../supabase/functions/pantry-vision/geminiOrchestration.ts';
+} from '../functions/pantry-vision/geminiOrchestration.ts';
 
 function testBuildCandidates() {
   const list = buildGeminiModelCandidates('gemini-3.6-flash', 'gemini-3.5-flash,gemini-3.6-flash');

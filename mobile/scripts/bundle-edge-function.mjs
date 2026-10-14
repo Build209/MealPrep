@@ -17,7 +17,8 @@ if (!name || name.startsWith('-')) {
   process.exit(1);
 }
 
-const entry = path.join(mobileRoot, 'supabase', 'functions', name, 'index.ts');
+// The function sources live at the repo root (supabase/functions); the bundles stay in mobile/.
+const entry = path.join(mobileRoot, '..', 'supabase', 'functions', name, 'index.ts');
 if (!fs.existsSync(entry)) {
   console.error(`Entry not found: ${entry}`);
   process.exit(1);

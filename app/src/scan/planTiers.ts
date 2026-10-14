@@ -1,4 +1,4 @@
-// PORTED VERBATIM from mobile/supabase/functions/_shared/planTiers.ts, the table the live
+// PORTED VERBATIM from supabase/functions/_shared/planTiers.ts, the table the live
 // pantry-vision function enforces. tests/scan-planTiers.test.ts keeps the two equal until mobile/
 // is deleted; change the numbers there first (with the terms and compliance), then here.
 //

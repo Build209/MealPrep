@@ -15,16 +15,16 @@ import {
   parseCheckoutTier,
   renewalDisclosure,
   TERMS_VERSION,
-} from '../supabase/functions/_shared/billingText.ts';
+} from '../functions/_shared/billingText.ts';
 import {
   hasLiveStripeSubscription,
   isUnknownStripeCustomer,
   planOpenCheckoutSessions,
-} from '../supabase/functions/_shared/checkoutGuards.ts';
-import { PLUS_ACTIVE_STATUSES } from '../supabase/functions/stripe-webhook/subscriptionState.ts';
+} from '../functions/_shared/checkoutGuards.ts';
+import { PLUS_ACTIVE_STATUSES } from '../functions/stripe-webhook/subscriptionState.ts';
 
-const mobileRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const read = (rel: string) => fs.readFileSync(path.join(mobileRoot, rel), 'utf8');
+const supabaseRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const read = (rel: string) => fs.readFileSync(path.join(supabaseRoot, rel), 'utf8');
 
 // Prices print the way a customer expects.
 assert.equal(formatPrice(699, 'usd'), '$6.99');
@@ -170,9 +170,9 @@ assert.equal(isUnknownStripeCustomer(new Error('network')), false);
 assert.equal(isUnknownStripeCustomer(null), false);
 
 // Source rules for the two functions that start payments.
-const checkout = read('supabase/functions/stripe-checkout/index.ts');
-const portal = read('supabase/functions/stripe-portal/index.ts');
-const server = read('supabase/functions/_shared/billingServer.ts');
+const checkout = read('functions/stripe-checkout/index.ts');
+const portal = read('functions/stripe-portal/index.ts');
+const server = read('functions/_shared/billingServer.ts');
 
 // Sign-in is verified with Supabase Auth, never by decoding the token.
 assert.match(server, /auth\.getUser\(\)/);
@@ -227,13 +227,7 @@ for (const source of [checkout, portal, server]) {
   assert.ok(remote.every((stmt) => /esm\.sh\/@supabase\/supabase-js/.test(stmt)), remote.join(', '));
 }
 
-// The terms version we record must be the date printed on the live terms page.
-const termsHtml = read('public/terms.html');
-const [year, month, day] = TERMS_VERSION.split('-').map(Number);
-const monthName = new Date(Date.UTC(year, month - 1, day)).toLocaleString('en-US', { month: 'long', timeZone: 'UTC' });
-assert.ok(
-  termsHtml.includes(`${monthName} ${day}, ${year}`),
-  `terms.html should be dated ${monthName} ${day}, ${year} to match TERMS_VERSION`,
-);
+// The terms version we record must be the date printed on the live terms page: checked in
+// mobile/scripts/stripe-checkout-mobile-check.ts while the page lives in mobile/public.
 
 console.log('stripe-checkout-check: ok');

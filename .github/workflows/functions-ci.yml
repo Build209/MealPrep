@@ -1,0 +1,42 @@
+name: Edge functions
+
+# Checks for the live Supabase edge functions in supabase/functions (scripts in supabase/scripts).
+# Never deploys: deploys stay manual in deploy-function.yml.
+on:
+  pull_request:
+    paths:
+      - "supabase/**"
+      - ".github/workflows/functions-ci.yml"
+      - ".github/workflows/deploy-function.yml"
+  push:
+    branches: [rebuild/v1, main]
+    paths:
+      - "supabase/**"
+      - ".github/workflows/functions-ci.yml"
+      - ".github/workflows/deploy-function.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: functions-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  functions:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: supabase
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      # No lockfile yet (one dev dependency, pinned exactly).
+      - name: Install
+        run: |
+          if [ -f package-lock.json ]; then npm ci; else npm install --no-audit --no-fund; fi
+      - name: Function checks
+        run: npm test

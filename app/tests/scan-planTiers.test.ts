@@ -1,22 +1,21 @@
 /// <reference types="node" />
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { TIER_LIMITS, TIER_PRICE_CENTS, tierForProfile, tierLimits, usageMonth, PLAN_TIERS } from '../src/scan/planTiers';
 
 // The live pantry-vision function enforces this file; the app's copy must say the same.
-const livePath = join(__dirname, '..', '..', 'mobile', 'supabase', 'functions', '_shared', 'planTiers.ts');
+const livePath = join(__dirname, '..', '..', 'supabase', 'functions', '_shared', 'planTiers.ts');
 const appPath = join(__dirname, '..', 'src', 'scan', 'planTiers.ts');
-const skip = !existsSync(livePath) && 'old app removed';
 
-test('the app copy is the live file verbatim (only a header comment added)', { skip }, () => {
+test('the app copy is the live file verbatim (only a header comment added)', () => {
   const live = readFileSync(livePath, 'utf8');
   const app = readFileSync(appPath, 'utf8');
-  assert.ok(app.endsWith(live), 'src/scan/planTiers.ts differs from mobile/supabase/functions/_shared/planTiers.ts');
+  assert.ok(app.endsWith(live), 'src/scan/planTiers.ts differs from supabase/functions/_shared/planTiers.ts');
 });
 
-test('monthly limits are the same numbers the live function uses', { skip }, () => {
+test('monthly limits are the same numbers the live function uses', () => {
   const live = readFileSync(livePath, 'utf8');
   for (const tier of PLAN_TIERS) {
     const line = new RegExp(`^\\s*${tier}: \\{ scans: (\\d+), imports: (\\d+), forkyQuestions: (\\d+), priceTagScans: (\\d+) \\},`, 'm').exec(live);
