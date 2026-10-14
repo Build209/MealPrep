@@ -18,9 +18,10 @@ export const LEGAL_LINKS = {
 } as const;
 
 /**
- * Where links in auth emails (confirm address, reset password) send people. The live app has the
- * "Choose a new password" screen and is on the server's allowed list, so links go there until the
- * rebuild has its own reset screen. NEW: chosen for the rebuild.
+ * Where links in auth emails send people when there is no better address: the live app, which is
+ * on the server's allowed list and has its own "Choose a new password" screen. On the web, reset
+ * links go to this app's own /reset-password screen instead (passwordResetRedirect in logic.ts).
+ * NEW: chosen for the rebuild.
  */
 export const AUTH_EMAIL_REDIRECT = 'https://mealplanatic.app/';
 
@@ -83,4 +84,20 @@ export const AUTH_RESET_COPY = {
   /** Said whether or not the address has an account, so nobody can use this to find out who does. */
   sent: 'If that email has an account, a reset link is on its way. Open it on this device to choose a new password.',
   missingEmail: 'Enter your email address.',
+  // The lines below up to busySave are carried over word for word from the live app's
+  // "Choose a new password" screen (mobile/config/authConfig.ts).
+  newPasswordTitle: 'Choose a new password',
+  newPasswordBlurb: 'You opened a password reset link. Enter a new password for your account.',
+  newPasswordLabel: 'New password',
+  confirmPasswordLabel: 'New password again',
+  mismatch: 'The two passwords are not the same.',
+  saveButton: 'Save new password',
+  notNow: 'Not now',
+  saved: 'Your password is changed.',
+  linkExpired: 'That reset link has expired or was already used. Ask for a new one from "Forgot password?".',
+  samePassword: 'Choose a password you have not used on this account before.',
+  /** NEW */
+  busySave: 'Saving...',
+  /** NEW: shown for a moment while the reset link is checked. */
+  checkingLink: 'Checking your reset link...',
 } as const;

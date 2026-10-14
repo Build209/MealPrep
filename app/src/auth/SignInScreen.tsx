@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
+import { Platform, Pressable, ScrollView, View } from 'react-native';
 import { parseChannel, signUpRedirect } from '../lib/channel';
 import { env } from '../lib/env';
 import { getSupabase } from '../lib/supabase';
@@ -12,11 +12,18 @@ import { requestPasswordReset, signIn, signUp } from './actions';
 import { AgeCheckbox } from './AgeCheckbox';
 import { AUTH_EMAIL_REDIRECT, AUTH_RESET_COPY, AUTH_RESULT_COPY, AUTH_SCREEN_COPY } from './copy';
 import { Field } from './Field';
-import { canSubmit, submitBlocker, type AuthActionResult, type AuthMode } from './logic';
+import { canSubmit, passwordResetRedirect, submitBlocker, type AuthActionResult, type AuthMode } from './logic';
 
 /** Preview web builds send the "confirm your email" link back to the preview's own address. */
 const confirmLinkTarget = signUpRedirect(
   parseChannel(env.appChannel),
+  (globalThis as { location?: { origin?: string } }).location?.origin,
+  AUTH_EMAIL_REDIRECT,
+);
+
+/** On the web, reset links come back to this app's own "Choose a new password" screen. */
+const resetLinkTarget = passwordResetRedirect(
+  Platform.OS === 'web',
   (globalThis as { location?: { origin?: string } }).location?.origin,
   AUTH_EMAIL_REDIRECT,
 );
@@ -92,7 +99,7 @@ function AuthForm() {
           ? await signIn(auth, email, password)
           : mode === 'sign-up'
             ? await signUp(auth, email, password, confirmLinkTarget)
-            : await requestPasswordReset(auth, email);
+            : await requestPasswordReset(auth, email, resetLinkTarget);
     } catch {
       result = { ok: false, error: AUTH_RESULT_COPY.generic };
     }

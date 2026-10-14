@@ -8,7 +8,10 @@ untouched until switch-over, when `mobile/` is deleted in the same release.
   `tests/tokens.test.ts` checks contrast and keeps the colours equal to `mobile/config/theme.colors.json`.
 - `src/ui/`: small shared pieces (text, button, card, screen, top bar).
 - `src/lib/`: the Supabase client and the query client. The server is the only source of truth:
-  screens read through queries and never keep their own copy of server data.
+  screens read through queries and never keep their own copy of server data. The sign-in session
+  is kept on the device (localStorage on the web, AsyncStorage on phones: `authStorage.native.ts`).
+- `/reset-password` (`src/auth/ResetPasswordScreen.tsx`): where reset emails land on the web;
+  choose a new password, then Home.
 - `src/data/`: the data layer (query keys, row models, optimistic mutations, `useIsOnline`).
   Rules in `src/data/README.md`.
 - `src/auth/`: sign-in, create account (18+ box), forgot password, sign out, and `AuthProvider`
