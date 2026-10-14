@@ -85,6 +85,14 @@ untouched until switch-over, when `mobile/` is deleted in the same release.
   `src/plans/CurrentPlan.tsx`; shown only for a live subscription), then "Plans & usage", "Delete account" and the
   sign-out card. It is the "Account, Manage subscription" the approved renewal terms name
   (`tests/account-screen-copy.test.ts` keeps the two in step). End to end: `e2e/account.spec.ts` (stripe-portal stubbed).
+- Tabs and screen-to-screen feel (`src/app/(tabs)/_layout.tsx`, `src/app/_layout.tsx`): a Feather line icon
+  (`@expo/vector-icons` 15.1.1, the version `mobile/` uses) over each tab label, ink when active and muted
+  otherwise, hidden from screen readers. The bar is its base height plus the bottom safe-area inset; on the web,
+  `src/lib/viewport.ts` adds `viewport-fit=cover` so iPhone Safari reports the home-indicator inset. Screens
+  above the tabs get the top and bottom insets from the stack. Home, Pantry and Grocery mount right after
+  sign-in (`lazy: false`, so switching is instant; Stores stays lazy because it may locate the device on open).
+  Tabs cross-fade (150 ms), phone stacks fade, web screens fade in (160 ms, `src/ui/Screen.tsx`); all off with
+  reduced motion. Phone tour test "tab bar: icons over labels, on screen, above the safe area".
 - One folder per feature as features arrive (`pantry/`, `grocery/`, `recipes/`, ...), no file over about 400 lines.
 
 ```bash
