@@ -106,9 +106,27 @@ jobs:
           EXPO_PUBLIC_SUPABASE_ANON_KEY="$E2E_SUPABASE_ANON_KEY" \
           npm run export:web
 
-      - name: Phone pass (all specs on iPhone and Android, plus the screen tour)
+      # Owner's call (2026-10-14): Android must pass; iPhone (WebKit) is report-only for now, because
+      # Playwright's Linux WebKit crashes on one Grocery step that passes on Chromium. iPhone results
+      # still run, appear in the report and the step summary, and are checked on a real iPhone.
+      - name: Phone pass, iPhone (report-only)
+        id: iphone
+        continue-on-error: true
         working-directory: app
-        run: npx playwright test -c playwright.phone.config.ts
+        env:
+          PHONE_RUN: iphone
+        run: npx playwright test -c playwright.phone.config.ts --project=iphone
+
+      - name: Phone pass, Android (must pass)
+        if: always()
+        working-directory: app
+        env:
+          PHONE_RUN: android
+        run: npx playwright test -c playwright.phone.config.ts --project=android
+
+      - name: Note iPhone result
+        if: always() && steps.iphone.outcome == 'failure'
+        run: echo "::warning title=iPhone phone pass::iPhone (WebKit) tests failed; report-only for now. See the phone report and playwright-report-phone-iphone."
 
       - name: Write the phone report
         if: always()
@@ -136,8 +154,8 @@ jobs:
         with:
           name: playwright-report-phone
           path: |
-            app/playwright-report-phone
-            app/test-results-phone
+            app/playwright-report-phone*
+            app/test-results-phone*
           if-no-files-found: ignore
           retention-days: 14
 

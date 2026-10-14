@@ -16,8 +16,8 @@ export default defineConfig({
   ...base,
   testIgnore: [],
   timeout: 90_000,
-  outputDir: 'test-results-phone',
-  reporter: process.env.CI ? [['list'], ['html', { open: 'never', outputFolder: 'playwright-report-phone' }]] : 'list',
+  outputDir: `test-results-phone${process.env.PHONE_RUN ? '-' + process.env.PHONE_RUN : ''}`,
+  reporter: process.env.CI ? [['list'], ['html', { open: 'never', outputFolder: `playwright-report-phone${process.env.PHONE_RUN ? '-' + process.env.PHONE_RUN : ''}` }]] : 'list',
   projects: [
     { name: 'iphone', use: { ...devices['iPhone 15'], defaultBrowserType: iphoneEngine } },
     { name: 'android', use: { ...devices['Pixel 7'], defaultBrowserType: 'chromium' } },

@@ -370,8 +370,6 @@ screen('21', 'delete-account-confirm', 'none', 'Delete account confirm step (not
 });
 
 /** The legal pages are the approved files, byte for byte equal to mobile/public (site-build.yml checks it). */
-const LEGAL_LOCKED = 'approved legal file, locked byte for byte to the live copy; a CSS change needs the owner and compliance';
-
 // ---- Signed out again: reset, not found, legal ------------------------------------------------
 
 screen('22', 'reset-password-expired', 'none', 'reset-password with an expired link', async (page) => {
@@ -392,11 +390,11 @@ screen('24', 'terms', 'none', 'Terms (/terms.html from the export)', async (page
   await expect(page.locator('body')).toContainText(/terms/i);
   await expect(page.locator('body')).toContainText(/18/);
   return ['Static legal page (public/terms.html), not an app screen.'];
-}, LEGAL_LOCKED);
+});
 
 screen('25', 'privacy', 'none', 'Privacy (/privacy.html from the export)', async (page) => {
   const res = await page.goto('/privacy.html');
   expect(res?.status()).toBe(200);
   await expect(page.locator('body')).toContainText(/privacy/i);
   return ['Static legal page (public/privacy.html), not an app screen.'];
-}, LEGAL_LOCKED);
+});

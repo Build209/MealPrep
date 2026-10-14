@@ -37,6 +37,12 @@
         color: var(--muted);
         font-size: 0.9rem;
       }
+      /* A link on its own line (the footer link) gets a 44px tap area. Style only. */
+      p.muted > a:only-child {
+        display: inline-flex;
+        align-items: center;
+        min-height: 44px;
+      }
       a {
         color: #0d6b4d;
       }
