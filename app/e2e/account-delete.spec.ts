@@ -136,10 +136,11 @@ test('delete account: refusals and failures say so in plain words and leave the 
   });
 
   await page.goto('/delete-account');
+  // After a reload the saved session is read first; wait for the button, then open the confirm step.
+  // It stays open after a failure, so each try below presses only the confirm button.
+  await page.getByRole('button', { name: 'Delete account', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Delete your account?' })).toBeVisible();
   const confirmAndDelete = async () => {
-    if (await page.getByRole('button', { name: 'Delete account', exact: true }).isVisible()) {
-      await page.getByRole('button', { name: 'Delete account', exact: true }).click();
-    }
     await page.getByRole('button', { name: 'Yes, delete my account', exact: true }).click();
   };
 
