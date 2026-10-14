@@ -38,6 +38,9 @@ The server (Supabase) is the only source of truth. This folder is the only place
 | `profile.ts`, `pantry.ts` | First real queries and the quantity mutation. |
 | `online.ts` | `useIsOnline()` from TanStack Query's onlineManager. |
 | `pantryScanSave.ts` | Saves the rows kept on the scan review list: one insert, server rows back, pantry queries refetched. |
+| `recipeRows.ts` | Recipe rows (`recipes`, `library_recipes`) mapped to one `AppRecipe`; the recipe id scheme `r_<uuid>` / `l_<uuid>` (`recipeHref`, `parseRecipeRouteId`); the add-missing answer. Pure. |
+| `recipes.ts` | `useRecipes()` (master + own + published library) and `useRecipe(id)`. Read-only. |
+| `recipeMutations.ts` | `useAddMissingToGrocery()`: one call to `add_missing_to_grocery`; the server's grocery rows go into the grocery query. |
 | `scanUsage.ts` | This month's photo scans used (own `photo_scan_usage` row) and `useScanAllowance()` for the Scan button. |
 
 Adding a table: add its Row type, app type, both mappers and column list to `rows.ts` (or a

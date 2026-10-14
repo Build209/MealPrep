@@ -27,6 +27,13 @@ untouched until switch-over, when `mobile/` is deleted in the same release.
   rules (`src/kitchen/pantryMatch.ts`): shelf items already there are shown as "Already in your pantry"
   and left unticked; receipt lines add to a matching row with the same unit. With no scans left the
   button says so and opens a sheet about the monthly allowance, with "See plans" (the live app for now).
+- `src/recipes/`: Home "Cook from your pantry" (phase 3) and the recipe detail (`/recipe/[id]`). Recipes come
+  from `recipes` (master + the person's own) and published `library_recipes` (`src/data/recipes.ts`), ranked
+  against the pantry with the old app's rules (`src/kitchen/recipeMatch.ts`, `recipeFeed.ts`, tested in
+  `tests/kitchen-recipe-*.test.ts`). Each card has a status sticker: leaf "Ready to cook" or banana "N missing".
+  Recipe ids: `r_<uuid>` (recipes) and `l_<uuid>` (library); build links with `recipeHref()`.
+  "Add N missing to grocery list" is one server call (`add_missing_to_grocery`, a new migration in `db/`, not on
+  the live database until the owner approves it) that merges into open grocery rows once per recipe.
 - One folder per feature as features arrive (`pantry/`, `grocery/`, `recipes/`, ...), no file over about 400 lines.
 
 ```bash
