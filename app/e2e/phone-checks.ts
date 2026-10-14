@@ -261,6 +261,7 @@ export type ScreenResult = {
   tomato: TomatoUse[];
   tomatoViolations: TomatoUse[];
   notes: string[];
+  reportOnly: { tapTargets?: string };
 };
 
 /**
@@ -271,7 +272,14 @@ export type ScreenResult = {
 export async function checkScreen(
   page: Page,
   testInfo: TestInfo,
-  opts: { order: string; screen: string; purpose: Purpose; notes?: string[] },
+  opts: {
+    order: string;
+    screen: string;
+    purpose: Purpose;
+    notes?: string[];
+    /** Tap-target issues are reported but do not fail, with this reason (only for files this repo may not change). */
+    tapReportOnly?: string;
+  },
 ): Promise<ScreenResult> {
   const project = testInfo.project.name;
   const dir = join(OUT_DIR, project);
@@ -326,6 +334,7 @@ export async function checkScreen(
     tomato: m.tomato,
     tomatoViolations: violations,
     notes: opts.notes ?? [],
+    reportOnly: opts.tapReportOnly ? { tapTargets: opts.tapReportOnly } : {},
   };
   writeFileSync(join(dir, `${base}.json`), `${JSON.stringify(result, null, 2)}\n`);
   await testInfo.attach(`${base}.png`, { path: join(OUT_DIR, shots[0]!), contentType: 'image/png' });
@@ -334,7 +343,9 @@ export async function checkScreen(
   expect.soft(m.scrollWidth, `${where}: the page scrolls sideways (scrollWidth ${m.scrollWidth} > width ${m.innerWidth})`).toBeLessThanOrEqual(
     m.innerWidth + 1,
   );
-  expect
+  if (opts.tapReportOnly && m.tap.length > 0) {
+    console.log(`${where}: tap targets under ${MIN_TAP}px reported, not failed (${opts.tapReportOnly}): ${m.tap.map((t) => `"${t.text}" ${t.width}x${t.height}`).join(', ')}`);
+  } else expect
     .soft(m.tap, `${where}: tap targets under ${MIN_TAP}x${MIN_TAP} px:\n${m.tap.map((t) => `  - ${t.role} "${t.text}" ${t.width}x${t.height}`).join('\n')}`)
     .toEqual([]);
   expect

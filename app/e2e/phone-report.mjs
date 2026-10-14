@@ -57,7 +57,7 @@ const lines = [
 ];
 for (const s of screens) {
   lines.push(
-    `| ${s.project} | ${s.order} ${s.screen} | \`${esc(s.route)}\` | ${tick(s.checks.noSidewaysScroll)} | ${tick(s.checks.tapTargets)} | ${tick(
+    `| ${s.project} | ${s.order} ${s.screen} | \`${esc(s.route)}\` | ${tick(s.checks.noSidewaysScroll)} | ${tick(s.checks.tapTargets)}${!s.checks.tapTargets && s.reportOnly?.tapTargets ? ' (report only)' : ''} | ${tick(
       s.checks.textFits,
     )} | ${tick(s.checks.tomatoRule)} | ${s.tomato.length} | ${s.screenshots.map((p) => `[${p.split('/').pop()}](${p})`).join(' ')} |`,
   );
@@ -67,6 +67,7 @@ for (const s of screens) {
   lines.push(`### ${s.project} / ${s.order} ${s.screen}`, '');
   lines.push(`Route \`${s.route}\`, viewport ${s.viewport}, purpose ${s.purpose}, engine ${s.engine}.`, '');
   if (!s.checks.noSidewaysScroll) lines.push(`- Sideways scroll: page is ${s.sidewaysScroll.scrollWidth}px wide in ${s.sidewaysScroll.innerWidth}px.`);
+  if (s.reportOnly?.tapTargets && s.tapTargetIssues.length) lines.push(`- Tap targets report only: ${esc(s.reportOnly.tapTargets)}`);
   for (const t of s.tapTargetIssues) lines.push(`- Tap target too small: ${t.role} "${esc(t.text)}" ${t.width}x${t.height}`);
   for (const t of s.tapTargetAllowed) lines.push(`- Small but allowed (${t.why}): ${t.role} "${esc(t.text)}" ${t.width}x${t.height}`);
   for (const c of s.clippedText) lines.push(`- Text ${c.kind}: "${esc(c.text)}" content ${c.scroll} in box ${c.client}`);

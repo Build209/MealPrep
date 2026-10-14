@@ -117,6 +117,22 @@ npx playwright install chromium && npm run e2e
 
 The tests refuse any Supabase address that is not on this machine.
 
+Phone pass: `.github/workflows/app-phone.yml` runs every spec in `e2e/` on two phone profiles
+(`playwright.phone.config.ts`: `iphone` = iPhone 15 in WebKit when CI can install it, else Chromium
+with the iPhone's size, user agent and touch; `android` = Pixel 7 in Chromium), plus the screen tour
+`e2e/phone-tour.spec.ts` (phone config only). The tour seeds a local account, stubs the edge functions,
+visits every screen of SWITCHOVER.md section 2 that a browser can reach and, per screen, saves
+`phone-screens/<project>/<NN>-<screen>.png` (plus `-bottom.png` when the screen scrolls) and runs the
+checks in `e2e/phone-checks.ts`: no sideways scroll, tap targets at least 44x44 px (allowed: links inside
+a sentence, and controls inside a bigger tappable one), no clipped text (ellipsis on purpose is only
+reported), and tomato only in a camera or money context (the "Plan" in the wordmark is reported as
+brand, never a failure). `e2e/phone-report.mjs` writes `phone-screens/phone-report.json` and `.md`.
+Results: artifact `phone-screens` on every run; branch `phone-screens` after each push to `rebuild/v1`
+or a manual run; branch `phone-screens-pr-<number>` for pull requests from this repository
+(`git fetch origin phone-screens && git checkout FETCH_HEAD -- .` in an empty folder). Locally, after
+the export: `npx playwright install chromium webkit && npx playwright test -c playwright.phone.config.ts
+&& node e2e/phone-report.mjs`.
+
 Site tests: `e2e-site/` checks the whole GitHub Pages site (`scripts/build-site.sh` output in `site/`)
 served the way Pages serves it (`e2e-site/serve-pages.mjs`: unknown addresses get `404.html` with
 status 404, folders get a trailing slash). Covered: `/` opens the app; deep links (`/pantry`,
