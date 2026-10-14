@@ -1,7 +1,7 @@
 import Feather from '@expo/vector-icons/Feather';
 import { Redirect, Tabs } from 'expo-router';
 import type { ComponentProps } from 'react';
-import { ActivityIndicator, Platform, View, type ColorValue } from 'react-native';
+import { ActivityIndicator, View, type ColorValue } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../auth/AuthProvider';
 import { TopBar } from '../../ui/TopBar';
@@ -37,11 +37,9 @@ function tabIcon(name: IconName, route: string) {
  *
  * - Safe area: the bar is its base height plus the bottom inset (iPhone home indicator; on the web
  *   that needs viewport-fit=cover, set in src/lib/viewport.ts), so labels never sit under it.
- * - Home, Pantry and Grocery mount right after sign-in (lazy: false), so switching is instant and
- *   their lists are already loaded (TanStack Query dedupes; staleTime in src/lib/queryClient.ts).
- *   Stores stays lazy: it may locate the device on open, which must wait until the person opens it.
- * - A short cross-fade between tabs (150 ms) on phones, off with reduced motion. The web build
- *   switches tabs instantly (each tab screen fades in once when it first mounts, src/ui/Screen.tsx).
+ * - Tabs load on first open (the default). Not preloaded: on the web the tabs you are not on stay
+ *   in the page and reachable, so mounting all of them at sign-in duplicated their content.
+ * - A short cross-fade between tabs (150 ms), off when the person asks for reduced motion.
  */
 export default function TabsLayout() {
   const { ready, session } = useAuth();
@@ -63,10 +61,7 @@ export default function TabsLayout() {
       <Tabs
         screenOptions={{
           headerShown: false,
-          lazy: false,
-          // Not on the web: there the fade keeps the other tabs in the page at opacity 0, where screen
-          // readers and keyboards still reach them. Without it, hidden tabs are display: none.
-          animation: reduceMotion || Platform.OS === 'web' ? 'none' : 'fade',
+          animation: reduceMotion ? 'none' : 'fade',
           tabBarActiveTintColor: colors.ink,
           tabBarInactiveTintColor: colors.muted,
           tabBarStyle: {
@@ -82,7 +77,7 @@ export default function TabsLayout() {
         <Tabs.Screen name="index" options={{ title: 'Home', tabBarIcon: tabIcon('home', 'index') }} />
         <Tabs.Screen name="pantry" options={{ title: 'Pantry', tabBarIcon: tabIcon('package', 'pantry') }} />
         <Tabs.Screen name="grocery" options={{ title: 'Grocery', tabBarIcon: tabIcon('shopping-cart', 'grocery') }} />
-        <Tabs.Screen name="stores" options={{ title: 'Stores', lazy: true, tabBarIcon: tabIcon('map-pin', 'stores') }} />
+        <Tabs.Screen name="stores" options={{ title: 'Stores', tabBarIcon: tabIcon('map-pin', 'stores') }} />
       </Tabs>
     </View>
   );
