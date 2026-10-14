@@ -27,6 +27,11 @@ untouched until switch-over, when `mobile/` is deleted in the same release.
   rules (`src/kitchen/pantryMatch.ts`): shelf items already there are shown as "Already in your pantry"
   and left unticked; receipt lines add to a matching row with the same unit. With no scans left the
   button says so and opens a sheet about the monthly allowance, with "See plans" (the live app for now).
+- `src/forky/`: Ask Forky (`/forky`), the AI chat through the live `ask-forky` function (unchanged; same
+  request as the old app), with "N messages left this month" from `forky_chat_usage` and the plan limits,
+  recipe buttons to `/recipe/<id>`, and the AI notice always on screen. The chat is kept in memory for the
+  session only. Forky stands in the top bar (opens the chat) and shows short tips with the old app's
+  backoff rules (`tipBackoff.ts`). Tips that open by themselves are off under browser automation.
 - One folder per feature as features arrive (`pantry/`, `grocery/`, `recipes/`, ...), no file over about 400 lines.
 
 ```bash
