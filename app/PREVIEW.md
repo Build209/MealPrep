@@ -20,8 +20,9 @@ accounts, pantry items and so on are saved for real.
 - Use a **test account** (for example a new address like yourname+test@gmail.com), not your own
   account and never a customer's.
 - Signing up sends a real confirmation email.
-- "Forgot password" emails still go to the real app's "Choose a new password" screen on
-  mealplanatic.app (the new app does not have that screen yet). That works, it just opens the old app.
+- "Forgot password" emails link back to the preview's own "Choose a new password" screen
+  (`/reset-password`), once the preview address is on Supabase's Redirect URLs list (step 3 below).
+  Until then the link opens the real app's reset screen on mealplanatic.app instead. Both work.
 
 ## Your one-time choices
 

@@ -30,7 +30,12 @@ max_rows = 1000
 enabled = true
 # The app's web build is served here during the e2e tests (app/e2e/serve.mjs).
 site_url = "http://127.0.0.1:4173"
-additional_redirect_urls = ["http://127.0.0.1:4173", "http://localhost:4173"]
+additional_redirect_urls = [
+  "http://127.0.0.1:4173",
+  "http://localhost:4173",
+  "http://127.0.0.1:4173/**",
+  "http://localhost:4173/**",
+]
 enable_signup = true
 
 [auth.email]
@@ -43,9 +48,6 @@ enable_confirmations = false
 [studio]
 enabled = false
 
-[local_smtp]
-enabled = false
-
 [realtime]
 enabled = false
 
@@ -54,3 +56,9 @@ enabled = false
 
 [analytics]
 enabled = false
+
+# Local mail catcher (Mailpit/Inbucket): the local auth server delivers its emails here instead
+# of sending them, and the forgot-password test reads the reset link from it
+# (app/e2e/reset-password.spec.ts). Local only: no real email is ever sent.
+[local_smtp]
+enabled = true

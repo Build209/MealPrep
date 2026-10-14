@@ -33,6 +33,7 @@ export default function RootLayout() {
           <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.paper } }}>
             <Stack.Screen name="(tabs)" />
             <Stack.Screen name="sign-in" />
+            <Stack.Screen name="reset-password" />
           </Stack>
         </AuthProvider>
       </QueryClientProvider>
