@@ -27,7 +27,7 @@ untouched until switch-over, when `mobile/` is deleted in the same release.
   rules (`src/kitchen/pantryMatch.ts`): shelf items already there are shown as "Already in your pantry"
   and left unticked; receipt lines add to a matching row with the same unit. With no scans left the
   button says so and opens a sheet about the monthly allowance, with "See plans" (opens `/plans`).
-- `src/plans/`: `/plans` and `/usage` (phase 4), linked from Home ("Plans & usage"). Plans: the current
+- `src/plans/`: `/plans` and `/usage` (phase 4), linked from Account ("Plans & usage"). Plans: the current
   plan (`profiles.plan`/`plan_tier`, `billing_subscriptions`), and for a free account on the web the
   monthly/yearly switch, Plus, Pro and Family with price and monthly limits, the renewal terms directly
   above the one tomato buy button. Buy and "Manage subscription" call the live `stripe-checkout` and
@@ -74,12 +74,17 @@ untouched until switch-over, when `mobile/` is deleted in the same release.
   then a review form, then Save writes the person's own `recipes` row (is_master false, creator credit in source_*)
   and opens `/recipe/r_<id>`. The Import button shows this month's imports left (limits from `src/scan/planTiers.ts`).
 - `src/account/`: delete account (phase 4) at `/delete-account`, the same address as the live page that the
-  privacy policy and terms link to; Home links to it under the sign-out card. It says what is deleted (and that
+  privacy policy and terms link to; Account links to it. It says what is deleted (and that
   MealPlanatic Plus is cancelled), then Delete account, a confirm step, and the live `delete-user-account`
   function (unchanged; same request as the old app, built in `deleteRequest.ts`). Afterwards the session is
   removed from the device and sign-in says the account was deleted. Wording is the live app's word for word
   (`copy.ts`, checked by `tests/account-copy.test.ts`). No tomato: the delete button is ink. End to end:
   `e2e/account-delete.spec.ts` (the function is stubbed; nothing is deleted).
+- Account (`/account`, `src/account/AccountScreen.tsx`), Home's one "Account" link: the signed-in email, the
+  current plan with "Manage subscription" (the same card, plan read and rules as `/plans`, shared in
+  `src/plans/CurrentPlan.tsx`; shown only for a live subscription), then "Plans & usage", "Delete account" and the
+  sign-out card. It is the "Account, Manage subscription" the approved renewal terms name
+  (`tests/account-screen-copy.test.ts` keeps the two in step). End to end: `e2e/account.spec.ts` (stripe-portal stubbed).
 - One folder per feature as features arrive (`pantry/`, `grocery/`, `recipes/`, ...), no file over about 400 lines.
 
 ```bash

@@ -20,7 +20,7 @@ const itemRow = (page: Page, detail: string) =>
 
 async function expectHome(page: Page) {
   await expect(page).toHaveURL(/^http:\/\/[^/]+\/$/);
-  await expect(page.getByRole('button', { name: 'Sign out' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Account', exact: true })).toBeVisible();
 }
 
 async function signIn(page: Page) {
