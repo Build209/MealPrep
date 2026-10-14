@@ -21,6 +21,7 @@ on:
           - pantry-vision
           - recipe-import
           - recipeapi-proxy
+          - scan-photo-retention
           - stripe-checkout
           - stripe-portal
           - stripe-webhook
@@ -61,9 +62,10 @@ jobs:
           test -f "supabase/functions/$FUNCTION_NAME/index.ts"
           # Gateway JWT verification stays off for functions that authenticate another way:
           # creator-videos and library-generate (shared secret / anon key, as deployed today)
-          # and stripe-webhook (Stripe signature; Stripe cannot send a Supabase token).
+          # stripe-webhook (Stripe signature; Stripe cannot send a Supabase token)
+          # and scan-photo-retention (shared secret; called by pg_cron).
           case "$FUNCTION_NAME" in
-            creator-videos|library-generate|stripe-webhook) jwt_flag="--no-verify-jwt" ;;
+            creator-videos|library-generate|stripe-webhook|scan-photo-retention) jwt_flag="--no-verify-jwt" ;;
             *) jwt_flag="" ;;
           esac
           supabase functions deploy "$FUNCTION_NAME" --project-ref "$SUPABASE_PROJECT_REF" $jwt_flag
