@@ -1,6 +1,6 @@
 -- DB hardening: user_id indexes, and no signed-out (anon) access to functions that do not need it.
 --
--- NOT ON LIVE. File only. Applying it to live needs the owner's yes (charter).
+-- Applied to live on 2026-10-14 with the owner's yes (as migration db_hardening, statements only).
 -- Fixes the two notes in db/README.md ("Things noticed while reading live").
 --
 -- Live was read on 2026-10-14 with read-only catalog queries (pg_proc + has_function_privilege,

@@ -31,7 +31,8 @@ begin
     -- Added by later migrations in this folder (checked in their own test files), not in the
     -- 2026-10-13 baseline.
     and p.proname not in ('tick_grocery_item', 'untick_grocery_item', 'add_missing_to_grocery',
-                          'daily_cap_for', 'take_daily_use', 'give_back_daily_use');
+                          'daily_cap_for', 'take_daily_use', 'give_back_daily_use',
+                          'list_expired_scan_photos');
   if n <> 28 then raise exception 'expected 28 public functions, found %', n; end if;
 
   if not exists (select 1 from pg_trigger where tgname = 'on_auth_user_created' and tgrelid = 'auth.users'::regclass) then
