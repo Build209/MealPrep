@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import { SignOutCard } from '../../auth/SignOutCard';
 import { AppText } from '../../ui/AppText';
 import { Card } from '../../ui/Card';
@@ -9,6 +10,7 @@ import { env, isSupabaseConfigured } from '../../lib/env';
 const build = buildLine(env.gitSha);
 
 export default function HomeScreen() {
+  const router = useRouter();
   return (
     <Screen title="Home">
       <Card>
@@ -27,6 +29,14 @@ export default function HomeScreen() {
           </AppText>
         ) : null}
       </Card>
+      <AppText
+        bold
+        accessibilityRole="link"
+        onPress={() => router.push('/plans')}
+        style={{ alignSelf: 'flex-start', textDecorationLine: 'underline', paddingVertical: 10 }}
+      >
+        {'Plans & usage'}
+      </AppText>
       <ComingSoon phase={3} what="Recipes you can cook from your pantry." />
       <SignOutCard />
     </Screen>

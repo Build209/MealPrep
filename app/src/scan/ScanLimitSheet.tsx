@@ -1,20 +1,17 @@
-import { Linking, Modal, Platform, Pressable, View } from 'react-native';
+import { useRouter } from 'expo-router';
+import { Modal, Pressable, View } from 'react-native';
 import { colors, layout, radius, space } from '../theme/tokens';
 import { AppText } from '../ui/AppText';
 import { Button } from '../ui/Button';
-import { LIVE_PLANS_URL, OUT_OF_SCANS_COPY } from './allowance';
-
-/** Opens the live app's plans in a new tab on the web, or the browser on a phone. */
-export function openLivePlans(): void {
-  if (Platform.OS === 'web' && typeof window !== 'undefined') {
-    window.open(LIVE_PLANS_URL, '_blank', 'noopener,noreferrer');
-    return;
-  }
-  void Linking.openURL(LIVE_PLANS_URL).catch(() => undefined);
-}
+import { OUT_OF_SCANS_COPY, PLANS_ROUTE } from './allowance';
 
 /** Shown when the Scan button is tapped with no scans left: what the allowance is, and where plans are. */
 export function ScanLimitSheet({ visible, limit, onClose }: { visible: boolean; limit: number; onClose: () => void }) {
+  const router = useRouter();
+  const seePlans = () => {
+    onClose();
+    router.push(PLANS_ROUTE);
+  };
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(27,31,59,0.45)' }}>
@@ -41,7 +38,7 @@ export function ScanLimitSheet({ visible, limit, onClose }: { visible: boolean; 
           <AppText variant="secondary" color="muted">
             {OUT_OF_SCANS_COPY.plans}
           </AppText>
-          <Button label={OUT_OF_SCANS_COPY.seePlans} kind="secondary" accessibilityRole="link" onPress={openLivePlans} />
+          <Button label={OUT_OF_SCANS_COPY.seePlans} kind="secondary" accessibilityRole="link" onPress={seePlans} />
           <Button label={OUT_OF_SCANS_COPY.close} kind="quiet" onPress={onClose} />
         </View>
       </View>

@@ -6,8 +6,8 @@ import { adminClient, freshEmail } from './local-supabase';
  * functions (and the live pantry-vision must never be called from a test), so the request to
  * /functions/v1/pantry-vision is intercepted and answered here in the function's real shape.
  * Everything else (sign-in, the allowance read, the pantry reads and writes) is the real local server.
- * The Scan button lives on the Pantry tab. "See plans" opens the live app in a new tab; that page
- * is answered here too, so no test ever loads the live site.
+ * The Scan button lives on the Pantry tab. "See plans" opens the app's own /plans screen; the live
+ * site is answered here too, so no test ever loads it.
  */
 test.describe.configure({ mode: 'serial' });
 
@@ -189,11 +189,11 @@ test('allowance on the button, shelf scan, review edits, save writes the rows', 
   ]);
 });
 
-test('no scans left: the button says so, a sheet explains the allowance, See plans opens the live app', async ({ page, context }) => {
+test('no scans left: the button says so, a sheet explains the allowance, See plans opens the plans screen', async ({ page, context }) => {
   const { userId } = await newSignedInUser(page, 'usedup');
   const seeded = await adminClient().from('photo_scan_usage').insert({ user_id: userId, period: period(), scans: 3 });
   expect(seeded.error).toBeNull();
-  // The live app's page is answered here: a test never loads the live site.
+  // The live site is answered here: a test never loads it.
   const livePages: string[] = [];
   await context.route('https://mealplanatic.app/**', async (route) => {
     livePages.push(route.request().url());
@@ -209,17 +209,11 @@ test('no scans left: the button says so, a sheet explains the allowance, See pla
   await expect(page.getByText('Your scans start again on the 1st.', { exact: false })).toBeVisible();
   await expect(page).toHaveURL(/\/pantry$/); // the sheet, not the scan screen
 
-  const opened = context.waitForEvent('page');
   await page.getByRole('link', { name: 'See plans' }).click();
-  const plans = await opened;
-  await plans.waitForLoadState();
-  expect(plans.url()).toBe('https://mealplanatic.app/');
-  expect(livePages).toEqual(['https://mealplanatic.app/']);
-  await plans.close();
-  await expect(page).toHaveURL(/\/pantry$/); // the app stays where it was
-
-  await page.getByRole('button', { name: 'Close', exact: true }).last().click();
+  await expect(page).toHaveURL(/\/plans$/);
+  await expect(page.getByTestId('current-plan')).toHaveText('Free');
   await expect(page.getByText('Your plan includes 3 photo scans a month.', { exact: false })).toHaveCount(0);
+  expect(livePages).toEqual([]);
   expect(captured).toHaveLength(0);
 });
 
