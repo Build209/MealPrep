@@ -22,6 +22,15 @@
           "photosPermission": "Allow MealPlanatic to open a photo of a shelf, your fridge or a grocery receipt to scan it.",
           "microphonePermission": false
         }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Allow MealPlanatic to use your location to find nearby grocery stores and deals.",
+          "isIosBackgroundLocationEnabled": false,
+          "isAndroidBackgroundLocationEnabled": false,
+          "isAndroidForegroundServiceEnabled": false
+        }
       ]
     ]
   }
