@@ -73,6 +73,13 @@ untouched until switch-over, when `mobile/` is deleted in the same release.
   recipe photo or a saved video; the live `recipe-import` function reads it (unchanged; same request as the old app),
   then a review form, then Save writes the person's own `recipes` row (is_master false, creator credit in source_*)
   and opens `/recipe/r_<id>`. The Import button shows this month's imports left (limits from `src/scan/planTiers.ts`).
+- `src/account/`: delete account (phase 4) at `/delete-account`, the same address as the live page that the
+  privacy policy and terms link to; Home links to it under the sign-out card. It says what is deleted (and that
+  MealPlanatic Plus is cancelled), then Delete account, a confirm step, and the live `delete-user-account`
+  function (unchanged; same request as the old app, built in `deleteRequest.ts`). Afterwards the session is
+  removed from the device and sign-in says the account was deleted. Wording is the live app's word for word
+  (`copy.ts`, checked by `tests/account-copy.test.ts`). No tomato: the delete button is ink. End to end:
+  `e2e/account-delete.spec.ts` (the function is stubbed; nothing is deleted).
 - One folder per feature as features arrive (`pantry/`, `grocery/`, `recipes/`, ...), no file over about 400 lines.
 
 ```bash

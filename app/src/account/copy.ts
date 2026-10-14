@@ -1,0 +1,58 @@
+/**
+ * Words for deleting an account (`/delete-account`).
+ *
+ * LIVE lines are copied word for word from the live app, which compliance has seen:
+ *  - mobile/config/account.ts (ACCOUNT_SHEET_COPY: the button and the confirm step)
+ *  - mobile/app/delete-account.tsx (the page: title, what is deleted, signed-out line, help line)
+ *  - mobile/lib/account/deleteAccount.ts (the error lines)
+ *  - mobile/supabase/functions/delete-user-account/index.ts (CANCEL_FAILED, the server's own words)
+ * tests/account-copy.test.ts checks they are still in those files. Lines marked NEW are written for
+ * the rebuild and have not been through compliance yet.
+ */
+export const ACCOUNT_DELETE_COPY = {
+  /** LIVE (delete-account.tsx). */
+  title: 'Delete your MealPlanatic account',
+  /** LIVE (delete-account.tsx): what is deleted, and that Plus is cancelled. */
+  whatIsDeleted:
+    'You can permanently delete your account and the personal data we store for you. This includes your profile, ' +
+    'pantry, saved recipes, meal plan, grocery lists, saved stores, and scan photos tied to your account. Deleting ' +
+    'your account also cancels MealPlanatic Plus and stops future charges.',
+  /** LIVE (account.ts). */
+  deleteButton: 'Delete account',
+  confirmTitle: 'Delete your account?',
+  confirmBody:
+    'This permanently removes your pantry, recipes, grocery list, meal plan, and profile. If you have MealPlanatic Plus, it is cancelled now and you will not be charged again. Community store prices you shared may stay visible without your name. This cannot be undone.',
+  confirmAction: 'Yes, delete my account',
+  cancel: 'Cancel',
+  /** LIVE (delete-account.tsx). */
+  signedOutHint: 'Sign in to delete your account from this page.',
+  signIn: 'Sign in',
+  /** LIVE (delete-account.tsx), shown on sign-in after deleting. */
+  deleted: 'Your account and personal data have been deleted.',
+  /** LIVE (delete-account.tsx), split around the address. */
+  helpBefore: 'Need help? Email',
+  helpAfter: 'from the address on your account and we will process your request.',
+  privacyLink: 'Privacy Policy',
+  /** NEW: the busy label while the request runs. */
+  busy: 'Deleting your account…',
+  /** Leaves the screen; same word as the plans screen's Close (src/plans/copy.ts). */
+  close: 'Close',
+} as const;
+
+/** LIVE (mobile/config/support.ts). */
+export const SUPPORT_EMAIL = 'support@mealplanatic.app';
+
+export const ACCOUNT_DELETE_ERRORS = {
+  /** LIVE (deleteAccount.ts): no session, or the server said the session is not valid (401). */
+  signedOut: 'Sign in to delete your account.',
+  /** LIVE (deleteAccount.ts). */
+  notConfigured: 'App is not configured for account deletion.',
+  /** LIVE (deleteAccount.ts): any other refusal; the server's raw database messages are not shown. */
+  failed: 'Could not delete account. Try again or contact support.',
+  /** NEW for this flow, same words as src/data/errors.ts: the request failed on the way (the old app showed the browser's own error). */
+  network: "Couldn't reach the server. Check your connection and try again.",
+  /** LIVE, the server's own words (delete-user-account CANCEL_FAILED_MESSAGE). */
+  cancelFailed:
+    'We could not cancel your MealPlanatic Plus subscription, so your account was not deleted. ' +
+    'Try again in a few minutes, or cancel in Account, Manage subscription first.',
+} as const;
