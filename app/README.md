@@ -26,6 +26,16 @@ untouched until switch-over, when `mobile/` is deleted in the same release.
   The Scan button sits on the Pantry tab. Scans are matched against the pantry with the old app's
   rules (`src/kitchen/pantryMatch.ts`): shelf items already there are shown as "Already in your pantry"
   and left unticked; receipt lines add to a matching row with the same unit. With no scans left the
+  button says so and opens a sheet about the monthly allowance, with "See plans" (opens `/plans`).
+- `src/plans/`: `/plans` and `/usage` (phase 4), linked from Home ("Plans & usage"). Plans: the current
+  plan (`profiles.plan`/`plan_tier`, `billing_subscriptions`), and for a free account on the web the
+  monthly/yearly switch, Plus, Pro and Family with price and monthly limits, the renewal terms directly
+  above the one tomato buy button. Buy and "Manage subscription" call the live `stripe-checkout` and
+  `stripe-portal` functions exactly as the old app does and go to Stripe's page; the app never sees card
+  details. Money wording is copied word for word from the live app (`src/plans/copy.ts`, checked by
+  `tests/plans-pricing.test.ts`); change it there with compliance first. Usage: this month's scans,
+  imports and Ask Forky questions against the plan's monthly limits (no daily numbers yet). The e2e
+  tests stub both Stripe functions and Stripe's pages.
   button says so and opens a sheet about the monthly allowance, with "See plans" (the live app for now).
 - `src/forky/`: Ask Forky (`/forky`), the AI chat through the live `ask-forky` function (unchanged; same
   request as the old app), with "N messages left this month" from `forky_chat_usage` and the plan limits,

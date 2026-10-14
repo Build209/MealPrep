@@ -52,11 +52,8 @@ export function isUsedUp(allowance: Allowance): allowance is Extract<Allowance, 
   return allowance.state === 'capped' && allowance.remaining <= 0;
 }
 
-/**
- * Where "See plans" goes. The new app has no plans screen until phase 4, so it opens the live
- * app; there the plans are under the account button. (The live app has no plans route of its own.)
- */
-export const LIVE_PLANS_URL = 'https://mealplanatic.app/';
+/** Where "See plans" goes: the app's own plans screen (phase 4). */
+export const PLANS_ROUTE = '/plans';
 
 /** The out-of-scans sheet. Plain words, no pressure (compliance rule 11). */
 export const OUT_OF_SCANS_COPY = {
@@ -65,7 +62,7 @@ export const OUT_OF_SCANS_COPY = {
   allowance: (limit: number) =>
     `Your plan includes ${limit} photo ${limit === 1 ? 'scan' : 'scans'} a month. Shelf, fridge, spice rack and receipt photos share them.`,
   reset: 'Your scans start again on the 1st. You can still add items by hand.',
-  plans: 'Paid plans include more scans. See plans opens the current MealPlanatic app, where plans are under your account.',
+  plans: 'Paid plans include more scans.',
   seePlans: 'See plans',
   close: 'Close',
 } as const;

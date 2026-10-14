@@ -7,8 +7,8 @@ import {
   allowanceText,
   currentUsagePeriod,
   isUsedUp,
-  LIVE_PLANS_URL,
   OUT_OF_SCANS_COPY,
+  PLANS_ROUTE,
   scanTierFor,
   usedFromResponse,
 } from '../src/scan/allowance';
@@ -58,5 +58,5 @@ test('out of scans: known only when capped and used up; sheet copy is plain', ()
   assert.equal(OUT_OF_SCANS_COPY.allowance(3), 'Your plan includes 3 photo scans a month. Shelf, fridge, spice rack and receipt photos share them.');
   const all = [OUT_OF_SCANS_COPY.title, OUT_OF_SCANS_COPY.allowance(3), OUT_OF_SCANS_COPY.reset, OUT_OF_SCANS_COPY.plans, OUT_OF_SCANS_COPY.seePlans].join(' ');
   assert.doesNotMatch(all, /\bfree\b|\bnow\b|today only|hurry|don't miss|limited/i, 'compliance rule 11: no pressure, no "free"');
-  assert.equal(LIVE_PLANS_URL, 'https://mealplanatic.app/');
+  assert.equal(PLANS_ROUTE, '/plans');
 });

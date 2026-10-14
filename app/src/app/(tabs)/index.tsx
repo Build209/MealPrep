@@ -33,6 +33,14 @@ export default function HomeScreen() {
           style={{ alignSelf: 'flex-start', paddingHorizontal: 0 }}
         />
       </View>
+      <AppText
+        bold
+        accessibilityRole="link"
+        onPress={() => router.push('/plans')}
+        style={{ alignSelf: 'flex-start', textDecorationLine: 'underline', paddingVertical: 10 }}
+      >
+        {'Plans & usage'}
+      </AppText>
       <SignOutCard />
       {build ? (
         <AppText variant="label" color="muted">
