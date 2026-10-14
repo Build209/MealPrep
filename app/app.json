@@ -12,6 +12,17 @@
       "favicon": "./assets/favicon.png",
       "output": "single"
     },
-    "plugins": ["expo-router", "expo-font"]
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Allow MealPlanatic to use your camera to scan shelves, your fridge and grocery receipts.",
+          "photosPermission": "Allow MealPlanatic to open a photo of a shelf, your fridge or a grocery receipt to scan it.",
+          "microphonePermission": false
+        }
+      ]
+    ]
   }
 }

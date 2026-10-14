@@ -37,6 +37,8 @@ The server (Supabase) is the only source of truth. This folder is the only place
 | `session.ts` | Client and signed-in user id (`useSessionUserId`). |
 | `profile.ts`, `pantry.ts` | First real queries and the quantity mutation. |
 | `online.ts` | `useIsOnline()` from TanStack Query's onlineManager. |
+| `pantryScanSave.ts` | Saves the rows kept on the scan review list: one insert, server rows back, pantry queries refetched. |
+| `scanUsage.ts` | This month's photo scans used (own `photo_scan_usage` row) and `useScanAllowance()` for the Scan button. |
 
 Adding a table: add its Row type, app type, both mappers and column list to `rows.ts` (or a
 new `rows-<feature>.ts` once it nears 400 lines), add keys, then a `<feature>.ts` with hooks.

@@ -17,6 +17,13 @@ untouched until switch-over, when `mobile/` is deleted in the same release.
 - `src/auth/`: sign-in, create account (18+ box), forgot password, sign out, and `AuthProvider`
   (session from `onAuthStateChange`). The tabs need a session; signed out goes to `/sign-in`.
   Rules and wording are in `logic.ts` and `copy.ts`, tested in `tests/auth-*.test.ts`.
+- `src/scan/`: shelf, fridge, spice rack and receipt photo scans through the live `pantry-vision` function
+  (unchanged; same request as the old app), a review list before saving, and `ScanButton` with this month's
+  allowance (`planTiers.ts` is a verbatim copy of the function's table, kept equal by a test). Route: `/scan`.
+  The Scan button sits on the Pantry tab. Scans are matched against the pantry with the old app's
+  rules (`src/kitchen/pantryMatch.ts`): shelf items already there are shown as "Already in your pantry"
+  and left unticked; receipt lines add to a matching row with the same unit. With no scans left the
+  button says so and opens a sheet about the monthly allowance, with "See plans" (the live app for now).
 - One folder per feature as features arrive (`pantry/`, `grocery/`, `recipes/`, ...), no file over about 400 lines.
 
 ```bash
