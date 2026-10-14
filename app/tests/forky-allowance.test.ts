@@ -14,7 +14,8 @@ test('tier as the function counts it: plan + plan_tier, admins get Family', () =
 test('remaining = plan limit minus this month\'s messages', () => {
   assert.deepEqual(forkyAllowanceFor('free', 2), { state: 'known', tier: 'free', limit: TIER_LIMITS.free.forkyQuestions, used: 2, remaining: TIER_LIMITS.free.forkyQuestions - 2 });
   assert.deepEqual(forkyAllowanceFor('plus', 0), { state: 'known', tier: 'plus', limit: 15, used: 0, remaining: 15 });
-  assert.equal(forkyAllowanceFor('free', 99).state === 'known' && forkyAllowanceFor('free', 99).remaining, 0);
+  const over = forkyAllowanceFor('free', 99);
+  assert.equal(over.state === 'known' ? over.remaining : null, 0);
   assert.deepEqual(forkyAllowanceFor(null, 1), { state: 'unknown' });
   assert.deepEqual(forkyAllowanceFor('free', null), { state: 'unknown' });
 });
