@@ -26,7 +26,7 @@ begin
   select count(*) into n from pg_proc p where p.pronamespace = 'public'::regnamespace
     and not exists (select 1 from pg_depend d where d.objid = p.oid and d.deptype = 'e')
     -- Added by later migrations in this folder (checked in their own test files), not live yet.
-    and p.proname not in ('tick_grocery_item', 'untick_grocery_item');
+    and p.proname not in ('tick_grocery_item', 'untick_grocery_item', 'add_missing_to_grocery');
   if n <> 28 then raise exception 'expected 28 public functions, found %', n; end if;
 
   if not exists (select 1 from pg_trigger where tgname = 'on_auth_user_created' and tgrelid = 'auth.users'::regclass) then
