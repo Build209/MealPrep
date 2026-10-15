@@ -246,6 +246,8 @@ rows with DB checks, (3) native permission prompts (camera, photos, location), (
 
 ## 3. Compliance check of money screens
 
+Review packet (every money line beside its approved source, with verdicts and rule checks): `docs/compliance-review-money-screens.md`.
+
 Money screens in the new app: `/plans` (`app/src/plans/PlansScreen.tsx`, `PlanChoice.tsx`), `/usage`, the scan / import / Forky limit sheets, the Stripe checkout and portal pages.
 
 Approved wording lives in `app/src/plans/copy.ts` (lines marked LIVE, copied word for word from the live app, compliance-approved in #252: terms `2026-10-11`, disclosure `2026-10-11.1`). Lines marked NEW have not been through compliance.
