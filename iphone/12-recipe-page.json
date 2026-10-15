@@ -1,0 +1,32 @@
+{
+  "project": "iphone",
+  "engine": "webkit",
+  "order": "12",
+  "screen": "recipe-page",
+  "route": "/recipe/r_85ab90e1-48cb-495f-8204-544d9e567ef6",
+  "purpose": "none",
+  "viewport": "393x659",
+  "screenshots": [
+    "iphone/12-recipe-page.png",
+    "iphone/12-recipe-page-bottom.png"
+  ],
+  "checks": {
+    "noSidewaysScroll": true,
+    "tapTargets": true,
+    "textFits": true,
+    "tomatoRule": true
+  },
+  "sidewaysScroll": {
+    "scrollWidth": 393,
+    "innerWidth": 393
+  },
+  "tapTargetIssues": [],
+  "tapTargetAllowed": [],
+  "clippedText": [],
+  "truncatedText": [],
+  "offscreenControls": [],
+  "tomato": [],
+  "tomatoViolations": [],
+  "notes": [],
+  "reportOnly": {}
+}
