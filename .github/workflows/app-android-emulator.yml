@@ -1,7 +1,7 @@
 name: New app Android emulator
 
 # The phone screen tour (app/e2e/phone-tour.spec.ts) in the REAL Chrome app on Android emulators:
-# a Pixel 7 (portrait and rotated) and a Pixel Fold (folded and unfolded). Catches what a
+# a Pixel 7 (portrait and rotated), a book-style foldable and a flip phone (folded and unfolded). Catches what a
 # phone-shaped desktop browser cannot: real Chrome on Android, real rotation and folding.
 # Same LOCAL Supabase stack as app-phone.yml (the emulator reaches it through `adb reverse`): never
 # connects to the live project. Script: app/e2e/emulator/run.sh.
@@ -40,9 +40,15 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # profiles: device ids to try, first one this runner's SDK knows wins (ids differ by SDK version).
           - device: pixel_7
+            profiles: pixel_7|pixel_6|pixel_5
             postures: portrait landscape
-          - device: pixel_fold
+          - device: fold
+            profiles: pixel_fold|7.6in Foldable|8in Foldable
+            postures: folded unfolded
+          - device: flip
+            profiles: 6.7in Foldable|pixel_fold
             postures: folded unfolded
     steps:
       - uses: actions/checkout@v4
@@ -107,6 +113,26 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
+      - name: Pick the device profile
+        id: profile
+        env:
+          WANT: ${{ matrix.profiles }}
+        run: |
+          avdmanager="$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager"
+          [ -x "$avdmanager" ] || avdmanager="$(command -v avdmanager)"
+          "$avdmanager" list device -c > "$RUNNER_TEMP/devices.txt"
+          echo "Device ids on this runner:"; cat "$RUNNER_TEMP/devices.txt"
+          IFS='|' read -ra wants <<< "$WANT"
+          for id in "${wants[@]}"; do
+            if grep -qxF "$id" "$RUNNER_TEMP/devices.txt"; then
+              echo "Using: $id"
+              echo "id=$id" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          done
+          echo "::error title=Android emulator::None of these device profiles exist on this runner: $WANT"
+          exit 1
+
       - name: "Phone tour on the emulator (${{ matrix.device }}: ${{ matrix.postures }})"
         uses: reactivecircus/android-emulator-runner@v2.37.0
         env:
@@ -117,7 +143,7 @@ jobs:
           api-level: 34
           target: google_apis
           arch: x86_64
-          profile: ${{ matrix.device }}
+          profile: ${{ steps.profile.outputs.id }}
           cores: 4
           ram-size: 4096M
           disk-size: 6000M
