@@ -5,6 +5,7 @@ import { useAuth } from '../../auth/AuthProvider';
 import { DataError } from '../../data/errors';
 import { importUsageAllKey, uploadImportPhotos, uploadImportVideo, useSaveImportedRecipe } from '../../data/recipeImport';
 import { env } from '../../lib/env';
+import { logEvent } from '../../lib/events';
 import { pickAndPreparePhoto, type PhotoSource } from '../../scan/pickPhoto';
 import { ImagePrepError } from '../../scan/prepareShared';
 import { createImporter } from './api';
@@ -167,6 +168,7 @@ export function useImportFlow(initialText = '') {
     setError(null);
     save.mutate(draft, {
       onSuccess: ({ id }) => {
+        logEvent('import_done', { source: draft.source.sourceType });
         setDraft(null);
         router.replace(recipeRoute(id));
       },

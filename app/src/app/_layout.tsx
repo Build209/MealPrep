@@ -8,6 +8,7 @@ import { ActivityIndicator, View } from 'react-native';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AuthProvider } from '../auth/AuthProvider';
 import { makeQueryClient } from '../lib/queryClient';
+import { useAppOpenEvent } from '../lib/useAppOpenEvent';
 import { CheckoutReturnNotice } from '../plans/CheckoutReturnNotice';
 import { enableSafeAreaViewport } from '../lib/viewport';
 import { colors, fonts } from '../theme/tokens';
@@ -40,12 +41,19 @@ export default function RootLayout() {
         <AuthProvider>
           <StatusBar style="dark" />
           <RootStack />
+          <UsageLog />
           {/* Web: the message after coming back from Stripe checkout (live app wording). */}
           <CheckoutReturnNotice />
         </AuthProvider>
       </QueryClientProvider>
     </SafeAreaProvider>
   );
+}
+
+/** Usage log: app_open once per app start for a signed-in account (src/lib/events.ts). */
+function UsageLog() {
+  useAppOpenEvent();
+  return null;
 }
 
 /**

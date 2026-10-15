@@ -5,6 +5,8 @@ import { usePantryItems } from '../data/pantry';
 import { useSavePantryScan } from '../data/pantryScanSave';
 import { scanUsageAllKey } from '../data/scanUsage';
 import { env } from '../lib/env';
+import { scanSavedProps } from '../lib/eventRules';
+import { logEvent } from '../lib/events';
 import { createScanner } from './api';
 import { pickAndPreparePhoto, type PhotoSource } from './pickPhoto';
 import { ImagePrepError } from './prepareShared';
@@ -111,6 +113,7 @@ export function useScanFlow() {
     }
     save.mutate(rows, {
       onSuccess: ({ added, toppedUp }) => {
+        logEvent('scan_saved', scanSavedProps(rows.filter((row) => row.include !== false), added.length + toppedUp.length));
         setRows([]);
         setPhase({ name: 'saved', added: added.length, toppedUp: toppedUp.length });
       },

@@ -86,6 +86,22 @@ test('create an account (18+ box required), land on Home, then sign out', async 
 
   await expectHome(page);
 
+  // Usage log (src/lib/events.ts): sign_up and app_open rows for this account, nothing personal.
+  const { userId } = await appSession(page);
+  const admin = adminClient();
+  await expect
+    .poll(async () => {
+      const { data } = await admin.from('app_events').select('name').eq('user_id', userId);
+      return (data ?? []).map((r) => r.name).sort();
+    }, { timeout: 15_000 })
+    .toEqual(expect.arrayContaining(['app_open', 'sign_up']));
+  const rows = await admin.from('app_events').select('name, props, platform, session_id').eq('user_id', userId);
+  expect(rows.error).toBeNull();
+  for (const row of rows.data!) {
+    expect(row.platform).toBe('web');
+    expect(JSON.stringify(row.props)).not.toContain('@');
+  }
+
   await signOutFromAccount(page);
   await expectSignInScreen(page);
 });

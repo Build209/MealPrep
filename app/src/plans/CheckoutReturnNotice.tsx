@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../auth/AuthProvider';
 import { fetchOwnProfile } from '../data/profile';
 import { keys } from '../data/keys';
+import { logEvent } from '../lib/events';
 import { colors, layout, radius, space, touch } from '../theme/tokens';
 import { AppText } from '../ui/AppText';
 import { CHECKOUT_RETURN_COPY } from './copy';
@@ -16,6 +17,8 @@ let startupOutcome: CheckoutReturn | null =
   Platform.OS === 'web' && typeof window !== 'undefined' ? parseCheckoutReturn(window.location.search) : null;
 /** Whether the page was opened with a marker, so the router's copy of it should be cleared too. */
 const openedWithMarker = startupOutcome !== null;
+/** The usage log row for this return is written once, even if the effect below runs again. */
+let returnLogged = false;
 
 /**
  * Web only. Handles the trip back from Stripe the way the live app does (CheckoutReturnHandler):
@@ -50,6 +53,12 @@ export function CheckoutReturnNotice() {
     if (outcome !== 'cancel' && (!ready || !userId)) return undefined;
 
     handled.current = true;
+
+    if (!returnLogged && (outcome === 'success' || outcome === 'cancel')) {
+      returnLogged = true;
+      // Signed-out visitors record nothing (logEvent checks the session).
+      logEvent(outcome === 'success' ? 'checkout_success' : 'checkout_cancelled');
+    }
 
     if (outcome === 'cancel') {
       startupOutcome = null;
