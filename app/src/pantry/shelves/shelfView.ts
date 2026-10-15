@@ -1,5 +1,6 @@
 import type { PantryCategory } from '../../kitchen/categories';
 import { daysUntilPantryExpiry } from '../../kitchen/expiry';
+import { isDrinkName, isPreparedDishName } from '../../kitchen/scanFiling';
 import type { PantryStorageLocation } from '../../kitchen/storage';
 import type { ShelvedItem as PantryItem } from '../types';
 import {
@@ -71,10 +72,16 @@ interface ShelfSpec {
 
 const OTHER: ShelfSpec = { id: 'other', name: 'Other', category: 'all' };
 
+/** Shelves picked by name, whatever the category: there is no leftovers or drinks category. */
+const LEFTOVERS: ShelfSpec = { id: 'leftovers', name: 'Leftovers', category: 'all' };
+const DRINKS: ShelfSpec = { id: 'drinks', name: 'Drinks', category: 'all' };
+
 const FRIDGE_SHELVES: readonly ShelfSpec[] = [
   { id: 'dairy', name: 'Dairy and eggs', category: 'dairy' },
   { id: 'produce', name: 'Produce', category: 'produce' },
   { id: 'meats', name: 'Meats', category: 'meats' },
+  LEFTOVERS,
+  DRINKS,
   { id: 'condiments', name: 'Condiments', category: 'condiments' },
   { id: 'frozen', name: 'Frozen', category: 'frozen' },
   OTHER,
@@ -85,6 +92,7 @@ const PANTRY_SHELVES: readonly ShelfSpec[] = [
   { id: 'canned', name: 'Canned goods', category: 'dry_goods' },
   { id: 'boxed', name: 'Boxed goods', category: 'dry_goods' },
   { id: 'produce', name: 'Produce', category: 'produce' },
+  DRINKS,
   { id: 'condiments', name: 'Condiments', category: 'condiments' },
   { id: 'spices', name: 'Spices', category: 'spices' },
   OTHER,
@@ -92,6 +100,8 @@ const PANTRY_SHELVES: readonly ShelfSpec[] = [
 
 function shelfIdFor(item: PantryItem, location: PantryStorageLocation, shape: PackageShape): string {
   if (location === 'fridge') {
+    if (isPreparedDishName(item.name) && item.category !== 'frozen') return 'leftovers';
+    if (isDrinkName(item.name) && item.category !== 'frozen') return 'drinks';
     if (item.category === 'dairy' || /\beggs?\b/i.test(item.name)) return 'dairy';
     // Jarred, canned or tubed "produce" is a condiment as far as the fridge shelves go.
     if (item.category === 'produce' && !isFreshProduce(item)) return 'condiments';
@@ -99,6 +109,7 @@ function shelfIdFor(item: PantryItem, location: PantryStorageLocation, shape: Pa
     return 'other';
   }
   // pantry
+  if (isDrinkName(item.name) && item.category !== 'spices') return 'drinks';
   if (item.category === 'dry_goods') {
     if (shape === 'can') return 'canned';
     if (shape === 'box') return 'boxed';

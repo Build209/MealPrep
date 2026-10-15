@@ -57,6 +57,13 @@ export const PANTRY_SCAN_STRIP_BRANDS = [
   'snack factory',
   'town house',
   'good gather',
+  'vlasic',
+  'claussen',
+  'mt olive',
+  'mt. olive',
+  'mount olive',
+  'grillos',
+  'best maid',
 ] as const;
 
 /**

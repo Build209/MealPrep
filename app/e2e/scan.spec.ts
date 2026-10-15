@@ -330,3 +330,48 @@ test('receipt scan: a bought item adds to the matching pantry row instead of mak
     location: 'pantry',
   });
 });
+
+test('shelf scan files leftovers and juice in the fridge, and near-duplicate pickles count once (phone test 2026-10-14)', async ({ page }) => {
+  const { userId } = await newSignedInUser(page, 'scanfiling');
+  await seedPantry(userId, [{ ingredient_id: 'pickles', name: 'Pickles', category: 'condiments', quantity: 1, unit: 'jar', location: 'fridge' }]);
+  const [pickles] = await serverPantry(userId);
+
+  // The model's answer as the phone test saw it: stew as cookware, juice as dry goods, pickles twice.
+  await stubPantryVision(
+    page,
+    200,
+    visionAnswer(
+      [
+        { name: 'leftover stew', quantity: 1, unit: 'container', category: 'cookware', storage: 'pantry', confidence: 0.8 },
+        { name: 'orange juice', quantity: 1, unit: 'carton', category: 'dry_goods', storage: 'pantry', confidence: 0.9 },
+        { name: 'dill pickles', quantity: 1, unit: 'jar', category: 'condiments', storage: 'fridge', confidence: 0.9 },
+        { name: 'pickle spears', quantity: 1, unit: 'jar', category: 'condiments', storage: 'fridge', confidence: 0.7 },
+      ],
+      'pantry',
+    ),
+  );
+
+  await page.goto('/pantry');
+  await expect(page.getByText('1 item', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Scan · 3 left this month' }).click();
+  await expect(page).toHaveURL(/\/scan$/);
+  await page.getByRole('radio', { name: 'Fridge', exact: true }).click();
+  await choosePhoto(page);
+
+  await expect(page.getByText('Check what we found (3)')).toBeVisible();
+  await expect(page.getByText('Already in your pantry', { exact: true })).toHaveCount(1);
+  await page.getByRole('button', { name: 'Save 2 items to pantry' }).click();
+  await expect(page.getByText('Saved 2 items to your pantry.')).toBeVisible();
+
+  const rows = await adminClient()
+    .from('pantry_items')
+    .select('id, name, category, quantity, unit, location')
+    .eq('user_id', userId)
+    .order('name');
+  expect(rows.error).toBeNull();
+  expect(rows.data!.map((r) => ({ ...r, quantity: Number(r.quantity) }))).toEqual([
+    { id: expect.any(String), name: 'Leftover Stew', category: 'meats', quantity: 1, unit: 'container', location: 'fridge' },
+    { id: expect.any(String), name: 'Orange Juice', category: 'produce', quantity: 1, unit: 'carton', location: 'fridge' },
+    { id: pickles!.id, name: 'Pickles', category: 'condiments', quantity: 1, unit: 'jar', location: 'fridge' },
+  ]);
+});

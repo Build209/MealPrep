@@ -128,7 +128,8 @@ const pantry: ShelvedItem[] = [
 
 test('shelves per place', () => {
   const fridge = buildPantryShelves(pantry, 'fridge', NOW);
-  assert.deepEqual(fridge.map((s) => s.name), ['Use soon', 'Dairy and eggs', 'Produce', 'Condiments', 'Other']);
+  // "Leftover rice" sat on Other until the Leftovers shelf (scan filing fix, 2026-10-15).
+  assert.deepEqual(fridge.map((s) => s.name), ['Use soon', 'Dairy and eggs', 'Produce', 'Leftovers', 'Condiments']);
   assert.deepEqual(fridge[0]!.tiles.map((t) => t.item.name), ['Strawberries', 'Whole milk'], 'soonest first');
   assert.deepEqual(fridge[1]!.tiles.map((t) => t.item.name), ['Cheddar', 'Eggs'], 'milk is on Use soon only');
   assert.equal(fridge[1]!.tiles[1]!.quantityBadge, '×12');
