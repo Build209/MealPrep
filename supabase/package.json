@@ -17,7 +17,8 @@
     "test:ops-alerts": "node --test scripts/ops-alerts.test.mjs",
     "test:secret-compare": "tsx scripts/secret-compare-check.ts",
     "test:verify-jwt": "tsx scripts/verify-jwt-guard-check.ts",
-    "test": "npm run test:deploy-workflow && npm run test:secret-compare && npm run test:verify-jwt && npm run test:ops-alerts && npm run test:creator-videos && npm run test:viral-recipes && npm run test:recipe-import && npm run test:pantry-vision && npm run test:ask-forky && npm run test:billing && npm run test:scan-photo-retention"
+    "test:rate-limit": "tsx scripts/rate-limit-check.ts",
+    "test": "npm run test:deploy-workflow && npm run test:secret-compare && npm run test:verify-jwt && npm run test:ops-alerts && npm run test:creator-videos && npm run test:viral-recipes && npm run test:recipe-import && npm run test:pantry-vision && npm run test:ask-forky && npm run test:billing && npm run test:scan-photo-retention && npm run test:rate-limit"
   },
   "devDependencies": {
     "tsx": "4.23.12"

@@ -25,6 +25,8 @@ const DECODES_UNVERIFIED_JWT = ['pantry-vision', 'recipe-import', 'recipeapi-pro
 const NO_VERIFY_ALLOWED = ['creator-videos', 'library-generate', 'scan-photo-retention', 'stripe-webhook'];
 
 const UNVERIFIED_DECODE = /split\(['"]\.['"]\)[\s\S]{0,400}atob\(/;
+/** _shared/rateLimit.ts bearerWithUser decodes the same way, so a function that uses it counts too. */
+const SHARED_DECODE = /\bbearerWithUser\s*\(/;
 
 // 1. The list above is complete: any function that decodes a JWT payload with atob is in it.
 const functionNames = fs
@@ -32,9 +34,19 @@ const functionNames = fs
   .filter((entry) => entry.isDirectory() && !entry.name.startsWith('_'))
   .map((entry) => entry.name);
 const decoders = functionNames
-  .filter((name) => UNVERIFIED_DECODE.test(fs.readFileSync(path.join(functionsDir, name, 'index.ts'), 'utf8')))
+  .filter((name) => {
+    const source = fs.readFileSync(path.join(functionsDir, name, 'index.ts'), 'utf8');
+    return UNVERIFIED_DECODE.test(source) || SHARED_DECODE.test(source);
+  })
   .sort();
 assert.deepEqual(decoders, [...DECODES_UNVERIFIED_JWT].sort(), 'functions that decode a JWT with atob');
+
+// 1b. The shared decoder carries the warning too.
+assert.match(
+  fs.readFileSync(path.join(functionsDir, '_shared', 'rateLimit.ts'), 'utf8'),
+  /verify-jwt-guard-check\.ts fails CI/,
+  '_shared/rateLimit.ts has the verify_jwt warning comment',
+);
 
 // 2. Each carries the warning comment next to the decode.
 for (const name of DECODES_UNVERIFIED_JWT) {

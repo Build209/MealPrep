@@ -63,22 +63,21 @@ import {
   withImportImageUrl,
 } from './recipeImageMeta.ts';
 import { parseRuleBasedRecipeFromText } from './textRecipeParse.ts';
+import { createRateLimiter } from '../_shared/rateLimit.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const USER_WINDOW_MS = 60_000;
-const USER_MAX_PER_WINDOW = 10;
+/** 10 imports a minute per account, counted in the database (in memory until its migration is live). */
+const importRateLimiter = createRateLimiter('recipe-import', 10);
 const CACHE_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 const WEB_FETCH_TIMEOUT_MS = 12_000;
 const WEB_MAX_BYTES = 1_500_000;
 const WEB_MAX_TEXT_CHARS = 48_000;
 const MAX_IMPORT_IMAGES = 4;
 const FETCH_USER_AGENT = 'MealPlanaticRecipeImport/1.0 (+https://mealplanatic.app; recipe-importer)';
-
-const userHits = new Map<string, { count: number; windowStart: number }>();
 
 type ImportRequestAction = 'link' | 'confirm_youtube' | 'photo' | 'video' | 'screenshot' | 'text';
 
@@ -106,18 +105,6 @@ function jsonResponse(body: unknown, status = 200): Response {
     status,
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   });
-}
-
-function checkUserRateLimit(userId: string): boolean {
-  const now = Date.now();
-  const bucket = userHits.get(userId);
-  if (!bucket || now - bucket.windowStart > USER_WINDOW_MS) {
-    userHits.set(userId, { count: 1, windowStart: now });
-    return true;
-  }
-  if (bucket.count >= USER_MAX_PER_WINDOW) return false;
-  bucket.count += 1;
-  return true;
 }
 
 // SECURITY: this decodes the JWT payload without checking its signature. That is only safe because
@@ -658,7 +645,7 @@ async function handleImportRequest(req: Request): Promise<Response> {
     return jsonResponse({ error: 'Sign in required', code: 'UNAUTHENTICATED' }, 401);
   }
 
-  if (!checkUserRateLimit(userId)) {
+  if (!(await importRateLimiter.take(req, userId)).allowed) {
     return jsonResponse(
       { error: 'Too many recipe imports. Wait a minute and try again.', code: 'RATE_LIMIT' },
       429,
