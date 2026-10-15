@@ -35,6 +35,7 @@ import {
   validatePublicHttpFetchUrl,
 } from '../functions/recipe-import/ssrfGuard.ts';
 import { validateUserImportStoragePath } from '../functions/recipe-import/storagePathValidation.ts';
+import { formatImportCostLine, readGeminiUsage } from '../functions/recipe-import/importCostLog.ts';
 import {
   parseRuleBasedRecipeFromText,
   recipeSignalsInText,
@@ -235,6 +236,35 @@ assert.equal(
   ),
   'https://www.example.com/images/dish.jpg',
 );
+
+// Cost log: one numbers-only line per answered Gemini call. No URLs, ids or recipe text.
+const costUsage = readGeminiUsage({ promptTokenCount: 41250, candidatesTokenCount: 812, thoughtsTokenCount: 1500 });
+assert.deepEqual(costUsage, { tokensIn: 41250, tokensOut: 812, thinking: 1500 });
+assert.deepEqual(readGeminiUsage(undefined), { tokensIn: 0, tokensOut: 0, thinking: 0 });
+assert.deepEqual(readGeminiUsage({ promptTokenCount: 'x', candidatesTokenCount: -3 }), {
+  tokensIn: 0,
+  tokensOut: 0,
+  thinking: 0,
+});
+assert.equal(
+  formatImportCostLine({
+    outcome: 'ok',
+    label: { kind: 'video', source: 'youtube' },
+    ms: 8421.6,
+    usage: costUsage,
+    model: 'gemini-2.5-flash',
+  }),
+  'recipe-import: extract ok kind=video source=youtube ms=8422 tokensIn=41250 tokensOut=812 thinking=1500 model=gemini-2.5-flash',
+);
+const sneakyLine = formatImportCostLine({
+  outcome: 'rejected',
+  label: { kind: 'link', source: 'https://evil.example/path?u=1 user@x' },
+  ms: 10,
+  usage: costUsage,
+  model: 'gemini 3/flash',
+});
+assert.doesNotMatch(sneakyLine, /https?:|\/|\?|@| user/);
+assert.match(sneakyLine, /^recipe-import: extract rejected kind=link source=\S+ ms=10 /);
 
 // The old app's client half (lib/recipeImport, the import box, the share target): the old app's recipe-import-mobile-check (retired with mobile/ at the switch-over).
 

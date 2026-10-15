@@ -3,6 +3,7 @@ import { Platform, Pressable, ScrollView, View } from 'react-native';
 import { accountWasJustDeleted, clearAccountDeleted } from '../account/afterDelete';
 import { ACCOUNT_DELETE_COPY } from '../account/copy';
 import { parseChannel, signUpRedirect } from '../lib/channel';
+import { logEvent } from '../lib/events';
 import { env } from '../lib/env';
 import { getSupabase } from '../lib/supabase';
 import { colors, layout, radius, space, touch } from '../theme/tokens';
@@ -116,6 +117,10 @@ function AuthForm() {
       setNotice(result.notice);
       setPassword('');
     }
+    // Usage log: only a plain ok means a session exists (a confirm-email notice records sign_up
+    // later, when the confirm link signs the person in: src/lib/useAppOpenEvent.ts).
+    if (!result.notice && mode === 'sign-in') logEvent('sign_in');
+    if (!result.notice && mode === 'sign-up') logEvent('sign_up');
     // A plain ok means signed in: AuthProvider gets the session and the route moves on.
   }
 

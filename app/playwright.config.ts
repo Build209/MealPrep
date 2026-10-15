@@ -10,6 +10,8 @@ const port = Number(process.env.E2E_PORT ?? 4173);
 
 export default defineConfig({
   testDir: './e2e',
+  // The phone screen tour runs only in playwright.phone.config.ts (phone profiles, screenshots).
+  testIgnore: ['**/phone-tour.spec.ts'],
   timeout: 60_000,
   expect: { timeout: 15_000 },
   fullyParallel: false,

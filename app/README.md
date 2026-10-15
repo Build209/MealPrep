@@ -90,6 +90,14 @@ it is in git history only. Edge functions are in `../supabase/functions`, the da
   `src/plans/CurrentPlan.tsx`; shown only for a live subscription), then "Plans & usage", "Delete account" and the
   sign-out card. It is the "Account, Manage subscription" the approved renewal terms name
   (`tests/account-screen-copy.test.ts` keeps the two in step). End to end: `e2e/account.spec.ts` (stripe-portal stubbed).
+- Tabs and screen-to-screen feel (`src/app/(tabs)/_layout.tsx`, `src/app/_layout.tsx`): a Feather line icon
+  (`@expo/vector-icons` 15.1.1, the version `mobile/` uses) over each tab label, ink when active and muted
+  otherwise, hidden from screen readers. The bar is its base height plus the bottom safe-area inset; on the web,
+  `src/lib/viewport.ts` adds `viewport-fit=cover` so iPhone Safari reports the home-indicator inset. Screens
+  above the tabs get the top and bottom insets from the stack. Tabs load on first open (not preloaded: on the
+  web, tabs you are not on stay in the page, so preloading duplicated their content). Tabs cross-fade (150 ms),
+  phone stack screens fade, web screens fade in once on open (160 ms, `src/ui/Screen.tsx`); all off with
+  reduced motion. Phone tour test "tab bar: icons over labels, on screen, above the safe area".
 - One folder per feature as features arrive (`pantry/`, `grocery/`, `recipes/`, ...), no file over about 400 lines.
 
 ```bash
@@ -123,3 +131,34 @@ npx playwright install chromium && npm run e2e
 ```
 
 The tests refuse any Supabase address that is not on this machine.
+
+Phone pass: `.github/workflows/app-phone.yml` runs every spec in `e2e/` on two phone profiles
+(`playwright.phone.config.ts`: `iphone` = iPhone 15 in WebKit when CI can install it, else Chromium
+with the iPhone's size, user agent and touch; `android` = Pixel 7 in Chromium), plus the screen tour
+`e2e/phone-tour.spec.ts` (phone config only). The tour seeds a local account, stubs the edge functions,
+visits every screen of SWITCHOVER.md section 2 that a browser can reach and, per screen, saves
+`phone-screens/<project>/<NN>-<screen>.png` (plus `-bottom.png` when the screen scrolls) and runs the
+checks in `e2e/phone-checks.ts`: no sideways scroll, tap targets at least 44x44 px (allowed: links inside
+a sentence, and controls inside a bigger tappable one), no clipped text (ellipsis on purpose is only
+reported), and tomato only in a camera or money context (the "Plan" in the wordmark is reported as
+brand, never a failure). `e2e/phone-report.mjs` writes `phone-screens/phone-report.json` and `.md`.
+Results: artifact `phone-screens` on every run; branch `phone-screens` after each push to `rebuild/v1`
+or a manual run; branch `phone-screens-pr-<number>` for pull requests from this repository
+(`git fetch origin phone-screens && git checkout FETCH_HEAD -- .` in an empty folder). Locally, after
+the export: `npx playwright install chromium webkit && npx playwright test -c playwright.phone.config.ts
+&& node e2e/phone-report.mjs`.
+
+Site tests: `e2e-site/` checks the whole GitHub Pages site (`scripts/build-site.sh` output in `site/`)
+served the way Pages serves it (`e2e-site/serve-pages.mjs`: unknown addresses get `404.html` with
+status 404, folders get a trailing slash). Covered: `/` opens the app; deep links (`/pantry`,
+`/recipes/search`, `/delete-account`, ...) open the app on that route; the legal pages at
+`/terms.html`, `/privacy.html`, `/terms/`, `/privacy/`; the redirect stubs; `/209/`; and the
+service-worker clean-up (a stand-in of the old worker, `e2e-site/fixtures/old-sw.js`, is installed at
+`/sw.js` and then replaced by the site's `sw.js`). Chromium only. Built with dummy Supabase settings;
+every request off the machine is blocked. CI: job `site-e2e` in `.github/workflows/site-build.yml`.
+
+```bash
+EXPO_PUBLIC_SUPABASE_URL=https://e2e-site-dummy.supabase.co EXPO_PUBLIC_SUPABASE_ANON_KEY=dummy \
+  bash scripts/build-site.sh
+npx playwright install chromium && npx playwright test -c e2e-site
+```

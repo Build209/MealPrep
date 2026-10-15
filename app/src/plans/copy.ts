@@ -57,6 +57,18 @@ export const PLANS_COPY = {
   privacyLink: 'Privacy Policy',
   close: 'Close',
   loading: 'Loading your plan…',
+  /** NEW (compliance review fix 3): the plan or subscription could not be read. Not about buying, so not genericError. */
+  loadError: "Couldn't load your plan. Please try again.",
+} as const;
+
+/**
+ * LIVE: CHECKOUT_RETURN_COPY (mobile/config/pricing.ts), word for word. Shown once when Stripe sends
+ * the browser back (`?checkout=success|cancel`). tests/plans-pricing.test.ts checks they still match.
+ */
+export const CHECKOUT_RETURN_COPY = {
+  unlocked: "You're on a paid MealPlanatic plan. Your new monthly limits are ready.",
+  pending: 'Payment received. Your plan will unlock in a moment; reopen the app if it does not.',
+  cancelled: 'Checkout closed. You have not been charged.',
 } as const;
 
 /** LIVE: AccountPlanSection's "Includes ..." line. */

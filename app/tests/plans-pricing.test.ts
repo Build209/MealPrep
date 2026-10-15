@@ -3,7 +3,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { PLANS_COPY, SUBSCRIPTION_STATUS_COPY, includesLine } from '../src/plans/copy';
+import { CHECKOUT_RETURN_COPY, PLANS_COPY, SUBSCRIPTION_STATUS_COPY, includesLine } from '../src/plans/copy';
+import { parseCheckoutReturn, PLAN_UNLOCK_POLL, stripCheckoutReturn } from '../src/plans/checkoutReturn';
 import {
   billingErrorMessage,
   checkoutBody,
@@ -194,6 +195,9 @@ test('LIVE wording is still word for word in the old app (snapshot)', () => {
     PLANS_COPY.freeBlurb,
     PLANS_COPY.freeBlurbNativeNoBilling,
     PLANS_COPY.paidBlurb,
+    CHECKOUT_RETURN_COPY.unlocked,
+    CHECKOUT_RETURN_COPY.pending,
+    CHECKOUT_RETURN_COPY.cancelled,
     SUBSCRIPTION_STATUS_COPY.pastDue,
     'Your plan ends on ${date}. You will not be charged again.',
     'Renews on ${date}.',
@@ -217,4 +221,24 @@ test('renewal terms match the server wording the consent record names', () => {
   ] as const) {
     assert.match(prices, new RegExp(`${tier}: \\{ month: \\{ unitAmount: ${m}, currency: 'usd' \\}, year: \\{ unitAmount: ${y}, currency: 'usd' \\} \\}`), tier);
   }
+});
+
+test('coming back from Stripe: markers read and removed like the live app', () => {
+  assert.equal(parseCheckoutReturn('?checkout=success'), 'success');
+  assert.equal(parseCheckoutReturn('checkout=cancel'), 'cancel');
+  assert.equal(parseCheckoutReturn('?billing=return'), 'portal');
+  assert.equal(parseCheckoutReturn('?checkout=paid'), null);
+  assert.equal(parseCheckoutReturn(''), null);
+  assert.equal(stripCheckoutReturn('?checkout=success'), '');
+  assert.equal(stripCheckoutReturn('?a=1&checkout=cancel&billing=return'), '?a=1');
+  assert.deepEqual(PLAN_UNLOCK_POLL, { intervalMs: 2_000, attempts: 10 });
+  // The server sends people back to exactly these markers.
+  const server = readFileSync(join(functions, '_shared', 'billingText.ts'), 'utf8');
+  assert.ok(server.includes('?checkout=success') && server.includes('?checkout=cancel'));
+  assert.match(CHECKOUT_RETURN_COPY.cancelled, /not been charged/);
+});
+
+test('a plan that fails to load says so, not "could not start checkout"', () => {
+  assert.equal(PLANS_COPY.loadError, "Couldn't load your plan. Please try again.");
+  assert.doesNotMatch(PLANS_COPY.loadError, /checkout/i);
 });

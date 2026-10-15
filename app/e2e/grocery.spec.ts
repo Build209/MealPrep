@@ -171,7 +171,7 @@ test('offline: changes are blocked with the offline message', async ({ page, con
   await expect(tickBox(page, 'Milk')).toBeEnabled();
 
   await context.setOffline(true);
-  await expect(page.getByText("You're offline. Changes need a connection.")).toBeVisible();
+  await expect(page.getByText("You're offline. Changes need a connection.").filter({ visible: true })).toBeVisible();
   await expect(addButton(page)).toBeDisabled();
   await expect(tickBox(page, 'Milk')).toBeDisabled();
   await context.setOffline(false);

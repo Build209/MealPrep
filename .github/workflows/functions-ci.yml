@@ -12,6 +12,7 @@ on:
       - "db/supabase/migrations/20261013000000_live_baseline.sql"
       - ".github/workflows/functions-ci.yml"
       - ".github/workflows/deploy-function.yml"
+      - ".github/workflows/ops-alerts.yml"
   push:
     branches: [rebuild/v1, main]
     paths:
@@ -22,6 +23,7 @@ on:
       - "db/supabase/migrations/20261013000000_live_baseline.sql"
       - ".github/workflows/functions-ci.yml"
       - ".github/workflows/deploy-function.yml"
+      - ".github/workflows/ops-alerts.yml"
 
 permissions:
   contents: read

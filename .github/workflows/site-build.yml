@@ -2,7 +2,8 @@ name: Site build (rebuild)
 
 # Builds the full GitHub Pages site for the new app (app/scripts/build-site.sh) and checks that
 # every public address the live site serves today is still in it. Uploads the folder as a
-# build artifact to look at.
+# build artifact to look at. Job `site-e2e` builds it again with dummy settings and runs the
+# browser tests in app/e2e-site against it.
 #
 # It does NOT deploy anything and does not touch GitHub Pages. The live site only comes from
 # `main` through pages.yml.
@@ -12,7 +13,7 @@ on:
       - "app/**"
       - "New/**"
       - ".github/workflows/site-build.yml"
-      - "docs/pages.switchover.yml"
+      - ".github/workflows/pages.yml"
 
 permissions:
   contents: read
@@ -56,23 +57,27 @@ jobs:
                    smart-shop.html smart-shop/index.html pantry-staples.html pantry-staples/index.html \
                    profile.html profile/index.html admin.html admin/index.html \
                    preview/video-recipe-detail.html preview/video-recipe-detail/index.html \
-                   privacy/terms.html terms/privacy.html zcta-centroids.json; do
+                   privacy/terms.html terms/privacy.html zcta-centroids.json \
+                   manifest.webmanifest og-image.png robots.txt sitemap.xml \
+                   icons/icon-192.png icons/icon-512.png icons/apple-touch-icon.png; do
             test -f "$f" || { echo "missing: $f"; exit 1; }
           done
           # SPA fallback is the app itself.
           cmp index.html 404.html
-          # Legal pages are the approved files, byte for byte.
-          # (mobile/ is deleted at the switch-over; then app/public is the only copy.)
-          if [ -d ../../mobile/public ]; then
-            cmp terms.html ../../mobile/public/terms.html
-            cmp privacy.html ../../mobile/public/privacy.html
-          fi
+          # Legal pages are the approved files, byte for byte. app/public is the only copy
+          # (the old mobile/public copy went with mobile/ at the switch-over).
           cmp terms.html ../public/terms.html
           cmp privacy.html ../public/privacy.html
           test "$(cat CNAME)" = "mealplanatic.app"
           # Assets are linked from the site root, and the live settings are in the bundle.
           grep -q 'src="/_expo/static/js/web/' index.html
           grep -rqF 'okkwapgyadpaifpmkcex.supabase.co' _expo/static/js/web/
+          # Search, share and install tags survive the site build (404.html is the same file).
+          grep -qF '<meta name="description" content="Plan meals from what you already have.' index.html
+          grep -qF '<link rel="manifest" href="/manifest.webmanifest" />' index.html
+          grep -qF '<meta property="og:url" content="https://mealplanatic.app/" />' index.html
+          grep -qF 'Sitemap: https://mealplanatic.app/sitemap.xml' robots.txt
+          if grep -q '^Disallow: *[^ ]' robots.txt; then echo "robots.txt must not block anything"; exit 1; fi
           # Redirect stubs point where they should.
           grep -qF "'/recipes/search'" recipes/index.html
           grep -qF "'/stores'" smart-shop/index.html
@@ -90,3 +95,46 @@ jobs:
           path: app/site
           include-hidden-files: true
           retention-days: 7
+
+  # Browser tests of the built site, served the way GitHub Pages serves it (app/e2e-site).
+  # Built with DUMMY Supabase settings (not the live project); the tests block every request
+  # that leaves the runner, so nothing reaches Supabase or any other server.
+  site-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install
+        working-directory: app
+        run: |
+          if [ -f package-lock.json ]; then npm ci; else npm install --no-audit --no-fund; fi
+      - name: Install Chromium for Playwright
+        working-directory: app
+        run: npx playwright install --with-deps chromium
+      - name: Build the site (dummy settings)
+        env:
+          EXPO_PUBLIC_SUPABASE_URL: https://e2e-site-dummy.supabase.co
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: sb_publishable_e2e_site_dummy_not_a_real_key
+          EXPO_PUBLIC_GIT_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: bash app/scripts/build-site.sh
+      - name: The build has the dummy address, not the live one
+        working-directory: app/site
+        run: |
+          grep -rqF 'e2e-site-dummy.supabase.co' _expo/static/js/web/
+          if grep -rqF 'okkwapgyadpaifpmkcex' _expo/static/js/web/; then echo "live project address in the test build"; exit 1; fi
+      - name: Site tests (Chromium)
+        working-directory: app
+        run: npx playwright test -c e2e-site
+      - name: Upload Playwright report and traces
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: site-e2e-report
+          path: |
+            app/e2e-site/playwright-report
+            app/e2e-site/test-results
+          if-no-files-found: ignore
+          retention-days: 14

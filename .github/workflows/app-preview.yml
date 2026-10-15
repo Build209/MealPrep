@@ -65,6 +65,18 @@ jobs:
           # The public settings and the preview label made it into the bundle.
           grep -rqF 'okkwapgyadpaifpmkcex.supabase.co' _expo/static/js/web/
           grep -rqF 'Preview build' _expo/static/js/web/
+          # Search, share and install tags (scripts/web-head.ts) and the files they point at.
+          grep -qF '<meta name="description" content="Plan meals from what you already have.' index.html
+          grep -qF '<link rel="manifest" href="/manifest.webmanifest" />' index.html
+          grep -qF '<meta property="og:image" content="https://mealplanatic.app/og-image.png" />' index.html
+          grep -qF '<meta name="twitter:card" content="summary_large_image" />' index.html
+          test "$(grep -c 'name="theme-color"' index.html)" = "1"
+          for f in manifest.webmanifest og-image.png robots.txt sitemap.xml icons/icon-192.png \
+                   icons/icon-512.png icons/maskable-192.png icons/maskable-512.png icons/apple-touch-icon.png; do
+            test -f "$f" || { echo "missing: $f"; exit 1; }
+          done
+          node -e 'const m=JSON.parse(require("fs").readFileSync("manifest.webmanifest","utf8")); if(m.start_url!=="/"||m.display!=="standalone") process.exit(1)'
+          sed -n '/<head>/,/<\/head>/p' index.html
           ls -la
       - name: Store the build on the app-preview branch
         if: github.event_name != 'pull_request'

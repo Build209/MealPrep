@@ -18,9 +18,9 @@ const CORS = {
 const WHAT_IS_DELETED =
   'You can permanently delete your account and the personal data we store for you. This includes your profile, ' +
   'pantry, saved recipes, meal plan, grocery lists, saved stores, and scan photos tied to your account. Deleting ' +
-  'your account also cancels MealPlanatic Plus and stops future charges.';
+  'your account also cancels your MealPlanatic plan and stops future charges.';
 const CONFIRM_BODY =
-  'This permanently removes your pantry, recipes, grocery list, meal plan, and profile. If you have MealPlanatic Plus, it is cancelled now and you will not be charged again. Community store prices you shared may stay visible without your name. This cannot be undone.';
+  'This permanently removes your pantry, recipes, grocery list, meal plan, and profile. If you have a paid MealPlanatic plan, it is cancelled now and you will not be charged again. Community store prices you shared may stay visible without your name. This cannot be undone.';
 
 async function newSignedInUser(page: Page, label: string): Promise<{ email: string; accessToken: string }> {
   const email = freshEmail(label);

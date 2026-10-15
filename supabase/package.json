@@ -15,7 +15,8 @@
     "test:scan-photo-retention": "tsx scripts/scan-photo-retention-check.ts",
     "test:deploy-workflow": "tsx scripts/deploy-workflow-check.ts",
     "test:legal-pages": "tsx scripts/legal-pages-check.ts",
-    "test": "npm run test:deploy-workflow && npm run test:creator-videos && npm run test:viral-recipes && npm run test:recipe-import && npm run test:pantry-vision && npm run test:ask-forky && npm run test:billing && npm run test:scan-photo-retention && npm run test:legal-pages"
+    "test:ops-alerts": "node --test scripts/ops-alerts.test.mjs",
+    "test": "npm run test:deploy-workflow && npm run test:ops-alerts && npm run test:creator-videos && npm run test:viral-recipes && npm run test:recipe-import && npm run test:pantry-vision && npm run test:ask-forky && npm run test:billing && npm run test:scan-photo-retention && npm run test:legal-pages"
   },
   "devDependencies": {
     "tsx": "4.23.12"

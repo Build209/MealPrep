@@ -16,6 +16,8 @@ new app's tests run against what is actually live.
 | `tests/add_missing_check.sql` | Checks for that function: merges into open rows of the same unit, ticked rows untouched, a repeat call adds nothing, a second recipe adds once, other people's lists out of reach, anon refused. Rolls back. |
 | `supabase/migrations/20261014090000_daily_caps.sql` | **Not on live; needs the owner's yes and compliance review (terms update, rule 11).** Daily caps on paid plans (spec section 4): table `daily_usage` and new bodies for the six claim/settle/refund allowance functions (same signatures). A daily refusal returns -2, which the deployed edge functions already treat as refused. |
 | `tests/daily_caps_check.sql` | Checks for daily caps: each tier stops at its cap with monthly room left, free uncapped, admin = Family, comped follows its tier, new Pacific day resets, refunds return one, own rows only, anon refused. Rolls back. |
+| `supabase/migrations/20261014100000_db_hardening.sql` | **Not on live; needs the owner's yes.** `user_id` indexes on pantry, grocery, deal votes, deals (`reported_by`) and recipes (`created_by`); `search_creator_videos` no longer callable signed out; new functions made by `postgres` no longer get EXECUTE for `anon` or PUBLIC by default. Header lists every function with its decision. |
+| `tests/db_hardening_check.sql` | Checks for that file: the indexes exist, anon can run only `is_admin` and `nearby_stores`, no PUBLIC grants except `is_admin`, signed-in and service-role callers keep their functions, signed-out reads of tables whose policies call `is_admin()` still work, a new function gets no anon/PUBLIC EXECUTE. Rolls back. |
 | `tests/plain-postgres-stubs.sql` | Small stand-ins for Supabase's `auth` and `storage` schemas, to run the checks on a bare Postgres with no Docker. |
 | `scripts/check-baseline.sh` | Applies the baseline if needed, then runs the checks. Refuses hosted Supabase URLs. |
 
@@ -41,6 +43,8 @@ createdb scratch && DB_URL=postgresql:///scratch db/scripts/check-baseline.sh --
 | `20261014030000_add_missing_to_grocery.sql` | Yes, 2026-10-14 (owner's yes). |
 | `20261014080000_recipes_read_own.sql` | Yes, 2026-10-14 (owner's yes): signed-in people read master + own recipes only. |
 | `20261014090000_daily_caps.sql` | No. Needs the owner's yes and compliance review. |
+| `20261014100000_db_hardening.sql` | Yes, 2026-10-14 (owner's yes). |
+| `20261014110000_scan_photo_retention.sql` | Yes, 2026-10-14 (owner's yes): #260, daily job `scan-photos-retention-daily` at 10:23 UTC. |
 
 ## Rules
 
@@ -63,8 +67,9 @@ because the test machine had no PostGIS; CI builds them with PostGIS.
 
 - New functions get EXECUTE for `anon` and `authenticated` by default (Supabase's default
   privileges). Every new `security definer` function must revoke it explicitly, as the existing
-  ones do. Worth a default-privileges change later, with the owner's yes.
+  ones do. **File ready, not live:** `20261014100000_db_hardening.sql` (anon and PUBLIC only).
 - `meal_plan_items.leftover_of_id` and `linked_leftover_id` have no foreign key.
 - `pantry_items` and `grocery_list_items` have no index on `user_id` (fine at today's size).
+  **File ready, not live:** `20261014100000_db_hardening.sql` (plus three more per-user columns).
 - `delete_user_owned_data` does not clear `user_saved_recipes` or `user_diet_prefs` itself;
   both are removed anyway by cascades when the auth user is deleted.

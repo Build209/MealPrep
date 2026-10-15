@@ -8,6 +8,8 @@
  * No change to either function or to Stripe comes with this file.
  */
 import { env } from '../lib/env';
+import { checkoutStartedProps } from '../lib/eventRules';
+import { logEventBeforeLeaving } from '../lib/events';
 import { getSupabase } from '../lib/supabase';
 import {
   billingErrorMessage,
@@ -65,6 +67,8 @@ function leaveForStripe(url: string, name: BillingFunction): void {
 /** Starts a purchase: asks our server for a Stripe Checkout page and goes there. */
 export async function startPlanCheckout(tier: PaidTier, interval: BillingInterval): Promise<void> {
   const url = await postBillingFunction('stripe-checkout', checkoutBody(tier, interval));
+  // Usage log: waits a moment (never fails) so the row is sent before the page is left.
+  if (isStripeHostedUrl(url)) await logEventBeforeLeaving('checkout_started', checkoutStartedProps(tier, interval));
   leaveForStripe(url, 'stripe-checkout');
 }
 

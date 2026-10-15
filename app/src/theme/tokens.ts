@@ -82,4 +82,7 @@ export const touch = {
 export const layout = {
   maxWidth: 520,
   tabBarHeight: 68,
+  /** Window width from which the tabs become a left sidebar (computers). */
+  sidebarMinWidth: 1024,
+  sidebarWidth: 220,
 } as const;

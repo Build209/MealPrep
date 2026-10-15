@@ -40,8 +40,12 @@ export const ASK_FORKY_COPY = {
   genericError: 'Forky could not answer. Please try again.',
 } as const;
 
-/** "3 messages left this month", "1 message left this month", "No messages left this month". */
-export function messagesLeftText(remaining: number): string {
-  if (remaining <= 0) return 'No messages left this month';
-  return remaining === 1 ? '1 message left this month' : `${remaining} messages left this month`;
+/**
+ * "3 questions left this month", "1 question left this month", "No questions left this month".
+ * Says "questions" like the live app, the Terms and the Plans screen (compliance review row 7.21).
+ * The "this month" ending is NEW wording, pending compliance sign-off.
+ */
+export function questionsLeftText(remaining: number): string {
+  if (remaining <= 0) return 'No questions left this month';
+  return remaining === 1 ? '1 question left this month' : `${remaining} questions left this month`;
 }
