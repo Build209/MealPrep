@@ -1,0 +1,42 @@
+{
+  "project": "emulator-pixel-7-landscape-2400x1080",
+  "engine": "chromium",
+  "order": "02",
+  "screen": "sign-up-18plus",
+  "route": "/sign-in",
+  "purpose": "none",
+  "viewport": "412x783",
+  "screenshots": [
+    "emulator-pixel-7-landscape-2400x1080/02-sign-up-18plus.png"
+  ],
+  "checks": {
+    "noSidewaysScroll": true,
+    "tapTargets": true,
+    "textFits": true,
+    "tomatoRule": true
+  },
+  "sidewaysScroll": {
+    "scrollWidth": 412,
+    "innerWidth": 412
+  },
+  "tapTargetIssues": [],
+  "tapTargetAllowed": [],
+  "clippedText": [],
+  "truncatedText": [],
+  "offscreenControls": [],
+  "tomato": [
+    {
+      "text": "Plan",
+      "tag": "h1",
+      "props": [
+        "color"
+      ],
+      "context": "brand"
+    }
+  ],
+  "tomatoViolations": [],
+  "notes": [
+    "Screenshot before pressing Create account; the next screen (Home) is checked in 04."
+  ],
+  "reportOnly": {}
+}
