@@ -60,7 +60,7 @@ createdb scratch && DB_URL=postgresql:///scratch db/scripts/check-baseline.sh --
 - **Never apply the baseline to the live project.** Everything in it already exists there.
 - New database changes go in new, dated files in `db/supabase/migrations`, after the baseline.
   Applying one to live needs the owner's yes (charter).
-- The old `mobile/supabase/migrations` stays as it is until switch-over; it is history, not the source of truth.
+- The old `mobile/supabase/migrations` moved to `supabase/history/migrations` at the switch-over; it is history, not the source of truth.
 - If live changes outside this folder (a hand-made change in the dashboard), re-read it and add a
   migration here, so this folder and live stay the same.
 

@@ -19,8 +19,9 @@ import {
 const functions = join(__dirname, '..', '..', 'supabase', 'functions');
 const functionPath = join(functions, 'ask-forky', 'index.ts');
 const sharedPath = join(functions, '_shared', 'askForkyText.ts');
-// Old-app file: repoint or snapshot at switch-over (SWITCHOVER.md 1b). Missing is a failure, never a skip.
-const oldCopyPath = join(__dirname, '..', '..', 'mobile', 'config', 'askForky.ts');
+// Snapshot of the old app's mobile/config/askForky.ts (mobile/ is deleted): tests/fixtures/old-app/README.md.
+// Missing is a failure, never a skip.
+const oldCopyPath = join(__dirname, 'fixtures', 'old-app', 'config_askForky.ts.txt');
 
 const context: ForkyContext = {
   pantry: [
@@ -190,10 +191,10 @@ test('the safety words are the function\'s own', () => {
 });
 
 test('the AI notice is the old app\'s, word for word (chatbot disclosure and rule 9)', () => {
-  assert.ok(existsSync(oldCopyPath), 'mobile/config/askForky.ts is gone: repoint or snapshot this check (SWITCHOVER.md 1b)');
+  assert.ok(existsSync(oldCopyPath), 'old-app snapshot of config/askForky.ts is missing (tests/fixtures/old-app)');
   const old = readFileSync(oldCopyPath, 'utf8');
   const quoted = /aiNotice:\s*'([^']+)'/.exec(old)?.[1];
-  assert.ok(quoted, 'aiNotice found in mobile/config/askForky.ts');
+  assert.ok(quoted, 'aiNotice found in the old-app snapshot of config/askForky.ts');
   assert.equal(ASK_FORKY_COPY.aiNotice, quoted);
   for (const key of ['safetyNote', 'limitFree', 'limitPlus', 'intro', 'featureOff', 'notConfigured', 'genericError'] as const) {
     assert.ok(old.includes(JSON.stringify(ASK_FORKY_COPY[key]).slice(1, -1)) || old.includes(ASK_FORKY_COPY[key]), key);

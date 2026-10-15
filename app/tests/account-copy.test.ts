@@ -5,13 +5,14 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { ACCOUNT_DELETE_COPY, ACCOUNT_DELETE_ERRORS, SUPPORT_EMAIL } from '../src/account/copy';
 
-const mobile = join(__dirname, '..', '..', 'mobile');
+// Snapshot of the old app's files (mobile/ is deleted): tests/fixtures/old-app/README.md.
+const oldApp = join(__dirname, 'fixtures', 'old-app');
 const functions = join(__dirname, '..', '..', 'supabase', 'functions');
 
-/** Old-app file: repoint or snapshot at switch-over (SWITCHOVER.md 1b). Missing is a failure, never a skip. */
+/** Old-app file, read from the snapshot (`config/account.ts` -> `config_account.ts.txt`). Missing is a failure, never a skip. */
 function readOldApp(rel: string): string {
-  const file = join(mobile, rel);
-  assert.ok(existsSync(file), `mobile/${rel} is gone: repoint or snapshot this check (SWITCHOVER.md 1b)`);
+  const file = join(oldApp, `${rel.replace(/\//g, '_')}.txt`);
+  assert.ok(existsSync(file), `old-app snapshot of ${rel} is missing (tests/fixtures/old-app)`);
   return readFileSync(file, 'utf8');
 }
 
@@ -20,7 +21,7 @@ const squeeze = (s: string) => s.replace(/\s+/g, ' ').trim();
 /** Joins the pieces of a '...' + '...' concatenation in source so they can be compared. */
 const unsplit = (s: string) => s.replace(/'\s*\+\s*'/g, '');
 
-test('LIVE wording is still word for word in the old app', () => {
+test('LIVE wording is still word for word in the old app (snapshot)', () => {
   const read = readOldApp;
   const account = read('config/account.ts');
   const page = squeeze(read('app/delete-account.tsx'));
@@ -32,7 +33,7 @@ test('LIVE wording is still word for word in the old app', () => {
     ACCOUNT_DELETE_COPY.confirmAction,
     ACCOUNT_DELETE_COPY.cancel,
   ]) {
-    assert.ok(account.includes(`'${line}'`), `not in mobile/config/account.ts: ${line}`);
+    assert.ok(account.includes(`'${line}'`), `not in the old-app snapshot of config/account.ts: ${line}`);
   }
   for (const line of [
     ACCOUNT_DELETE_COPY.title,
@@ -42,10 +43,10 @@ test('LIVE wording is still word for word in the old app', () => {
     ACCOUNT_DELETE_COPY.helpAfter,
     ACCOUNT_DELETE_COPY.privacyLink,
   ]) {
-    assert.ok(page.includes(squeeze(line)), `not in mobile/app/delete-account.tsx: ${line}`);
+    assert.ok(page.includes(squeeze(line)), `not in the old-app snapshot of app/delete-account.tsx: ${line}`);
   }
   for (const line of [ACCOUNT_DELETE_ERRORS.signedOut, ACCOUNT_DELETE_ERRORS.notConfigured, ACCOUNT_DELETE_ERRORS.failed]) {
-    assert.ok(client.includes(`'${line}'`), `not in mobile/lib/account/deleteAccount.ts: ${line}`);
+    assert.ok(client.includes(`'${line}'`), `not in the old-app snapshot of lib/account/deleteAccount.ts: ${line}`);
   }
   assert.ok(read('config/support.ts').includes(`'${SUPPORT_EMAIL}'`), 'support address changed');
 });

@@ -824,7 +824,7 @@ function reset(): void {
   assert.equal(busyScan.status, 502);
   assert.equal(busyScan.json.code, 'UPSTREAM_ERROR');
 
-  // Crop layout (client side, pure): checked in mobile/scripts/pantry-vision-crop-layout-check.ts.
+  // Crop layout (client side, pure): was checked in the old app's pantry-vision-crop-layout-check (retired with mobile/ at the switch-over).
 
   console.log = realLog;
   console.warn = realWarn;

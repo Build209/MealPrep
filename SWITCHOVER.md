@@ -31,6 +31,8 @@ Marked **(not verified)** = read in code or docs but not tried.
 
 ### 1b. Code moves (one switch-over PR into `rebuild/v1`)
 
+Done in draft PR #290, not merged. (Branch `rebuild/switchover`: `rebuild/v1` + #286 + #287 merged in, then the boxes ticked below.)
+
 `mobile/` is deleted in the release. These must move first.
 
 **Live edge function sources: move, do not delete.**
@@ -47,11 +49,13 @@ Marked **(not verified)** = read in code or docs but not tried.
 - [ ] **Until the release, `main` still deploys from `mobile/supabase/functions`.** Any function change that lands on `main`
       before then must be ported to `supabase/functions/` on `rebuild/v1` (the 1a merge will show it as a conflict or a re-added `mobile/supabase/functions` file).
 - [ ] After the release, deploy ONE harmless function from `main` with the workflow to prove the new path works (owner, Actions tab). (not verified)
-- [ ] `mobile/supabase/functions-bundled/` (pasteable bundles, made by `mobile/scripts/bundle-edge-function.mjs`, now reading `supabase/functions/`): keep the script with the functions or drop both. Owner's call.
+- [x] `mobile/supabase/functions-bundled/` (pasteable bundles, made by `mobile/scripts/bundle-edge-function.mjs`, now reading `supabase/functions/`): keep the script with the functions or drop both. Owner's call.
+  - Draft PR #290 drops both (git history only); deploys go through the workflow. Say so if you want them back.
 
 **Old migrations and SQL: history only.**
 
-- [ ] Move `mobile/supabase/migrations/` (51 files after 1a) and the loose `mobile/supabase/*.sql` + `seed-data/` to `supabase/history/` (or rely on git history; owner's call).
+- [x] Move `mobile/supabase/migrations/` (51 files after 1a) and the loose `mobile/supabase/*.sql` + `seed-data/` to `supabase/history/` (or rely on git history; owner's call).
+  - `git mv` in draft PR #290 (51 files on `rebuild/v1` already), plus `mobile/scripts/stores-ingest/` to `supabase/history/stores-ingest/`. See `supabase/history/README.md`.
 - [ ] Add `20261013030000_scan_photo_retention.sql` to `db/supabase/migrations/` (renamed after the baseline date) once it is on live, and mark it in `db/README.md`.
 
 **Function checks: moved to `supabase/scripts/`, run by `.github/workflows/functions-ci.yml`.**
@@ -65,10 +69,13 @@ Marked **(not verified)** = read in code or docs but not tried.
 - [x] The parts of those checks that read old-app files (`mobile/config`, `mobile/lib`, `mobile/components`, `mobile/public/*.html`,
   `mobile/supabase/migrations`) were split into `mobile/scripts/*-mobile-check.ts` (and `pantry-vision-crop-layout-check.ts`).
   The old `mobile` CI job runs both halves, so nothing it checked before is lost.
-- [ ] At the release those `*-mobile-check` halves go with `mobile/`. Worth keeping on the new side:
+- [x] At the release those `*-mobile-check` halves go with `mobile/`. Worth keeping on the new side:
   the terms/privacy page checks (`plan-tiers-mobile-check`, `delete-account-billing-mobile-check`, `stripe-checkout-mobile-check`,
   `scan-photo-retention-mobile-check`, `ask-forky-mobile-check`): repoint them at `app/public/*.html` once the pages are copied there.
   The migration checks are history (`db/` is the source of truth).
+  - Draft PR #290: the page parts of all five are in `supabase/scripts/legal-pages-check.ts`, reading `app/public/*.html` (in `npm test`;
+    `functions-ci.yml` also runs on changes to the two pages). The `PLUS_ACTIVE_STATUSES` check now reads the live baseline in `db/`.
+    Retired: the old-app code parts and the old-migration parts.
 - Stay in `mobile/scripts/` (old-app UI, not function checks): `ask-forky-allowance-check`, `creator-recipes-check`, `plus-upgrade-ui-check`
   (imports repointed to `../../supabase/functions/`).
 
@@ -79,16 +86,20 @@ Marked **(not verified)** = read in code or docs but not tried.
 | `app/tests/scan-planTiers.test.ts` | `supabase/functions/_shared/planTiers.ts` | [x] repointed |
 | `app/tests/recipe-import-allowance.test.ts` | same file | [x] repointed |
 | `app/tests/creators-video-filter.test.ts` | `supabase/functions/creator-videos/fixtures/manual-hide-videos.json` | [x] repointed |
-| `app/tests/forky-request.test.ts` | `supabase/functions/ask-forky/index.ts`, `_shared/askForkyText.ts`; `mobile/config/askForky.ts` | [x] function files repointed; [ ] AI-notice check still reads `mobile/config` |
-| `app/tests/plans-pricing.test.ts` | `supabase/functions/_shared/billingText.ts`; `mobile/config/pricing.ts` and 3 more old-app files | [x] billingText repointed; [ ] old-app wording and prices still read `mobile/` |
-| `app/tests/account-copy.test.ts` | `supabase/functions/delete-user-account/index.ts`; `mobile/config/account.ts` and 3 more old-app files | [x] function repointed (own test); [ ] old-app wording still reads `mobile/` |
-| `app/tests/tokens.test.ts` | `mobile/config/theme.colors.json` | [ ] still reads `mobile/` |
+| `app/tests/forky-request.test.ts` | `supabase/functions/ask-forky/index.ts`, `_shared/askForkyText.ts`; `mobile/config/askForky.ts` | [x] function files repointed; [x] AI-notice check reads the snapshot `app/tests/fixtures/old-app/config_askForky.ts.txt` |
+| `app/tests/plans-pricing.test.ts` | `supabase/functions/_shared/billingText.ts`; `mobile/config/pricing.ts` and 3 more old-app files | [x] billingText repointed; [x] old-app wording and prices read the snapshot in `app/tests/fixtures/old-app/` |
+| `app/tests/account-copy.test.ts` | `supabase/functions/delete-user-account/index.ts`; `mobile/config/account.ts` and 3 more old-app files | [x] function repointed (own test); [x] old-app wording reads the snapshot in `app/tests/fixtures/old-app/` |
+| `app/tests/tokens.test.ts` | `mobile/config/theme.colors.json` | [x] copied to `app/src/theme/theme.colors.json`; the test reads it there |
 
 - [x] A missing file is now a FAILURE, not a skip, in all seven tests.
-- [ ] **Repoint or snapshot at switch-over:** the four `[ ]` rows above read old-app files and will FAIL once `mobile/` is deleted.
+- [x] **Repoint or snapshot at switch-over:** the four `[ ]` rows above read old-app files and will FAIL once `mobile/` is deleted.
   In the switch-over PR, for each: snapshot the old values into `app/tests/fixtures/` (or retire the check, owner's call). Do not reintroduce a skip.
+  - Draft PR #290: snapshot, nothing retired. The 8 old-app files are copied byte for byte (as `.txt`) into `app/tests/fixtures/old-app/`
+    (identical on `main`). A missing snapshot file fails the test.
 - [ ] `grep -rn "mobile" app/ .github/ db/` comes back with comments only (after the row above).
-- [ ] No code in `app/src` imports from `mobile/` (checked 2026-10-14: comments only).
+  - Draft PR #290: comments only, except `site-build.yml` (not changed here): its `cmp` against `mobile/public` sits inside
+    `if [ -d ../../mobile/public ]` and is a no-op once `mobile/` is gone. Its `paths:` still names `docs/pages.switchover.yml` (deleted) and not `pages.yml`.
+- [x] No code in `app/src` imports from `mobile/` (checked 2026-10-14: comments only; checked again in draft PR #290).
 
 **Static legal pages: same URLs after the switch.** Prepared on branch `rebuild/site-build` (PR into `rebuild/v1`).
 
@@ -127,18 +138,21 @@ Marked **(not verified)** = read in code or docs but not tried.
   - `/discover-recipes/<id>` (old recipe-detail links): open the new app's "not found" screen. The old ids are not new recipe ids.
 - [x] The build fails without `404.html` (`build-site.sh` self-check, and again in `site-build.yml`).
 - [x] Domain: `build-site.sh` writes `CNAME` (`mealplanatic.app`). GitHub ignores it for Actions deploys; the domain is the Pages setting (not verified). Nothing to change if that is right.
-- [ ] Switch-over PR: `cp docs/pages.switchover.yml .github/workflows/pages.yml`, delete the doc copy.
+- [x] Switch-over PR: `cp docs/pages.switchover.yml .github/workflows/pages.yml`, delete the doc copy. (Draft PR #290; header comment replaced, steps unchanged. Not run: `pages.yml` only runs on `main`.)
 - Note: unknown routes now return the app with HTTP status 404 (GitHub Pages serves `404.html` with 404). The page works; search engines will not index deep links. Today the old app had real files per route.
 
 **CI and preview workflows.**
 
-- [ ] `ci.yml`: drop the `mobile` job; keep `static-site`; add the function-check job from above.
-- [ ] `app-ci.yml`, `app-e2e.yml`, `db-baseline.yml`, `app-preview.yml`: add `main` to their `push` branches (today only `rebuild/v1`).
-- [ ] `preview-build.yml` (builds `mobile/` for `redesign/**`): delete.
+- [x] `ci.yml`: drop the `mobile` job; keep `static-site`; add the function-check job from above. (Draft PR #290; the function checks stay in their own `functions-ci.yml`, already on `main` pushes.)
+- [x] `app-ci.yml`, `app-e2e.yml`, `db-baseline.yml`: add `main` to their `push` branches (today only `rebuild/v1`). (Draft PR #290.)
+- [ ] `app-preview.yml`: kept as is (pushes to `rebuild/v1` only), owner decides below.
+- [x] `preview-build.yml` (builds `mobile/` for `redesign/**`): delete. (Draft PR #290.)
 - [ ] `app-preview.yml`: delete, or keep for future preview work. If deleted, delete the `app-preview` branch and disconnect the Cloudflare Pages project (owner).
-- [ ] `app/README.md`: remove "old one in `mobile/` stays live"; update the `planTiers` and tokens notes.
-- [ ] Root `README.md`, `PRODUCT.md`, `DESIGN.md`: fix any `mobile/` paths.
-- [ ] `mobile/docs/GO_LIVE.md` and other old docs: move what is still true to `docs/`, or rely on git history.
+- [x] `app/README.md`: remove "old one in `mobile/` stays live"; update the `planTiers` and tokens notes. (Draft PR #290.)
+- [x] Root `README.md`, `PRODUCT.md`, `DESIGN.md`: fix any `mobile/` paths. (Draft PR #290; also `supabase/README.md`, `db/README.md`, `.cursor/setup-agent-env.sh`.)
+- [x] `mobile/docs/GO_LIVE.md` and other old docs: move what is still true to `docs/`, or rely on git history.
+  - Draft PR #290: `docs/GO_LIVE.md` (with a STALE note on the $6.99 / $60 prices and the old screen names; numbers not changed),
+    the other four to `docs/old-app/` as history.
 
 ### 1c. Database (owner's yes for each)
 
@@ -342,7 +356,7 @@ From the spec and the "Do list". None needs code.
 - [ ] **Database backups** (paid Supabase plan, about $25 a month).
 - [ ] **Enforce HTTPS** on GitHub Pages (Do list).
 - [ ] Stripe live settings: yearly renewal reminder and price-change emails promised in the terms.
-- [ ] Go-live steps (old `mobile/docs/GO_LIVE.md`, still names $6.99 and $60): live prices (six), live webhook, clear test rows, switch keys, one real purchase and refund. Move the updated list out of `mobile/` before it is deleted.
+- [ ] Go-live steps (old `mobile/docs/GO_LIVE.md`, still names $6.99 and $60): live prices (six), live webhook, clear test rows, switch keys, one real purchase and refund. Move the updated list out of `mobile/` before it is deleted (moved to `docs/GO_LIVE.md` in draft PR #290, prices not updated).
 
 ---
 

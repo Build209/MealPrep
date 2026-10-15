@@ -6,6 +6,10 @@ on:
   pull_request:
     paths:
       - "supabase/**"
+      # legal-pages-check reads the public terms and privacy pages; stripe-webhook-check reads the live baseline.
+      - "app/public/terms.html"
+      - "app/public/privacy.html"
+      - "db/supabase/migrations/20261013000000_live_baseline.sql"
       - ".github/workflows/functions-ci.yml"
       - ".github/workflows/deploy-function.yml"
       - ".github/workflows/ops-alerts.yml"
@@ -13,6 +17,10 @@ on:
     branches: [rebuild/v1, main]
     paths:
       - "supabase/**"
+      # legal-pages-check reads the public terms and privacy pages; stripe-webhook-check reads the live baseline.
+      - "app/public/terms.html"
+      - "app/public/privacy.html"
+      - "db/supabase/migrations/20261013000000_live_baseline.sql"
       - ".github/workflows/functions-ci.yml"
       - ".github/workflows/deploy-function.yml"
       - ".github/workflows/ops-alerts.yml"

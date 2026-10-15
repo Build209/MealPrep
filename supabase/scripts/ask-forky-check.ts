@@ -17,7 +17,7 @@ import {
 const supabaseRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (rel: string) => fs.readFileSync(path.join(supabaseRoot, rel), 'utf8');
 
-// --- What the app sends, and that the server accepts it: mobile/scripts/ask-forky-mobile-check.ts.
+// --- What the app sends, and that the server accepts it: the old app's ask-forky-mobile-check (retired with mobile/ at the switch-over; page parts now in legal-pages-check.ts).
 
 // --- The server re-checks everything; the app is not trusted.
 assert.equal(parseForkyRequest(null).ok, false);
@@ -117,13 +117,13 @@ assert.match(fn, /tool_choice: \{ type: 'tool', name: FORKY_REPLY_TOOL\.name \}/
 assert.match(fn, /Deno\.env\.get\('ANTHROPIC_API_KEY'\)/);
 assert.doesNotMatch(fn, /sk-ant-|console\.(log|error)\([^)]*(question|answer\b|anthropicKey)/, 'no key or chat text in logs');
 assert.doesNotMatch(fn, /\.from\('(?!profiles|feature_flags)[a-z_]+'\)\s*\.(insert|upsert)/, 'chat text is not stored');
-// Migration (mobile/supabase/migrations): mobile/scripts/ask-forky-mobile-check.ts.
+// Migration (now supabase/history/migrations, history only): the old app's ask-forky-mobile-check (retired with mobile/ at the switch-over; page parts now in legal-pages-check.ts).
 
-// App rules and the privacy page: mobile/scripts/ask-forky-mobile-check.ts.
+// App rules and the privacy page: the old app's ask-forky-mobile-check (retired with mobile/ at the switch-over; page parts now in legal-pages-check.ts).
 assert.match(read('../.github/workflows/deploy-function.yml'), /- ask-forky/);
 
 // --- Household profile (learning step 4): a few facts so answers fit, and nothing health-coded.
-// What the app sends (buildAskForkyBody, recentlyCookedTitles): mobile/scripts/ask-forky-mobile-check.ts.
+// What the app sends (buildAskForkyBody, recentlyCookedTitles): the old app's ask-forky-mobile-check (retired with mobile/ at the switch-over; page parts now in legal-pages-check.ts).
 // The server bounds it again and drops anything it does not know.
 const householdRequest = parseForkyRequest({
   question: 'q',
@@ -154,7 +154,7 @@ for (const bad of [{ size: 99 }, { size: 'four' }, 'text', null, { usualItems: '
 assert.doesNotMatch(forkyMessages({ question: 'q', history: [], pantry: [], recipes: [] }).at(-1)?.content ?? '', /household/);
 assert.match(forkySystemPrompt('2026-10-11'), /household block/);
 assert.match(forkySystemPrompt('2026-10-11'), /do not draw conclusions about\s+'?\s*health|health, diet, money or family/);
-// The app never sends diet or allergy settings, and the privacy page says so: mobile/scripts/ask-forky-mobile-check.ts.
+// The app never sends diet or allergy settings, and the privacy page says so: the old app's ask-forky-mobile-check (retired with mobile/ at the switch-over; page parts now in legal-pages-check.ts).
 
 // --- Model: Claude Haiku 5.5 (owner's decision, Oct 10). It rejects sampling settings and a prefilled
 // reply, and counts more tokens for the same text, so the request must stay free of those.

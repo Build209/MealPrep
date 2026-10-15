@@ -8,7 +8,7 @@ on:
       - "db/**"
       - ".github/workflows/db-baseline.yml"
   push:
-    branches: [rebuild/v1]
+    branches: [rebuild/v1, main]
     paths:
       - "db/**"
       - ".github/workflows/db-baseline.yml"

@@ -6,7 +6,7 @@ name: New app phone pass
 # clipped text, tomato only for camera or money). Same LOCAL Supabase stack as app-e2e.yml: never
 # connects to the live project.
 #
-# Results: the "phone-screens" artifact on every run. On push to rebuild/v1 and on manual runs the
+# Results: the "phone-screens" artifact on every run. On push to rebuild/v1 or main and on manual runs the
 # same files are also stored on the `phone-screens` branch (one commit, force-updated, like
 # app-preview.yml does for builds); on pull requests from this repository, on
 # `phone-screens-pr-<number>`. The tests run with a read-only token; only the small publish job,
@@ -18,7 +18,7 @@ on:
       - "db/**"
       - ".github/workflows/app-phone.yml"
   push:
-    branches: [rebuild/v1]
+    branches: [rebuild/v1, main]
     paths:
       - "app/**"
       - "db/**"

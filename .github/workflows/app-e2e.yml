@@ -10,7 +10,7 @@ on:
       - "db/**"
       - ".github/workflows/app-e2e.yml"
   push:
-    branches: [rebuild/v1]
+    branches: [rebuild/v1, main]
     paths:
       - "app/**"
       - "db/**"

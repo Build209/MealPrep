@@ -15,8 +15,8 @@ import {
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (rel: string) => fs.readFileSync(path.join(root, rel), 'utf8');
 
-// Same bucket and window as the app and the privacy page: checked in
-// mobile/scripts/scan-photo-retention-mobile-check.ts while those live in mobile/.
+// Same window as the privacy page: checked in scripts/legal-pages-check.ts. (The old app's bucket
+// check retired with mobile/ at the switch-over.)
 
 // Paths.
 assert.equal(isScanPhotoObjectPath('aaaa-bbbb/pantry/1700000000000.jpg'), true);
@@ -42,7 +42,7 @@ assert.match(fn, /storage\.from\(SCAN_PHOTO_BUCKET\)\.remove\(paths\)/);
 assert.match(fn, /list_expired_scan_photos/);
 assert.doesNotMatch(fn, /console\.log\([^)]*paths/);
 
-// Migration (mobile/supabase/migrations): checked in mobile/scripts/scan-photo-retention-mobile-check.ts.
+// Migration: history only (supabase/history/migrations); db/ is the source of truth.
 
 // Deploy workflow knows the function and leaves gateway JWT checks off for it (cron sends no token).
 const workflow = read('../.github/workflows/deploy-function.yml');

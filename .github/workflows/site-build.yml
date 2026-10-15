@@ -13,7 +13,7 @@ on:
       - "app/**"
       - "New/**"
       - ".github/workflows/site-build.yml"
-      - "docs/pages.switchover.yml"
+      - ".github/workflows/pages.yml"
 
 permissions:
   contents: read
@@ -64,12 +64,8 @@ jobs:
           done
           # SPA fallback is the app itself.
           cmp index.html 404.html
-          # Legal pages are the approved files, byte for byte.
-          # (mobile/ is deleted at the switch-over; then app/public is the only copy.)
-          if [ -d ../../mobile/public ]; then
-            cmp terms.html ../../mobile/public/terms.html
-            cmp privacy.html ../../mobile/public/privacy.html
-          fi
+          # Legal pages are the approved files, byte for byte. app/public is the only copy
+          # (the old mobile/public copy went with mobile/ at the switch-over).
           cmp terms.html ../public/terms.html
           cmp privacy.html ../public/privacy.html
           cmp accessibility.html ../public/accessibility.html

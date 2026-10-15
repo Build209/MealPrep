@@ -1,11 +1,15 @@
 # app: the rebuilt MealPlanatic
 
-Rebuild spec v1, phase 0. This folder is the new app; the old one in `mobile/` stays live and
-untouched until switch-over, when `mobile/` is deleted in the same release.
+Rebuild spec v1. This folder is MealPlanatic, served at https://mealplanatic.app from `main` by
+`.github/workflows/pages.yml`. The old app in `mobile/` was deleted at the switch-over (`SWITCHOVER.md`);
+it is in git history only. Edge functions are in `../supabase/functions`, the database in `../db`.
 
 - Expo 57, React Native, Expo Router (routes in `src/app/`), supabase-js, TanStack Query.
 - `src/theme/tokens.ts`: colours (from the live theme), the six type sizes, corners, spacing.
-  `tests/tokens.test.ts` checks contrast and keeps the colours equal to `mobile/config/theme.colors.json`.
+  `tests/tokens.test.ts` checks contrast and keeps the colours equal to `src/theme/theme.colors.json`
+  (copied byte for byte from the old app's `mobile/config/theme.colors.json` at the switch-over).
+- `tests/fixtures/old-app/`: a snapshot of the old app's money, account-deletion and Ask Forky wording
+  (compliance-approved). `plans-pricing`, `account-copy` and `forky-request` tests check the LIVE lines against it.
 - `src/ui/`: small shared pieces (text, button, card, screen, top bar).
 - `src/lib/`: the Supabase client and the query client. The server is the only source of truth:
   screens read through queries and never keep their own copy of server data. The sign-in session
@@ -22,7 +26,8 @@ untouched until switch-over, when `mobile/` is deleted in the same release.
   on the live database until the owner approves it). Data hooks: `src/data/grocery.ts`, `groceryMutations.ts`.
 - `src/scan/`: shelf, fridge, spice rack and receipt photo scans through the live `pantry-vision` function
   (unchanged; same request as the old app), a review list before saving, and `ScanButton` with this month's
-  allowance (`planTiers.ts` is a verbatim copy of the function's table, kept equal by a test). Route: `/scan`.
+  allowance (`planTiers.ts` is a verbatim copy of `supabase/functions/_shared/planTiers.ts`, kept equal by
+  `tests/scan-planTiers.test.ts`). Route: `/scan`.
   The Scan button sits on the Pantry tab. Scans are matched against the pantry with the old app's
   rules (`src/kitchen/pantryMatch.ts`): shelf items already there are shown as "Already in your pantry"
   and left unticked; receipt lines add to a matching row with the same unit. With no scans left the
@@ -102,7 +107,9 @@ npm run typecheck && npm test
 npm run web          # local preview in a browser
 ```
 
-CI: `.github/workflows/app-ci.yml` (typecheck, tests, web build) on pull requests that touch `app/`.
+CI: `.github/workflows/app-ci.yml` (typecheck, tests, web build) on pull requests that touch `app/` and on
+pushes to `rebuild/v1` and `main`. `site-build.yml` builds the whole Pages site (`scripts/build-site.sh`) on
+pull requests; `pages.yml` builds and deploys it on pushes to `main`.
 
 Phone preview: `.github/workflows/app-preview.yml` builds the web app against the live database on
 every push to `rebuild/v1` and stores it on the `app-preview` branch, with a small "Preview build"

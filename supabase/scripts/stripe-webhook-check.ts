@@ -201,8 +201,13 @@ function testStatusRules(): void {
     assert.equal(isPlusActiveStatus(status), false, String(status));
   }
 
-  // The SQL that derives the plan must use the same list: checked against the old migration in
-  // mobile/scripts/stripe-webhook-mobile-check.ts.
+  // The SQL that derives the plan must use the same list. Was checked against the old migration in the old
+  // app's stripe-webhook-mobile-check; since the switch-over, against the live schema baseline in db/.
+  const baseline = fs.readFileSync(
+    path.join(supabaseRoot, '..', 'db', 'supabase', 'migrations', '20261013000000_live_baseline.sql'),
+    'utf8',
+  );
+  assert.match(baseline, /b\.status in \('active', 'trialing', 'past_due'\)/, 'recompute_user_plan uses the webhook status list');
 
   assert.equal(isHandledEventType('checkout.session.completed'), true);
   assert.equal(isHandledEventType('customer.subscription.deleted'), true);

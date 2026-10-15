@@ -86,7 +86,7 @@ components:
     padding: "16px"
 ---
 
-Scope: the MealPlanatic app in `mobile/`. Source of truth for colours is `mobile/config/theme.colors.json`; for the font and corner sizes, `mobile/tailwind.config.js`. If a value changes there, change it here in the same pull request.
+Scope: the MealPlanatic app in `app/` (the old app in `mobile/` was deleted at the switch-over). Source of truth for colours is `app/src/theme/theme.colors.json` (copied byte for byte from the old `mobile/config/theme.colors.json`; `app/tests/tokens.test.ts` keeps `app/src/theme/tokens.ts` equal to it); for the type, corner and spacing sizes, `app/src/theme/tokens.ts`. If a value changes there, change it here in the same pull request.
 
 Written by the design session on 2026-10-10 from the code on `main` and the scheme the owner approved on 2026-10-08. The "Named rules" are the binding part. The "Known drift" list at the end records where today's code does not follow this file yet.
 

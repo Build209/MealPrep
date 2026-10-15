@@ -1,5 +1,5 @@
 # Local database used only by CI and by developers to test against the live schema.
-# This folder is separate from mobile/supabase on purpose: that folder deploys the live edge
+# This folder is separate from the root supabase/ folder (once mobile/supabase) on purpose: that folder deploys the live edge
 # functions, and a config.toml there could change how they deploy.
 project_id = "mealplanatic-rebuild-db"
 

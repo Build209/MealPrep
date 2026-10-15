@@ -228,6 +228,6 @@ for (const source of [checkout, portal, server]) {
 }
 
 // The terms version we record must be the date printed on the live terms page: checked in
-// mobile/scripts/stripe-checkout-mobile-check.ts while the page lives in mobile/public.
+// scripts/legal-pages-check.ts.
 
 console.log('stripe-checkout-check: ok');

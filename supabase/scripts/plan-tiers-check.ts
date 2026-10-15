@@ -1,7 +1,7 @@
 /**
  * Plan tiers (Free, Plus, Pro, Family), server side: the server table, the recipe-import
  * allowance and the function wiring. The comparisons with the old app's copy, the buy screen
- * prices, the Terms of Use page and the migration are in mobile/scripts/plan-tiers-mobile-check.ts.
+ * prices, the Terms of Use page and the migration are in the old app's plan-tiers-mobile-check (retired with mobile/ at the switch-over; page parts now in legal-pages-check.ts).
  *
  * Run from supabase/: npm run test:plan-tiers
  */
@@ -77,7 +77,7 @@ for (const raise of ['{"plus":{"scans":16}}', '{"plus":{"scans":15.5}}', '{"plus
 }
 assert.equal(server.TIER_LIMITS.plus.scans, 15, 'the published table is never changed by an override');
 
-// --- Terms of Use and privacy pages: mobile/scripts/plan-tiers-mobile-check.ts ------------------
+// --- Terms of Use and privacy pages: the old app's plan-tiers-mobile-check (retired with mobile/ at the switch-over; page parts now in legal-pages-check.ts) ------------------
 
 // --- Recipe-import allowance (against a stand-in for Supabase) ----------------------------------
 type Row = { plan: string; role?: string; plan_tier?: string };
@@ -214,7 +214,7 @@ globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
   assert.match(checkoutFn, /if \(tier !== 'plus'\) \{[\s\S]{0,200}select\('plan_tier'\)/);
   assert.match(checkoutFn, /metadata: \{ supabase_user_id: userId, plan_tier: tier \}/);
 
-  // Migration (mobile/supabase/migrations): mobile/scripts/plan-tiers-mobile-check.ts.
+  // Migration (now supabase/history/migrations, history only): the old app's plan-tiers-mobile-check (retired with mobile/ at the switch-over; page parts now in legal-pages-check.ts).
 
   console.log('plan-tiers-check: ok');
 })().catch((error) => {
