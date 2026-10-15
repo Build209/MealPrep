@@ -62,6 +62,9 @@ export function createMemoryLimiter(limit: number, windowMs: number): (key: stri
   };
 }
 
+// SECURITY: this decodes the JWT payload without checking its signature. That is only safe because
+// every function using it is deployed WITHOUT --no-verify-jwt, so the gateway verifies the token first.
+// supabase/scripts/verify-jwt-guard-check.ts fails CI if one of them loses gateway JWT verification.
 /** The bearer token, if it carries an account id (`sub`). Guest (publishable key) tokens do not. */
 export function bearerWithUser(req: Request): { token: string; userId: string } | null {
   const authHeader = req.headers.get('Authorization');

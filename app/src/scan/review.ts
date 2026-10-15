@@ -6,7 +6,9 @@
  * matching row with the same unit. Pure functions only (tests/scan-review.test.ts).
  * Saving goes through src/data/pantryScanSave.ts.
  */
-import { findAlreadyInPantry, matchReceiptLine, roundQuantity, type PantryMatchRow } from '../kitchen/pantryMatch';
+import { areSameIngredientForPantryDedupe } from '../kitchen/ingredientNormalize';
+import { findAlreadyInPantry, matchReceiptLine, roundQuantity, sameUnit, type PantryMatchRow } from '../kitchen/pantryMatch';
+import { fileScannedItem } from '../kitchen/scanFiling';
 import type { DetectedItem, PantryCategory, ScanKind, ScanPlace } from './request';
 
 export type ReviewRow = {
@@ -62,25 +64,59 @@ export function formatQuantity(quantity: number): string {
 /**
  * Rows for the review list. A shelf scan puts items where the function says they belong, else
  * where the photo was taken; a receipt has no place of its own, so the function's guess (or
- * the pantry) is used.
+ * the pantry) is used. The function's category and place are checked first
+ * (src/kitchen/scanFiling.ts: no stew as cookware, no juice as dry goods), and on a shelf scan
+ * near-duplicates ("Pickles", "Dill Pickles", "Vlasic Pickle Spears") become one row.
  */
 export function toReviewRows(items: readonly DetectedItem[], kind: ScanKind, place: ScanPlace, keyPrefix = 'scan'): ReviewRow[] {
   const rows: ReviewRow[] = [];
   items.forEach((item, index) => {
     if (item.confidence < JUNK_CONFIDENCE) return;
+    const filed = fileScannedItem(item, kind === 'receipt' ? 'pantry' : place, kind === 'receipt' ? null : place);
     rows.push({
       key: `${keyPrefix}-${index}`,
       name: displayName(item.name),
       quantityText: formatQuantity(item.quantity),
       unit: item.unit,
-      place: item.storage ?? (kind === 'receipt' ? 'pantry' : place),
-      category: item.category,
+      place: filed.storage,
+      category: filed.category,
       confidence: item.confidence,
       needsCheck: item.confidence < CHECK_CONFIDENCE,
       kind,
     });
   });
-  return rows;
+  // Receipt lines stay one per line: planSave already adds lines for the same pantry row together.
+  return kind === 'shelf' ? mergeNearDuplicates(rows) : rows;
+}
+
+/**
+ * Rows naming the same ingredient (same phrase or synonym group, brands and plurals ignored).
+ * Same unit: one row with the quantities added, kept under the first name. Another unit: both
+ * kept, each marked "Check this" so the person decides.
+ */
+export function mergeNearDuplicates(rows: readonly ReviewRow[]): ReviewRow[] {
+  const out: ReviewRow[] = [];
+  for (const row of rows) {
+    const twinIndex = out.findIndex((kept) => areSameIngredientForPantryDedupe(kept.name, row.name));
+    if (twinIndex < 0) {
+      out.push({ ...row });
+      continue;
+    }
+    const twin = out[twinIndex]!;
+    if (sameUnit(twin.unit, row.unit)) {
+      const sum = (Number(twin.quantityText) || 0) + (Number(row.quantityText) || 0);
+      out[twinIndex] = {
+        ...twin,
+        quantityText: formatQuantity(Math.min(sum, MAX_QUANTITY)),
+        confidence: Math.max(twin.confidence, row.confidence),
+        needsCheck: twin.needsCheck && row.needsCheck,
+      };
+      continue;
+    }
+    out[twinIndex] = { ...twin, needsCheck: true };
+    out.push({ ...row, needsCheck: true });
+  }
+  return out;
 }
 
 export type RowEdit = Partial<Pick<ReviewRow, 'name' | 'quantityText' | 'unit' | 'place'>>;

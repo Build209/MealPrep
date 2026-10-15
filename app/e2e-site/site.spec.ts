@@ -85,6 +85,7 @@ test.describe('legal pages', () => {
     ['/terms/', 'Terms of Use'],
     ['/privacy.html', 'Privacy Policy'],
     ['/privacy/', 'Privacy Policy'],
+    ['/accessibility.html', 'Accessibility'],
   ] as const;
   for (const [path, heading] of pages) {
     test(`${path} shows ${heading}`, async ({ page }) => {

@@ -5,6 +5,7 @@
 // JWT verification off — the app sends the Supabase publishable (anon) key, not a user JWT.
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1';
+import { secretsMatch } from '../_shared/secrets.ts';
 import { applyHideOverrides, loadCreatorVideoOverrides } from './creatorVideoOverrides.ts';
 import { loadChannelIdsWithVisibleFeedVideos } from './creatorListVisibility.ts';
 import { buildChannelFitWeightMap, mixCreatorFeed } from './feedMix.ts';
@@ -144,7 +145,7 @@ function videoToDto(row: VideoRow, creator: CreatorRow | undefined): VideoDto {
 function authorizeRefresh(req: Request): boolean {
   const expected = (Deno.env.get('CREATOR_ADMIN_SECRET') ?? '').trim();
   const provided = (req.headers.get(ADMIN_SECRET_HEADER) ?? '').trim();
-  return Boolean(expected && provided && provided === expected);
+  return secretsMatch(expected, provided);
 }
 
 /**

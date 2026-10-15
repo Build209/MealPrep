@@ -61,7 +61,7 @@ export default function TabsLayout() {
   const bottom = Math.max(0, insets.bottom);
   return (
     <View style={{ flex: 1, backgroundColor: colors.paper }}>
-      <TopBar />
+      <TopBar account />
       <Tabs
         screenOptions={{
           headerShown: false,

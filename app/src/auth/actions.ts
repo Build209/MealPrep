@@ -9,6 +9,11 @@ import { authErrorMessage, newPasswordBlocker, signUpOutcome, thrownMessage, typ
 
 export type AuthClient = SupabaseClient['auth'];
 
+/** What sign-up stores in the auth user's metadata to record the ticked 18+ box. */
+export function ageConfirmationMetadata(now: Date): { age_confirmed: true; age_confirmed_at: string } {
+  return { age_confirmed: true, age_confirmed_at: now.toISOString() };
+}
+
 export async function signIn(auth: AuthClient | null, email: string, password: string): Promise<AuthActionResult> {
   if (!auth) return { ok: false, error: AUTH_RESULT_COPY.unavailable };
   try {
@@ -24,19 +29,24 @@ export async function signIn(auth: AuthClient | null, email: string, password: s
  * Only called once the 18+ box is ticked (the button does not work before). The profile name
  * defaults to the part of the email before the @, done by the database's sign-up trigger.
  * `redirectTo` is where the confirm link lands (the preview build passes its own address).
+ *
+ * The 18+ confirmation is also sent to the server in the user's metadata (`age_confirmed`,
+ * `age_confirmed_at`), so a database check on auth.users can require it later (proposed for
+ * switch-over: the old app on main does not send it yet, so it cannot be enforced today).
  */
 export async function signUp(
   auth: AuthClient | null,
   email: string,
   password: string,
   redirectTo: string = AUTH_EMAIL_REDIRECT,
+  now: Date = new Date(),
 ): Promise<AuthActionResult> {
   if (!auth) return { ok: false, error: AUTH_RESULT_COPY.unavailable };
   try {
     const { data, error } = await auth.signUp({
       email: email.trim(),
       password,
-      options: { emailRedirectTo: redirectTo },
+      options: { emailRedirectTo: redirectTo, data: ageConfirmationMetadata(now) },
     });
     if (error) return { ok: false, error: authErrorMessage(error.message) };
     return signUpOutcome({ session: data.session, user: data.user });

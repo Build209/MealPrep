@@ -157,6 +157,56 @@ const SPICE_PHRASES = [
   'seasoning',
 ];
 
+// Cookware: added in the rebuild (the old app never guessed it from a name).
+
+
+/** A word that makes a name a piece of cookware. */
+const COOKWARE_HEADS = new Set([
+  'pot', 'pots', 'pan', 'pans', 'skillet', 'skillets', 'saucepan', 'saucepans', 'wok', 'woks',
+  'oven', 'griddle', 'kettle', 'colander', 'cooker', 'sheet', 'sheets', 'dish', 'dishes',
+  'cookware', 'lid', 'lids', 'crockpot', 'tray', 'trays', 'ramekin', 'ramekins', 'stockpot',
+  'tin', 'tins', 'mold', 'mould', 'strainer', 'spatula', 'whisk', 'ladle', 'tongs',
+]);
+
+/** Words that can sit next to a cookware word without making it food. */
+const COOKWARE_WORDS = new Set([
+  ...COOKWARE_HEADS,
+  'stock', 'sauce', 'frying', 'fry', 'baking', 'bake', 'roasting', 'saute', 'casserole', 'pie',
+  'loaf', 'muffin', 'cake', 'sheet', 'cast', 'iron', 'nonstick', 'non-stick', 'non', 'stick',
+  'stainless', 'steel', 'copper', 'ceramic', 'enamel', 'enameled', 'glass', 'dutch', 'pressure',
+  'slow', 'instant', 'rice', 'large', 'small', 'medium', 'big', 'inch', 'in', 'quart', 'qt',
+  'set', 'with', 'and', 'a', 'of', 'deep', 'shallow', 'round', 'square', 'oval', 'grill',
+  'soup', 'sheetpan', 'springform', 'bundt', 'tart', 'pizza', 'roaster',
+]);
+
+/**
+ * Whether a name is a piece of cookware: every word is a cookware word and at least one is a
+ * cookware noun. "stock pot" and "9x13 baking dish" are; "pot roast", "pan dulce", "pancake
+ * mix", "pizza" and "casserole" are not.
+ */
+export function isCookwareName(name: string): boolean {
+  const words = cleanForCookware(name)
+    .split(' ')
+    .filter((w) => w && !/^\d+(x\d+)?$/.test(w));
+  if (words.length === 0) return false;
+  if (!words.some((w) => COOKWARE_HEADS.has(w))) return false;
+  // A dish named after its pan ("pot roast", "pot pie", "sheet cake", "pan pizza") is food.
+  const joined = words.join(' ');
+  if (/\b(pie|cake|pizza|roast|stickers?|dulce|meal|dinner|lasagna|cornbread|fried|seared)$/.test(joined)) {
+    return false;
+  }
+  return words.every((w) => COOKWARE_WORDS.has(w));
+}
+
+function cleanForCookware(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/&/g, ' and ')
+    .replace(/[^a-z0-9\s-]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 function nameIncludesPhrase(normalized: string, phrase: string): boolean {
   const p = normalizeIngredientName(phrase);
   if (!p) return false;
@@ -175,6 +225,7 @@ function matchesAnyPhrase(normalized: string, phrases: readonly string[]): boole
 export function inferGroceryCategoryFromName(name: string): PantryCategory {
   const normalized = normalizeIngredientName(name);
   if (!normalized) return 'dry_goods';
+  if (isCookwareName(name)) return 'cookware';
 
   if (matchesAnyPhrase(normalized, DRY_GOODS_PHRASES)) return 'dry_goods';
   if (matchesAnyPhrase(normalized, SPICE_PHRASES)) return 'spices';
