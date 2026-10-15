@@ -131,7 +131,7 @@ test('allowance on the button, shelf scan, review edits, save writes the rows', 
   expect(seeded.error).toBeNull();
   await expect(page.getByText('Scan your food')).toHaveCount(0); // the temporary Home card is gone
   await page.goto('/pantry');
-  await expect(page.getByText('Your pantry is empty')).toBeVisible();
+  await expect(page.getByText('Your pantry is empty').filter({ visible: true })).toBeVisible();
   const scanButton = page.getByRole('button', { name: 'Scan · 2 left this month' });
   await expect(scanButton).toBeVisible();
 

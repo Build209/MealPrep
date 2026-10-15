@@ -229,6 +229,88 @@ screen('04', 'home', 'none', 'Home feed with seeded pantry and recipe', async (p
   await expect(page.getByRole('button', { name: new RegExp(`^${seed.recipeTitle}, `) }).first()).toBeVisible();
 });
 
+/**
+ * The tab bar (owner's phone test: "tabs at bottom aren't populating"): each tab shows an icon over
+ * its label, the icon is hidden from screen readers (the label names the tab), every tab is at least
+ * 44px tall and fully on screen, and the bar's bottom padding covers the safe-area inset (read from
+ * env(safe-area-inset-bottom); 0 in these browsers, about 34px on an iPhone home-screen web app).
+ */
+test('tab bar: icons over labels, on screen, above the safe area', async ({ page, context }) => {
+  await isolate(context, page);
+  await signIn(page);
+  await page.evaluate(async () => {
+    await (document as Document & { fonts?: { ready: Promise<unknown> } }).fonts?.ready;
+  });
+  const m = await page.evaluate(() => {
+    const probe = document.createElement('div');
+    probe.style.paddingBottom = 'env(safe-area-inset-bottom, 0px)';
+    document.body.appendChild(probe);
+    const safeBottom = parseFloat(getComputedStyle(probe).paddingBottom) || 0;
+    probe.remove();
+    let bar: HTMLElement | null = null;
+    const tabs = ['index', 'pantry', 'grocery', 'stores'].map((route) => {
+      const icon = document.querySelector<HTMLElement>(`[data-testid="tab-icon-${route}"]`);
+      if (!icon) return { route, found: false, iconW: 0, iconH: 0, hidden: false, label: '', tabH: 0, tabBottom: 0, iconAboveLabel: false };
+      const tab = icon.closest<HTMLElement>('a, button, [role="tab"], [role="button"], [role="link"]');
+      const ir = icon.getBoundingClientRect();
+      const tr = tab?.getBoundingClientRect();
+      if (!bar && tab) {
+        let p: HTMLElement | null = tab.parentElement;
+        while (p && p !== document.body && !(parseFloat(getComputedStyle(p).borderTopWidth) > 0)) p = p.parentElement;
+        bar = p && p !== document.body ? p : null;
+      }
+      const label = (tab?.innerText ?? '').replace(/[^\x20-\x7e]/g, '').trim();
+      // The label's text node sits below the icon.
+      let labelTop = 0;
+      if (tab) {
+        const walker = document.createTreeWalker(tab, NodeFilter.SHOW_TEXT);
+        for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+          if (/[A-Za-z]/.test(n.textContent ?? '') && n.parentElement) {
+            labelTop = n.parentElement.getBoundingClientRect().top;
+            break;
+          }
+        }
+      }
+      return {
+        route,
+        found: true,
+        iconW: ir.width,
+        iconH: ir.height,
+        hidden: !!icon.closest('[aria-hidden="true"]'),
+        label,
+        tabH: tr?.height ?? 0,
+        tabBottom: tr?.bottom ?? 0,
+        iconAboveLabel: labelTop >= ir.bottom - 1,
+      };
+    });
+    const b = bar as HTMLElement | null;
+    return {
+      tabs,
+      safeBottom,
+      innerHeight: window.innerHeight,
+      barBottom: b ? b.getBoundingClientRect().bottom : -1,
+      barPaddingBottom: b ? parseFloat(getComputedStyle(b).paddingBottom) : -1,
+    };
+  });
+  expect(m.tabs.map((t) => t.label)).toEqual(['Home', 'Pantry', 'Grocery', 'Stores']);
+  for (const t of m.tabs) {
+    expect(t.found, `${t.route}: tab icon present`).toBe(true);
+    expect(t.iconW, `${t.route}: icon has a size`).toBeGreaterThan(10);
+    expect(t.iconH, `${t.route}: icon has a size`).toBeGreaterThan(10);
+    expect(t.hidden, `${t.route}: icon hidden from screen readers`).toBe(true);
+    expect(t.iconAboveLabel, `${t.route}: icon above the label`).toBe(true);
+    expect(t.tabH, `${t.route}: tab at least 44px tall`).toBeGreaterThanOrEqual(44);
+    expect(t.tabBottom, `${t.route}: tab fully on screen`).toBeLessThanOrEqual(m.innerHeight + 1);
+  }
+  expect(m.barBottom, 'tab bar found and fully on screen').toBeGreaterThan(0);
+  expect(m.barBottom).toBeLessThanOrEqual(m.innerHeight + 1);
+  expect(m.barPaddingBottom, 'bar padding covers the safe-area inset').toBeGreaterThanOrEqual(m.safeBottom + 8 - 0.5);
+  // Every tab is still reachable by its name alone (the icon adds nothing to it).
+  for (const name of ['Home', 'Pantry', 'Grocery', 'Stores']) {
+    await expect(page.getByRole('tab', { name, exact: true }).or(page.getByRole('link', { name, exact: true })).first()).toBeVisible();
+  }
+});
+
 screen('05', 'pantry-shelves', 'none', 'Pantry, shelves view', async (page) => {
   await signIn(page);
   await page.goto('/pantry');
@@ -247,7 +329,7 @@ screen('06', 'pantry-list', 'none', 'Pantry, list view', async (page) => {
 screen('07', 'pantry-empty', 'none', 'Pantry, empty (second account)', async (page) => {
   await signIn(page, seed.emptyEmail);
   await page.goto('/pantry');
-  await expect(page.getByText('Your pantry is empty')).toBeVisible();
+  await expect(page.getByText('Your pantry is empty').filter({ visible: true })).toBeVisible();
 });
 
 screen('08', 'scan', 'camera', 'the scan screen (no camera in the browser)', async (page) => {
