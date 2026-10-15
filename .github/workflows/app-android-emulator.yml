@@ -115,20 +115,6 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
-      # The runner's preinstalled command-line tools predate the Pixel Fold profile (two screens:
-      # cover and inner). Newer tools have it; without it a "foldable" has one screen (2026-10-15 run).
-      - name: Update Android command-line tools
-        run: |
-          sdk="$ANDROID_HOME/cmdline-tools"
-          yes | "$sdk/latest/bin/sdkmanager" --install "cmdline-tools;latest" > /dev/null || true
-          # sdkmanager puts the update next to the running copy (latest-2); swap it in, since the
-          # emulator step calls the tools in latest/ (2026-10-15 run).
-          if [ -d "$sdk/latest-2" ]; then
-            sudo rm -rf "$sdk/latest"
-            sudo mv "$sdk/latest-2" "$sdk/latest"
-          fi
-          "$sdk/latest/bin/avdmanager" list device -c | grep -x pixel_fold || echo "pixel_fold still missing"
-
       - name: Pick the device profile
         id: profile
         env:
