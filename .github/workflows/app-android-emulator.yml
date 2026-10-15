@@ -141,7 +141,8 @@ jobs:
           EMULATOR_RESULT: ${{ runner.temp }}/emulator-result.txt
         with:
           api-level: 34
-          target: google_apis
+          # Play Store images ship the Chrome app; plain google_apis images do not (first run, 2026-10-15).
+          target: playstore
           arch: x86_64
           profile: ${{ steps.profile.outputs.id }}
           cores: 4
