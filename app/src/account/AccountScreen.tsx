@@ -8,12 +8,13 @@ import { colors } from '../theme/tokens';
 import { AppText } from '../ui/AppText';
 import { Button } from '../ui/Button';
 import { Screen } from '../ui/Screen';
+import { HELP_COPY } from '../help/copy';
 import { ACCOUNT_SCREEN_COPY as COPY } from './copy';
 
 /**
  * /account: who is signed in, the current plan with Manage subscription (the same card, plan read
- * and rules as /plans, from src/plans/CurrentPlan.tsx), then Plans & usage, Delete account and the
- * sign-out card. This is the "Account, Manage subscription" the approved renewal terms point to.
+ * and rules as /plans, from src/plans/CurrentPlan.tsx), then Plans & usage, Delete account, Help and
+ * contact, and the sign-out card. This is the "Account, Manage subscription" the approved renewal terms point to.
  * Manage subscription shows only for a live subscription, exactly as on /plans; a free account
  * reaches the plans through "Plans & usage". No tomato here (Manage subscription is the plans
  * screen's ink secondary button).
@@ -56,6 +57,7 @@ export function AccountScreen() {
       <View style={{ alignItems: 'flex-start' }}>
         <TextLink label={COPY.plansLink} onPress={() => router.push('/plans')} />
         <TextLink label={COPY.deleteLink} onPress={() => router.push('/delete-account')} />
+        <TextLink label={HELP_COPY.accountLink} onPress={() => router.push('/help')} />
       </View>
 
       <SignOutCard />

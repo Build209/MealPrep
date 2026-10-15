@@ -1,10 +1,13 @@
-// RecipeAPI.io proxy — paste this ENTIRE file into Supabase Dashboard:
-// Edge Functions → Deploy a new function → Via Editor → name: recipeapi-proxy
+// RecipeAPI.io proxy — deploy folder recipeapi-proxy with the Supabase CLI or deploy-function.yml
+// (it imports ../_shared/rateLimit.ts, so pasting this one file into the dashboard editor no longer works).
 //
 // Settings: leave "Verify JWT" ENABLED (default). Guests may call with the publishable
-// anon key; signed-in users send their session JWT. Rate limits use user id or client IP.
+// anon key; signed-in users send their session JWT. Rate limits: signed-in per account in the
+// database (_shared/rateLimit.ts), guests per client IP in memory.
 //
 // Secrets (Edge Functions → Secrets): RECIPEAPI_KEY = your sk_live_... key
+
+import { clientAddressKey, createRateLimiter } from '../_shared/rateLimit.ts';
 
 const RECIPE_API_BASE = 'https://recipeapi.io/api/v1';
 
@@ -70,9 +73,11 @@ const responseCache = new Map<string, CacheEntry>();
 const CACHE_TTL_MS = 10 * 60 * 1000;
 const MAX_CACHE_ENTRIES = 200;
 
-const userHits = new Map<string, { count: number; windowStart: number }>();
-const USER_WINDOW_MS = 60_000;
-const USER_MAX_PER_WINDOW = 30;
+/**
+ * 30 searches a minute. Signed-in: per account, counted in the database (in memory until its
+ * migration is live). Guests: per network address, in memory.
+ */
+const searchRateLimiter = createRateLimiter('recipeapi-proxy', 30);
 
 function pickQuery(
   input: Record<string, string | number | boolean | undefined> | undefined,
@@ -106,18 +111,9 @@ function writeCache(key: string, body: string, status: number): void {
   responseCache.set(key, { body, status, expiresAt: Date.now() + CACHE_TTL_MS });
 }
 
-function checkUserRateLimit(userId: string): boolean {
-  const now = Date.now();
-  const bucket = userHits.get(userId);
-  if (!bucket || now - bucket.windowStart > USER_WINDOW_MS) {
-    userHits.set(userId, { count: 1, windowStart: now });
-    return true;
-  }
-  if (bucket.count >= USER_MAX_PER_WINDOW) return false;
-  bucket.count += 1;
-  return true;
-}
-
+// SECURITY: this decodes the JWT payload without checking its signature. That is only safe because
+// the gateway verifies the token first (deployed WITHOUT --no-verify-jwt). Keep it that way:
+// supabase/scripts/verify-jwt-guard-check.ts fails CI if this function loses gateway JWT verification.
 function userIdFromJwt(req: Request): string | null {
   const authHeader = req.headers.get('Authorization');
   if (!authHeader?.startsWith('Bearer ')) return null;
@@ -137,9 +133,7 @@ function userIdFromJwt(req: Request): string | null {
 function rateLimitKey(req: Request): string {
   const userId = userIdFromJwt(req);
   if (userId) return userId;
-  const forwarded = req.headers.get('x-forwarded-for');
-  const ip = forwarded?.split(',')[0]?.trim() || req.headers.get('cf-connecting-ip') || 'anon';
-  return `anon:${ip}`;
+  return `anon:${clientAddressKey(req)}`;
 }
 
 Deno.serve(async (req) => {
@@ -162,7 +156,7 @@ Deno.serve(async (req) => {
     });
   }
 
-  if (!checkUserRateLimit(limitKey)) {
+  if (!(await searchRateLimiter.take(req, limitKey)).allowed) {
     return new Response(
       JSON.stringify({ error: 'Too many recipe searches. Try again in a minute.', code: 'RATE_LIMIT' }),
       {

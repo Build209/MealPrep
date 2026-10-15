@@ -51,6 +51,22 @@ export const INGREDIENT_SYNONYMS: Record<string, readonly string[]> = {
   lettuce: ['romaine', 'romaine lettuce'],
   cilantro: ['cilantro bunch', 'coriander', 'coriander leaves', 'fresh coriander'],
   broth: ['chicken broth', 'beef broth', 'vegetable broth'],
+  // Scan near-duplicates (phone test 2026-10-14): the same jar read as three names.
+  pickle: [
+    'pickles',
+    'dill pickle',
+    'dill pickles',
+    'kosher dill pickle',
+    'kosher dill pickles',
+    'whole dill pickles',
+    'baby dill pickles',
+    'pickle spear',
+    'pickle spears',
+    'dill pickle spears',
+    'dill spears',
+    'pickle slices',
+    'dill pickle slices',
+  ],
 };
 
 export type IngredientCanonical = keyof typeof INGREDIENT_SYNONYMS;

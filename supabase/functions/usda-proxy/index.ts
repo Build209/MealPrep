@@ -97,6 +97,9 @@ function writeCache(key: string, body: string, status: number): void {
   responseCache.set(key, { body, status, expiresAt: Date.now() + CACHE_TTL_MS });
 }
 
+// SECURITY: this decodes the JWT payload without checking its signature. That is only safe because
+// the gateway verifies the token first (deployed WITHOUT --no-verify-jwt). Keep it that way:
+// supabase/scripts/verify-jwt-guard-check.ts fails CI if this function loses gateway JWT verification.
 function userIdFromJwt(req: Request): string | null {
   const authHeader = req.headers.get('Authorization');
   if (!authHeader?.startsWith('Bearer ')) return null;

@@ -19,15 +19,5 @@ export function isScanPhotoObjectPath(objectPath: string): boolean {
   return parts.length >= 2 && parts.every((part) => part.length > 0);
 }
 
-/** Constant-time comparison so the secret check does not leak length or prefix by timing. */
-export function secretsMatch(expected: string, provided: string): boolean {
-  const a = expected.trim();
-  const b = provided.trim();
-  if (!a || !b) return false;
-  let diff = a.length ^ b.length;
-  const len = Math.max(a.length, b.length);
-  for (let i = 0; i < len; i += 1) {
-    diff |= (a.charCodeAt(i) || 0) ^ (b.charCodeAt(i) || 0);
-  }
-  return diff === 0;
-}
+/** Constant-time secret comparison; lives in secrets.ts, re-exported here for existing imports. */
+export { secretsMatch } from './secrets.ts';

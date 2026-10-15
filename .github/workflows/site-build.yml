@@ -47,7 +47,7 @@ jobs:
         working-directory: app/site
         run: |
           set -euo pipefail
-          for f in index.html 404.html terms.html privacy.html terms/index.html privacy/index.html \
+          for f in index.html 404.html terms.html privacy.html accessibility.html terms/index.html privacy/index.html \
                    CNAME .nojekyll 209/index.html \
                    sw.js pwa-register.js app/sw.js \
                    app/index.html app/pantry/index.html app/grocery/index.html app/recipes/index.html \
@@ -68,6 +68,7 @@ jobs:
           # (the old mobile/public copy went with mobile/ at the switch-over).
           cmp terms.html ../public/terms.html
           cmp privacy.html ../public/privacy.html
+          cmp accessibility.html ../public/accessibility.html
           test "$(cat CNAME)" = "mealplanatic.app"
           # Assets are linked from the site root, and the live settings are in the bundle.
           grep -q 'src="/_expo/static/js/web/' index.html

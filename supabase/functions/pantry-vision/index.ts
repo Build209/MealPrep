@@ -35,6 +35,7 @@
 // It never contains the user id, the photo or the item names.
 
 import { tierForProfile, tierLimits, usageMonth, type PlanTier } from '../_shared/planTiers.ts';
+import { createRateLimiter } from '../_shared/rateLimit.ts';
 
 // BEGIN GEMINI_ORCHESTRATION (keep in sync with geminiOrchestration.ts — npm run test:pantry-vision-gemini)
 /** @sync mobile/config/geminiConfig.ts */
@@ -404,9 +405,8 @@ const RESPONSE_JSON_SCHEMA = {
   required: ['items'],
 } as const;
 
-const userHits = new Map<string, { count: number; windowStart: number }>();
-const USER_WINDOW_MS = 60_000;
-const USER_MAX_PER_WINDOW = 12;
+/** 12 scans a minute per account, counted in the database (in memory until its migration is live). */
+const scanRateLimiter = createRateLimiter('pantry-vision', 12);
 
 type DetectedPantryItem = {
   name: string;
@@ -667,18 +667,9 @@ function usageForResponse(tier: ScanTier, allowance: ScanAllowance, remaining: n
   };
 }
 
-function checkUserRateLimit(userId: string): boolean {
-  const now = Date.now();
-  const bucket = userHits.get(userId);
-  if (!bucket || now - bucket.windowStart > USER_WINDOW_MS) {
-    userHits.set(userId, { count: 1, windowStart: now });
-    return true;
-  }
-  if (bucket.count >= USER_MAX_PER_WINDOW) return false;
-  bucket.count += 1;
-  return true;
-}
-
+// SECURITY: this decodes the JWT payload without checking its signature. That is only safe because
+// the gateway verifies the token first (deployed WITHOUT --no-verify-jwt). Keep it that way:
+// supabase/scripts/verify-jwt-guard-check.ts fails CI if this function loses gateway JWT verification.
 /** With Verify JWT enabled, only authenticated requests reach this handler. */
 function userIdFromJwt(req: Request): string | null {
   const authHeader = req.headers.get('Authorization');
@@ -1057,6 +1048,8 @@ function geminiEnumeratePrompt(
     '- name: generic recipe ingredient only, lowercase, singular when natural (egg, cheddar cheese, milk). Never put store or product brand names in name (no Kraft, WinCo, Goldfish, etc.).\n' +
     '- Be specific when it matters: honey peanut butter not almond butter; pancake syrup not maple syrup; powdered drink mix not juice brand; bread not bread mix; cheddar cheese crackers not just crackers.\n' +
     '- quantity is a rough count when visible; default 1. Use realistic units (oz, lb, each, bottle, jar, can, box, bag).\n' +
+    '- category is the food, never its container: never use cookware for food. Leftovers and cooked dishes in a pot or container ' +
+    '(stew, chili, soup) take the main ingredient\'s category (meats when unsure) with storage fridge. Fruit juice is produce, not dry_goods.\n' +
     '- confidence 0-1: 0.85 or more when the label is clearly readable, lower when you are inferring.\n' +
     'Examples: {"name":"black olives","quantity":1,"unit":"can","category":"dry_goods","storage":"pantry","confidence":0.9}\n' +
     '{"name":"cheddar cheese","quantity":1,"unit":"block","category":"dairy","storage":"fridge","confidence":0.88}\n' +
@@ -1112,7 +1105,7 @@ function receiptPrompt(tileCount: number = 0): string {
     '- If a line is clearly food but you are not sure what, STILL list your best specific guess with a lower confidence (0.3 to 0.6). ' +
     'The user reviews the list and removes mistakes.\n' +
     '- quantity and unit: use the weight for items sold by weight (1.25 lb), the package size when it is printed (1 gallon), otherwise the count with unit "each".\n' +
-    '- category and storage: where the product would be kept at home (pantry, fridge or spice_rack).\n' +
+    '- category and storage: where the product would be kept at home (pantry, fridge or spice_rack). Never use cookware for food; fruit juice is produce, not dry_goods.\n' +
     '- confidence 0-1: 0.85 or more when the line is clear, lower when you are expanding a hard abbreviation.\n' +
     'What to leave out:\n' +
     '- Anything that is not food or drink: cleaning supplies, paper goods, pet food, medicine, cosmetics, gift cards, clothing.\n' +
@@ -1866,7 +1859,7 @@ Deno.serve(async (req) => {
     );
   }
 
-  if (!checkUserRateLimit(userId)) {
+  if (!(await scanRateLimiter.take(req, userId)).allowed) {
     return jsonResponse(
       {
         error: 'Too many pantry scans. Wait a minute and try again.',
