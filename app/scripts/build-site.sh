@@ -54,6 +54,10 @@ done
 # 2. Static host basics -----------------------------------------------------------------------
 # GitHub Pages serves 404.html for any unknown address: the app then opens on that route.
 cp index.html 404.html
+# Pages that outside checkers fetch directly must answer 200, not the 404.html fallback:
+# Google Play's account-deletion URL check (mealplanatic.app/delete-account). Pages serves
+# /delete-account from delete-account.html with status 200; the app then opens that route.
+cp index.html delete-account.html
 # _expo/ starts with an underscore; Jekyll would drop it.
 touch .nojekyll
 # Custom domain. GitHub ignores this file for Actions-based deploys (the domain is the Pages
@@ -84,7 +88,7 @@ redirect_page privacy/terms.html "'/terms.html'" /terms.html
 redirect_page terms/privacy.html "'/privacy.html'" /privacy.html
 
 # Old-app routes that the new app does not have. old path -> new path.
-# (/pantry, /grocery, /stores, /delete-account exist in the new app and open through 404.html.)
+# (/pantry, /grocery, /stores exist in the new app and open through 404.html; /delete-account has its own copy, above.)
 retired_routes=(
   "recipes:/recipes/search"
   "discover-recipes:/recipes/search"
@@ -131,7 +135,7 @@ for page in 209/*.html; do
 done
 
 # 6. Self-check ---------------------------------------------------------------------------------
-required=(index.html 404.html terms.html privacy.html accessibility.html terms/index.html privacy/index.html
+required=(index.html 404.html delete-account.html terms.html privacy.html accessibility.html terms/index.html privacy/index.html
   CNAME .nojekyll sw.js app/sw.js pwa-register.js 209/index.html app/index.html)
 for entry in "${retired_routes[@]}"; do
   old="${entry%%:*}"
@@ -144,6 +148,7 @@ for f in "${required[@]}"; do
   [ -f "$f" ] || fail "missing $f in the site"
 done
 cmp -s index.html 404.html || fail "404.html differs from index.html"
+cmp -s index.html delete-account.html || fail "delete-account.html differs from index.html"
 cmp -s terms.html "$REPO_DIR/app/public/terms.html" || fail "terms.html differs from app/public"
 cmp -s privacy.html "$REPO_DIR/app/public/privacy.html" || fail "privacy.html differs from app/public"
 cmp -s accessibility.html "$REPO_DIR/app/public/accessibility.html" || fail "accessibility.html differs from app/public"

@@ -57,7 +57,8 @@ test.describe('deep links open through 404.html', () => {
 
   test('/delete-account renders its own screen without a session', async ({ page }) => {
     const response = await page.goto('/delete-account');
-    expect(response?.status()).toBe(404);
+    // Served from delete-account.html with 200: Google Play's deletion-URL check needs a 200.
+    expect(response?.status()).toBe(200);
     await expect(page).toHaveURL(/\/delete-account$/);
     await expect(page.getByText('Sign in to delete your account from this page.')).toBeVisible();
     await expectAppRendered(page);
