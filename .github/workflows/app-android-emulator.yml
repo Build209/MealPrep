@@ -113,13 +113,22 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
+      # The runner's preinstalled command-line tools predate the Pixel Fold profile (two screens:
+      # cover and inner). Newer tools have it; without it a "foldable" has one screen (2026-10-15 run).
+      - name: Update Android command-line tools
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "cmdline-tools;latest" > /dev/null || true
+          ls -d "$ANDROID_HOME"/cmdline-tools/*/
+          for d in "$ANDROID_HOME"/cmdline-tools/latest-2 "$ANDROID_HOME"/cmdline-tools/latest; do
+            if [ -x "$d/bin/avdmanager" ]; then echo "$d/bin" >> "$GITHUB_PATH"; echo "Using $d"; break; fi
+          done
+
       - name: Pick the device profile
         id: profile
         env:
           WANT: ${{ matrix.profiles }}
         run: |
-          avdmanager="$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager"
-          [ -x "$avdmanager" ] || avdmanager="$(command -v avdmanager)"
+          avdmanager="$(command -v avdmanager)"
           "$avdmanager" list device -c > "$RUNNER_TEMP/devices.txt"
           echo "Device ids on this runner:"; cat "$RUNNER_TEMP/devices.txt"
           IFS='|' read -ra wants <<< "$WANT"
