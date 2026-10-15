@@ -12,16 +12,20 @@
 export const ACCOUNT_DELETE_COPY = {
   /** LIVE (delete-account.tsx). */
   title: 'Delete your MealPlanatic account',
-  /** LIVE (delete-account.tsx): what is deleted, and that Plus is cancelled. */
+  /**
+   * Live text (delete-account.tsx) with one change: "MealPlanatic Plus" became "your MealPlanatic
+   * plan", because Pro and Family are sold too (compliance review). NEW wording, pending sign-off.
+   */
   whatIsDeleted:
     'You can permanently delete your account and the personal data we store for you. This includes your profile, ' +
     'pantry, saved recipes, meal plan, grocery lists, saved stores, and scan photos tied to your account. Deleting ' +
-    'your account also cancels MealPlanatic Plus and stops future charges.',
-  /** LIVE (account.ts). */
+    'your account also cancels your MealPlanatic plan and stops future charges.',
+  /** LIVE (account.ts), except confirmBody: see below. */
   deleteButton: 'Delete account',
   confirmTitle: 'Delete your account?',
+  /** Live text (account.ts) with "MealPlanatic Plus" changed to "a paid MealPlanatic plan". NEW wording, pending sign-off. */
   confirmBody:
-    'This permanently removes your pantry, recipes, grocery list, meal plan, and profile. If you have MealPlanatic Plus, it is cancelled now and you will not be charged again. Community store prices you shared may stay visible without your name. This cannot be undone.',
+    'This permanently removes your pantry, recipes, grocery list, meal plan, and profile. If you have a paid MealPlanatic plan, it is cancelled now and you will not be charged again. Community store prices you shared may stay visible without your name. This cannot be undone.',
   confirmAction: 'Yes, delete my account',
   cancel: 'Cancel',
   /** LIVE (delete-account.tsx). */

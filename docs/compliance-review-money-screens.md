@@ -40,6 +40,18 @@ Every money-related screen and line in the new app (`app/`), next to the approve
 5. **Used-up notes for scans and imports reword the server's approved sentences** ("You've used … They start again on the 1st." vs the functions' "You have used … for this month. They reset on the 1st."). Meaning is the same. Suggest **Approve**, or **Change** to the server's exact words. Rows 7.3, 7.4, 7.13, 7.14.
 6. **No message after coming back from Stripe.** The live app said "Checkout closed. You have not been charged." and "You're on a paid MealPlanatic plan. Your new monthly limits are ready." The new app shows nothing. Not a legal requirement (Stripe's page carries the terms and the receipt), but it is approved wording that was dropped. Suggest **Question**: port it after switch-over? Row 8.7.
 
+## Fixes built (owner approved 2026-10-15), waiting for compliance sign-off
+
+PR `rebuild/compliance-fixes`. Lines marked NEW need a compliance yes before switch-over.
+
+| Decision | What changed | Status |
+|---|---|---|
+| 1 (row 7.21) | Ask Forky counter: "4 questions left this month", "1 question left this month", "No questions left this month" | NEW wording ("this month" ending) |
+| 2 | Delete page: "…also cancels your MealPlanatic plan and stops future charges." Confirm step: "If you have a paid MealPlanatic plan, it is cancelled now and you will not be charged again." The server's CANCEL_FAILED line still says "MealPlanatic Plus": changing it needs a function deploy, so it is left for a separate, owner-run step. | NEW wording |
+| 3 | Plan or subscription fails to load (Plans, Account): "Couldn't load your plan. Please try again." Checkout errors keep "Could not start checkout. Please try again." | NEW wording (no money words) |
+| 6 | After Stripe: the live app's three lines restored word for word (cancelled, unlocked, pending), shown once, then the marker is removed from the address | LIVE wording, unchanged |
+| Privacy page | "avatar → Account → Delete account" became "Home → Account → Delete account" (app/public and mobile/public, identical). "Last updated" date not changed: compliance to say if it should be. | Legal page change, needs approval |
+
 ## Sources and checks, short names
 
 | Short name | File |

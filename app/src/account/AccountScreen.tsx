@@ -41,7 +41,7 @@ export function AccountScreen() {
         </View>
       ) : profile.error || !profile.data || !state ? (
         <AppText variant="secondary" color="danger" bold accessibilityRole="alert">
-          {profile.error instanceof Error ? profile.error.message : PLANS_COPY.genericError}
+          {profile.error instanceof Error ? profile.error.message : PLANS_COPY.loadError}
         </AppText>
       ) : (
         <CurrentPlan

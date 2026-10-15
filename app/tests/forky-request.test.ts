@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { createForkyAsker } from '../src/forky/api';
-import { ASK_FORKY_COPY, messagesLeftText } from '../src/forky/copy';
+import { ASK_FORKY_COPY, questionsLeftText } from '../src/forky/copy';
 import {
   askForkyUrl,
   buildAskForkyBody,
@@ -130,10 +130,10 @@ test('rule 9: the check line shows when the server says so, or the words say so'
   assert.equal(needsSafetyNote('Dinner?', { ...base, answer: 'Watch for gluten in the soy sauce.' }), true);
 });
 
-test('messages left wording', () => {
-  assert.equal(messagesLeftText(3), '3 messages left this month');
-  assert.equal(messagesLeftText(1), '1 message left this month');
-  assert.equal(messagesLeftText(0), 'No messages left this month');
+test('questions left wording', () => {
+  assert.equal(questionsLeftText(3), '3 questions left this month');
+  assert.equal(questionsLeftText(1), '1 question left this month');
+  assert.equal(questionsLeftText(0), 'No questions left this month');
 });
 
 type Call = { url: string; init: { method: string; headers: Record<string, string>; body: string } };

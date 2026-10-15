@@ -15,7 +15,7 @@ import { forkyAllowanceFor, forkyTierFor, forkyUsedUp, morePlansExist } from './
 import { createForkyAsker } from './api';
 import { FORKY_IDEA } from './art';
 import { forkyChat, usageForPeriod, type ChatMessage } from './chatStore';
-import { ASK_FORKY_COPY, ASK_FORKY_LIMITS, messagesLeftText } from './copy';
+import { ASK_FORKY_COPY, ASK_FORKY_LIMITS, questionsLeftText } from './copy';
 import { askForkyUrl, ForkyError, needsSafetyNote, type ForkyTurn } from './request';
 import { rankShortlist, recipeButtons } from './shortlist';
 
@@ -80,7 +80,7 @@ function Bubble({ message, onOpen }: { message: ChatMessage; onOpen: (href: stri
  * - The line saying Forky is an AI and can be wrong is always on screen (compliance rules 9, 17).
  * - The chat is kept in memory for this session only (chatStore.ts): never stored.
  * - Recipe buttons open only recipes the app itself put on the shortlist.
- * - "N messages left this month" from forky_chat_usage and the plan's limit; the server decides.
+ * - "N questions left this month" from forky_chat_usage and the plan's limit; the server decides.
  */
 export function ForkyChatScreen() {
   const { ready, session } = useAuth();
@@ -245,7 +245,7 @@ export function ForkyChatScreen() {
         <View style={[column, { gap: 8 }]}>
           {allowance.state === 'known' ? (
             <AppText variant="label" color="muted">
-              {messagesLeftText(allowance.remaining)}
+              {questionsLeftText(allowance.remaining)}
             </AppText>
           ) : null}
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
