@@ -224,10 +224,14 @@ screen('03', 'forgot-password', 'none', 'the forgot-password form', async (page)
 
 // ---- Signed in, seeded account -------------------------------------------------------------
 
-screen('04', 'home', 'none', 'Home feed with seeded pantry and recipe', async (page) => {
+screen('04', 'home', 'none', 'Home: Ask Forky box and the counters (seeded account)', async (page) => {
   await signIn(page);
-  await expect(page.getByRole('heading', { name: 'Cook from your pantry' })).toBeVisible();
-  await expect(page.getByRole('button', { name: new RegExp(`^${seed.recipeTitle}, `) }).first()).toBeVisible();
+  await expect(page.getByRole('textbox', { name: 'Ask Forky a question' })).toBeVisible();
+  // 5 pantry items; 2 grocery rows to buy (Apples is ticked); the seeded recipe misses scallions and soy sauce.
+  await expect(page.getByTestId('home-count-pantry-value')).toHaveText('5');
+  await expect(page.getByTestId('home-count-grocery-value')).toHaveText('2');
+  await expect(page.getByTestId('home-count-ready-value')).toHaveText(/^\d+$/);
+  return ['The promo slot under the counters is a link to Plans on the web (no ads, nothing loaded from outside).'];
 });
 
 /**
@@ -249,7 +253,7 @@ test('tab bar: icons over labels, on screen, above the safe area', async ({ page
     const safeBottom = parseFloat(getComputedStyle(probe).paddingBottom) || 0;
     probe.remove();
     let bar: HTMLElement | null = null;
-    const tabs = ['index', 'pantry', 'grocery', 'stores'].map((route) => {
+    const tabs = ['index', 'pantry', 'recipes', 'grocery'].map((route) => {
       const icon = document.querySelector<HTMLElement>(`[data-testid="tab-icon-${route}"]`);
       if (!icon) return { route, found: false, iconW: 0, iconH: 0, hidden: false, label: '', tabH: 0, tabBottom: 0, iconAboveLabel: false };
       const tab = icon.closest<HTMLElement>('a, button, [role="tab"], [role="button"], [role="link"]');
@@ -293,7 +297,7 @@ test('tab bar: icons over labels, on screen, above the safe area', async ({ page
       barPaddingBottom: b ? parseFloat(getComputedStyle(b).paddingBottom) : -1,
     };
   });
-  expect(m.tabs.map((t) => t.label)).toEqual(['Home', 'Pantry', 'Grocery', 'Stores']);
+  expect(m.tabs.map((t) => t.label)).toEqual(['Home', 'Pantry', 'Recipes', 'Grocery']);
   for (const t of m.tabs) {
     expect(t.found, `${t.route}: tab icon present`).toBe(true);
     expect(t.iconW, `${t.route}: icon has a size`).toBeGreaterThan(10);
@@ -307,7 +311,7 @@ test('tab bar: icons over labels, on screen, above the safe area', async ({ page
   expect(m.barBottom).toBeLessThanOrEqual(m.innerHeight + 1);
   expect(m.barPaddingBottom, 'bar padding covers the safe-area inset').toBeGreaterThanOrEqual(m.safeBottom + 8 - 0.5);
   // Every tab is still reachable by its name alone (the icon adds nothing to it).
-  for (const name of ['Home', 'Pantry', 'Grocery', 'Stores']) {
+  for (const name of ['Home', 'Pantry', 'Recipes', 'Grocery']) {
     await expect(page.getByRole('tab', { name, exact: true }).or(page.getByRole('link', { name, exact: true })).first()).toBeVisible();
   }
 });
@@ -401,14 +405,15 @@ screen('15', 'forky-answer', 'none', 'Ask Forky with a stubbed answer', async (p
   await page.getByRole('textbox', { name: 'Your question for Forky' }).fill('What can I cook tonight?');
   await page.getByRole('button', { name: 'Send', exact: true }).click();
   await expect(page.getByText(/perfect for egg fried rice tonight/)).toBeVisible();
-  await expect(page.getByText('4 questions left this month', { exact: true })).toBeVisible();
+  // Home (with the same allowance line) stays mounted under the chat.
+  await expect(page.getByText('4 questions left this month', { exact: true }).filter({ visible: true })).toBeVisible();
   return ['The ask-forky function is stubbed: the answer text is the test\'s, not the AI\'s.'];
 });
 
-screen('16', 'stores-zip', 'none', 'Stores found by ZIP', async (page) => {
+screen('16', 'stores-zip', 'none', 'Stores found by ZIP (Grocery, Stores view)', async (page) => {
   await stubFunction(page, 'kroger-deals', 503, () => ({ error: 'Live Kroger prices are not set up yet.', configured: false }));
   await signIn(page);
-  await page.goto('/stores');
+  await page.goto('/grocery?view=stores');
   const zipBox = page.getByRole('textbox', { name: 'ZIP code' });
   await expect(zipBox).toBeVisible();
   await zipBox.fill(ZIP.zip);
@@ -495,4 +500,46 @@ screen('27', 'accessibility', 'none', 'Accessibility statement (/accessibility.h
   expect(res?.status()).toBe(200);
   await expect(page.getByRole('heading', { level: 1, name: 'Accessibility' })).toBeVisible();
   return ['Static page (public/accessibility.html), not an app screen.'];
+});
+
+// ---- Added with the four-tab layout (2026-10-15) ------------------------------------------------
+
+screen('28', 'recipes-tab', 'none', 'Recipes tab: the feed with seeded pantry and recipe', async (page) => {
+  await signIn(page);
+  await page.goto('/recipes');
+  await expect(page.getByRole('heading', { name: 'Cook from your pantry' })).toBeVisible();
+  await expect(page.getByRole('button', { name: new RegExp(`^${seed.recipeTitle}, `) }).first()).toBeVisible();
+});
+
+screen('29', 'home-forky-ask', 'none', 'Ask Forky from the Home box (stubbed answer)', async (page) => {
+  await stubFunction(page, 'ask-forky', 200, () => ({
+    answer: 'Use the eggs first: an omelette with the cheddar.',
+    recipeIds: [],
+    offTopic: false,
+    safetyNote: false,
+    remaining: 4,
+    limit: 5,
+    isPlus: false,
+    tier: 'free',
+  }));
+  await signIn(page);
+  const box = page.getByRole('textbox', { name: 'Ask Forky a question' });
+  await box.fill('What should I use up first?');
+  // Send must be fully tappable on narrow screens too (flip phone cover screen): it wraps under the box.
+  const send = page.getByRole('button', { name: 'Send to Forky', exact: true });
+  await send.scrollIntoViewIfNeeded();
+  const box44 = await send.boundingBox();
+  expect(box44 && box44.width >= 44 && box44.height >= 44, `Send is 44px: ${JSON.stringify(box44)}`).toBeTruthy();
+  await send.click();
+  await expect(page.getByText(/Use the eggs first/)).toBeVisible();
+  return ['The ask-forky function is stubbed: the answer text is the test\'s, not the AI\'s.'];
+});
+
+screen('30', 'grocery-stores-switch', 'none', 'Grocery: the List | Stores switch', async (page) => {
+  await stubFunction(page, 'kroger-deals', 503, () => ({ error: 'Live Kroger prices are not set up yet.', configured: false }));
+  await signIn(page);
+  await page.goto('/stores');
+  await expect(page.getByRole('radio', { name: 'Stores', exact: true })).toBeChecked();
+  await expect(page.getByRole('heading', { name: 'Stores near you' })).toBeVisible();
+  return ['Reached through /stores, which redirects to /grocery?view=stores.'];
 });

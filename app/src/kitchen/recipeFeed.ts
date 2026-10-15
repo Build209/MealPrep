@@ -62,6 +62,22 @@ export function rankRecipeFeed<R extends MatchRecipe, P extends StockRow>(
   return { cookable, usedPartialFallback, more: rest.slice(0, limit), moreHidden: Math.max(0, rest.length - limit) };
 }
 
+/**
+ * How many recipes can be cooked now with what is in the pantry: the same scoring as the feed and
+ * its "Ready to cook" sticker (nothing missing), and at least one ingredient really from the pantry
+ * (a recipe of only staples such as salt and water does not count). An empty pantry counts 0.
+ * Home's "Ready to cook" counter (src/home/). Pure (tests/home-counts.test.ts).
+ */
+export function readyToCookCount(recipes: readonly MatchRecipe[], pantry: readonly StockRow[]): number {
+  if (pantry.length === 0) return 0;
+  let ready = 0;
+  for (const recipe of recipes) {
+    const match = scoreRecipeAgainstPantry(recipe, pantry);
+    if (match.missingCount === 0 && match.matchedCount >= 1) ready += 1;
+  }
+  return ready;
+}
+
 /** The status sticker: leaf "Ready to cook" or banana "N missing" (DESIGN rules). */
 export type RecipeStatus = { kind: 'ready' } | { kind: 'missing'; count: number };
 

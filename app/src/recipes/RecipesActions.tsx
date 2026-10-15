@@ -6,11 +6,11 @@ import { Button } from '../ui/Button';
 import { FEED_COPY } from './recipeLogic';
 
 /**
- * Home's ways into the other recipe screens: plain links to Search and Saved, and a secondary
+ * The Recipes tab's ways into the other recipe screens: plain links to Search and Saved, and a secondary
  * "Import a recipe" button (an import is the person's own recipe; saving one opens its page).
  * Shown whatever state the feed is in, so they work while recipes load or fail.
  */
-export function HomeActions() {
+export function RecipesActions() {
   const router = useRouter();
   const links = [
     { href: '/recipes/search', label: FEED_COPY.searchLink },

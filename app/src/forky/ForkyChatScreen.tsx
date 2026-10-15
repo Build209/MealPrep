@@ -1,25 +1,31 @@
-import { Link, Redirect, useRouter } from 'expo-router';
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
-import { Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, TextInput, View } from 'react-native';
+import { Link, Redirect, useLocalSearchParams, useRouter } from 'expo-router';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, TextInput, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../auth/AuthProvider';
 import { OFFLINE_MESSAGE, isOnlineNow } from '../data/online';
-import { useForkyMessagesUsed, useForkyRecipes, useRefreshForkyUsage } from '../data/forkyChat';
+import { useForkyRecipes, useRefreshForkyUsage } from '../data/forkyChat';
 import { usePantryItems } from '../data/pantry';
-import { useProfile } from '../data/profile';
 import { env } from '../lib/env';
 import { logEvent } from '../lib/events';
-import { currentUsagePeriod } from '../scan/allowance';
 import { colors, fonts, layout, radius, space, touch, type as typeScale } from '../theme/tokens';
 import { AppText } from '../ui/AppText';
 import { Button } from '../ui/Button';
-import { forkyAllowanceFor, forkyTierFor, forkyUsedUp, morePlansExist } from './allowance';
+import { morePlansExist } from './allowance';
 import { createForkyAsker } from './api';
 import { FORKY_IDEA } from './art';
-import { forkyChat, usageForPeriod, type ChatMessage } from './chatStore';
+import { forkyChat, type ChatMessage } from './chatStore';
 import { ASK_FORKY_COPY, ASK_FORKY_LIMITS, questionsLeftText } from './copy';
 import { askForkyUrl, ForkyError, needsSafetyNote, type ForkyTurn } from './request';
 import { rankShortlist, recipeButtons } from './shortlist';
+import { useForkyAllowance } from './useForkyAllowance';
+
+/**
+ * Below this window height (a flip phone's cover screen, a phone on its side) the question box
+ * scrolls with the chat instead of being pinned to the bottom: pinned, the header and the box
+ * together were taller than the screen and covered the Send button (flip phone, folded).
+ */
+const PINNED_COMPOSER_MIN_HEIGHT = 480;
 
 const askForky = createForkyAsker({ url: askForkyUrl(env.supabaseUrl) });
 
@@ -89,21 +95,22 @@ export function ForkyChatScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const userId = session?.user.id ?? null;
-  const chat = useSyncExternalStore(forkyChat.subscribe, () => forkyChat.snapshot(userId), () => forkyChat.snapshot(userId));
-  const profile = useProfile();
+  const { chat, profile, period, tier, allowance, usedUp } = useForkyAllowance(userId);
   const pantry = usePantryItems();
   const recipes = useForkyRecipes();
-  const used = useForkyMessagesUsed();
   const refreshUsage = useRefreshForkyUsage();
+  const { height } = useWindowDimensions();
+  const pinnedComposer = height >= PINNED_COMPOSER_MIN_HEIGHT;
+  // A question sent from Home's box: /forky?q=<question>&ask=<nonce> (src/home/HomeForkyBox.tsx).
+  const params = useLocalSearchParams<{ q?: string; ask?: string }>();
+  const incoming = typeof params.q === 'string' ? params.q.trim() : '';
+  const askKey = incoming ? `${params.ask ?? ''}|${incoming}` : null;
+  const prefilledAsk = useRef<string | null>(null);
+  const handledAsk = useRef<string | null>(null);
   const [draft, setDraft] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const scrollRef = useRef<ScrollView>(null);
-
-  const period = currentUsagePeriod();
-  const tier = profile.data ? forkyTierFor(profile.data) : null;
-  const allowance = forkyAllowanceFor(tier, used.data ?? null, usageForPeriod(chat.serverUsage, period));
-  const usedUp = forkyUsedUp(allowance);
 
   const shortlist = useMemo(
     () => rankShortlist(recipes.data ?? [], pantry.data ?? []),
@@ -114,6 +121,28 @@ export function ForkyChatScreen() {
     const timer = setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 50);
     return () => clearTimeout(timer);
   }, [chat.messages.length, busy]);
+
+  // Home's question: shown in the box at once, then sent once the pantry and recipes Forky sees are
+  // loaded (the same send as the Send button, so the allowance, offline and error rules are the
+  // same). Used up: it stays in the box under the "used up" card and nothing is sent.
+  const contextReady = !!profile.data && !pantry.isPending && !recipes.isPending;
+  useEffect(() => {
+    if (!askKey) return;
+    if (prefilledAsk.current !== askKey) {
+      prefilledAsk.current = askKey;
+      setDraft(incoming);
+    }
+    if (handledAsk.current === askKey || busy || !userId || !contextReady) return;
+    handledAsk.current = askKey;
+    try {
+      // Off the address, so a reload or Back does not ask it again.
+      router.setParams({ q: undefined, ask: undefined });
+    } catch {
+      // Router not ready; the ref above still stops a second send.
+    }
+    if (!usedUp) void send(incoming);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [askKey, contextReady, userId, busy, usedUp]);
 
   if (ready && !session) return <Redirect href="/sign-in" />;
 
@@ -180,15 +209,57 @@ export function ForkyChatScreen() {
   const errorText = usedUp && error === usedUpText ? null : error;
   const column = { width: '100%' as const, maxWidth: layout.maxWidth, alignSelf: 'center' as const };
 
+  // The allowance line and the question box. Pinned under the chat on a normal screen; inside the
+  // scrolling chat on a short one (PINNED_COMPOSER_MIN_HEIGHT). On a very narrow screen Send wraps
+  // under the box instead of being squeezed.
+  const composer = (
+    <View style={{ gap: 8 }}>
+      {allowance.state === 'known' ? (
+        <AppText variant="label" color="muted">
+          {questionsLeftText(allowance.remaining)}
+        </AppText>
+      ) : null}
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
+        <TextInput
+          value={draft}
+          onChangeText={setDraft}
+          onSubmitEditing={() => void send(draft)}
+          editable={!usedUp}
+          maxLength={ASK_FORKY_LIMITS.questionChars}
+          placeholder={ASK_FORKY_COPY.placeholder}
+          placeholderTextColor={colors.muted}
+          accessibilityLabel={ASK_FORKY_COPY.inputLabel}
+          returnKeyType="send"
+          style={{
+            flexGrow: 1,
+            flexShrink: 1,
+            flexBasis: 150,
+            minWidth: 0,
+            minHeight: 48,
+            borderRadius: radius.pill,
+            borderWidth: 1,
+            borderColor: colors.border,
+            backgroundColor: colors.card,
+            paddingHorizontal: 16,
+            color: colors.ink,
+            fontFamily: fonts.body,
+            ...typeScale.body,
+          }}
+        />
+        <Button label={ASK_FORKY_COPY.send} disabled={!canSend} onPress={() => void send(draft)} />
+      </View>
+    </View>
+  );
+
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1, backgroundColor: colors.paper }}>
       <View style={{ backgroundColor: colors.banana, paddingTop: insets.top }}>
         <View style={[column, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingLeft: space.gutter, paddingRight: 8, paddingVertical: 8 }]}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flexShrink: 1 }}>
             <View style={{ width: 40, height: 40, borderRadius: radius.pill, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
               <Image source={FORKY_IDEA} resizeMode="contain" accessible={false} style={{ width: 22, height: 36 }} />
             </View>
-            <AppText variant="pageTitle" display color="onBanana">
+            <AppText variant="pageTitle" display color="onBanana" style={{ flexShrink: 1 }}>
               {ASK_FORKY_COPY.title}
             </AppText>
           </View>
@@ -246,44 +317,16 @@ export function ForkyChatScreen() {
               ))}
             </View>
           ) : null}
+
+          {pinnedComposer ? null : <View style={{ paddingBottom: insets.bottom }}>{composer}</View>}
         </View>
       </ScrollView>
 
-      <View style={{ borderTopWidth: 1, borderTopColor: colors.border, backgroundColor: colors.paper, paddingHorizontal: space.gutter, paddingTop: 12, paddingBottom: 12 + insets.bottom }}>
-        <View style={[column, { gap: 8 }]}>
-          {allowance.state === 'known' ? (
-            <AppText variant="label" color="muted">
-              {questionsLeftText(allowance.remaining)}
-            </AppText>
-          ) : null}
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-            <TextInput
-              value={draft}
-              onChangeText={setDraft}
-              onSubmitEditing={() => void send(draft)}
-              editable={!usedUp}
-              maxLength={ASK_FORKY_LIMITS.questionChars}
-              placeholder={ASK_FORKY_COPY.placeholder}
-              placeholderTextColor={colors.muted}
-              accessibilityLabel={ASK_FORKY_COPY.inputLabel}
-              returnKeyType="send"
-              style={{
-                flex: 1,
-                minHeight: 48,
-                borderRadius: radius.pill,
-                borderWidth: 1,
-                borderColor: colors.border,
-                backgroundColor: colors.card,
-                paddingHorizontal: 16,
-                color: colors.ink,
-                fontFamily: fonts.body,
-                ...typeScale.body,
-              }}
-            />
-            <Button label={ASK_FORKY_COPY.send} disabled={!canSend} onPress={() => void send(draft)} />
-          </View>
+      {pinnedComposer ? (
+        <View style={{ borderTopWidth: 1, borderTopColor: colors.border, backgroundColor: colors.paper, paddingHorizontal: space.gutter, paddingTop: 12, paddingBottom: 12 + insets.bottom }}>
+          <View style={column}>{composer}</View>
         </View>
-      </View>
+      ) : null}
     </KeyboardAvoidingView>
   );
 }

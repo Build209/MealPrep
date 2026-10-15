@@ -53,7 +53,7 @@ jobs:
                    app/index.html app/pantry/index.html app/grocery/index.html app/recipes/index.html \
                    app/smart-shop/index.html app/discover-recipes/index.html app/privacy/index.html \
                    app/terms/index.html app/delete-account/index.html app/admin/index.html \
-                   recipes.html recipes/index.html discover-recipes.html discover-recipes/index.html \
+                   discover-recipes.html discover-recipes/index.html \
                    smart-shop.html smart-shop/index.html pantry-staples.html pantry-staples/index.html \
                    profile.html profile/index.html admin.html admin/index.html \
                    preview/video-recipe-detail.html preview/video-recipe-detail/index.html \
@@ -80,7 +80,9 @@ jobs:
           grep -qF 'Sitemap: https://mealplanatic.app/sitemap.xml' robots.txt
           if grep -q '^Disallow: *[^ ]' robots.txt; then echo "robots.txt must not block anything"; exit 1; fi
           # Redirect stubs point where they should.
-          grep -qF "'/recipes/search'" recipes/index.html
+          grep -qF "'/recipes/search'" discover-recipes/index.html
+          # /recipes is the app's Recipes tab (through 404.html): no stub may sit on that address.
+          if [ -e recipes.html ] || [ -e recipes/index.html ]; then echo "/recipes must open the app, not a stub"; exit 1; fi
           grep -qF "'/stores'" smart-shop/index.html
           grep -qF "'/pantry'" pantry-staples/index.html
           grep -qF "'/account'" profile/index.html

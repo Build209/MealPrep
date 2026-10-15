@@ -125,7 +125,7 @@ Page title 28 / section title 19 / button 17 / body 16 / secondary 14 / label 12
 
 ## Layout
 
-Phone first, 360 to 430px wide; on wider screens the same single column sits centred. 20px side gutter. Fixed green header, fixed 60px tab bar with four tabs (Home, Pantry, Grocery, Stores). Sideways-scrolling rows (chips, shelves, creators) bleed to the right edge to show there is more. Related items sit 8 to 12px apart; separate groups 24px or more.
+Phone first, 360 to 430px wide; on wider screens the same single column sits centred. 20px side gutter. Fixed green header, fixed 60px tab bar with four tabs (Home, Pantry, Recipes, Grocery; owner 2026-10-15: Home is Ask Forky and counters, Stores is a view inside Grocery). Sideways-scrolling rows (chips, shelves, creators) bleed to the right edge to show there is more. Related items sit 8 to 12px apart; separate groups 24px or more.
 
 ## Elevation & Depth
 

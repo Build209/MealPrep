@@ -57,7 +57,7 @@ export const HELP_FAQ: readonly HelpQuestion[] = [
     id: 'import',
     q: 'How do I import a recipe?',
     a:
-      'On Home, tap Import a recipe. Paste a link or the recipe text, take a photo of a cookbook page, or upload a saved video. ' +
+      'On the Recipes tab, tap Import a recipe. Paste a link or the recipe text, take a photo of a cookbook page, or upload a saved video. ' +
       'You can check and fix the recipe before you save it. ' +
       `Imports a month: ${perPlanList('imports')}. ${REFILL}`,
   },
@@ -65,7 +65,7 @@ export const HELP_FAQ: readonly HelpQuestion[] = [
     id: 'forky',
     q: 'What is Ask Forky?',
     a:
-      'Tap Forky in the top bar to ask what to cook, how to use something up, or what to swap. ' +
+      'Type a question in the box at the top of Home, or tap Forky in the top bar, to ask what to cook, how to use something up, or what to swap. ' +
       `${ASK_FORKY_COPY.aiNotice} ` +
       `Questions a month: ${perPlanList('forkyQuestions')}. ${REFILL}`,
   },

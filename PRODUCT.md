@@ -28,7 +28,7 @@ The pantry is filled by camera, not by typing: a photo of a shelf or a grocery r
 
 - First use: a tour led by Forky, then a shelf scan (3 free scans, once per account).
 - Weekly habit: scan the grocery receipt to keep the pantry current (Plus), pick recipes, tick off the grocery list.
-- Tabs: Home (recipes), Pantry, Grocery, Stores.
+- Tabs (owner, 2026-10-15): Home (Ask Forky box, counters for ready-to-cook recipes, pantry items and grocery items, a reserved slot), Pantry, Recipes, Grocery (the list, and nearby stores as a second view).
 - Payment happens on the web only, through Stripe's hosted checkout. Store builds must not link to it.
 
 ## Capabilities and Constraints

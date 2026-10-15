@@ -1,12 +1,12 @@
 /**
- * Wording and small pure helpers for the Home feed and the recipe detail screen.
+ * Wording and small pure helpers for the Recipes tab feed and the recipe detail screen.
  * Tested in tests/recipe-feed-logic.test.ts.
  */
 import { formatIngredientText, formatQuantityWithUnit } from '../kitchen/formatQuantity';
 import type { IngredientStatusLine } from '../kitchen/recipeMatch';
 
 export const FEED_COPY = {
-  title: 'Home',
+  title: 'Recipes',
   cookTitle: 'Cook from your pantry',
   cookIntro: 'Recipes that use what you already have, best match first.',
   partialIntro: 'Nothing uses two of your pantry items yet. These use at least one.',
