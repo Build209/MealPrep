@@ -1,0 +1,237 @@
+name: New app Android emulator
+
+# The phone screen tour (app/e2e/phone-tour.spec.ts) in the REAL Chrome app on Android emulators:
+# a Pixel 7 (portrait and rotated) and a flip phone (cover screen and open). Book-style foldable paused. Catches what a
+# phone-shaped desktop browser cannot: real Chrome on Android, real rotation and folding.
+# Same LOCAL Supabase stack as app-phone.yml (the emulator reaches it through `adb reverse`): never
+# connects to the live project. Script: app/e2e/emulator/run.sh.
+#
+# Report-only for now (owner, 2026-10-15: Android emulator first, iPhone simulator later): test
+# failures show as a warning and in the report. The job fails only when the emulator or Chrome
+# could not be set up. Screenshots: the "emulator-screens-<device>" artifacts, and on pull requests
+# from this repository the `emulator-screens-pr-<number>` branch.
+on:
+  pull_request:
+    paths:
+      - "app/**"
+      - "db/**"
+      - ".github/workflows/app-android-emulator.yml"
+  push:
+    branches: [rebuild/v1]
+    paths:
+      - "app/**"
+      - "db/**"
+      - ".github/workflows/app-android-emulator.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: app-android-emulator-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  emulator:
+    name: emulator (${{ matrix.device }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 70
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # profiles: device ids to try, first one this runner's SDK knows wins (ids differ by SDK version).
+          - device: pixel_7
+            profiles: pixel_7|pixel_6|pixel_5
+            postures: portrait landscape
+          # Book-style foldable (7.6in, big inner screen): paused 2026-10-15. Chrome on it kept
+          # crashing on signed-in screens after the first few runs; flip + Pixel 7 cover phones for now.
+          - device: flip
+            profiles: 6.7in Foldable|pixel_fold
+            postures: folded unfolded
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: supabase/setup-cli@v1
+        with:
+          # Same pin as app-e2e.yml.
+          version: 2.120.0
+
+      - name: Start local Supabase (applies migrations)
+        run: supabase start --workdir db
+
+      - name: Read local URL and keys
+        run: |
+          supabase status -o env --workdir db > "$RUNNER_TEMP/supabase.env"
+          get() { grep -E "^$1=" "$RUNNER_TEMP/supabase.env" | head -n1 | cut -d= -f2- | sed -e 's/^"//' -e 's/"$//' || true; }
+          url="$(get API_URL)"
+          anon="$(get ANON_KEY)"; [ -n "$anon" ] || anon="$(get PUBLISHABLE_KEY)"
+          service="$(get SERVICE_ROLE_KEY)"; [ -n "$service" ] || service="$(get SECRET_KEY)"
+          if [ -z "$url" ] || [ -z "$anon" ] || [ -z "$service" ]; then
+            echo "Could not read API_URL / anon key / service key from supabase status." >&2
+            exit 1
+          fi
+          case "$url" in
+            http://127.0.0.1:*|http://localhost:*) ;;
+            *) echo "API_URL is not local: refusing." >&2; exit 1 ;;
+          esac
+          mail="$(get MAILPIT_URL)"; [ -n "$mail" ] || mail="$(get INBUCKET_URL)"; [ -n "$mail" ] || mail="http://127.0.0.1:54324"
+          case "$mail" in
+            http://127.0.0.1:*|http://localhost:*) ;;
+            *) echo "Mail catcher URL is not local: refusing." >&2; exit 1 ;;
+          esac
+          echo "::add-mask::$anon"
+          echo "::add-mask::$service"
+          {
+            echo "E2E_SUPABASE_URL=$url"
+            echo "E2E_SUPABASE_ANON_KEY=$anon"
+            echo "E2E_SUPABASE_SERVICE_ROLE_KEY=$service"
+            echo "E2E_MAIL_URL=$mail"
+          } >> "$GITHUB_ENV"
+          rm -f "$RUNNER_TEMP/supabase.env"
+          echo "Local API: $url"
+
+      - name: Install app dependencies
+        working-directory: app
+        run: |
+          if [ -f package-lock.json ]; then npm ci; else npm install --no-audit --no-fund; fi
+
+      - name: Web build against the local stack
+        working-directory: app
+        run: |
+          EXPO_PUBLIC_SUPABASE_URL="$E2E_SUPABASE_URL" \
+          EXPO_PUBLIC_SUPABASE_ANON_KEY="$E2E_SUPABASE_ANON_KEY" \
+          npm run export:web
+
+      # Hardware speed-up for the emulator (GitHub's Linux runners support KVM).
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Pick the device profile
+        id: profile
+        env:
+          WANT: ${{ matrix.profiles }}
+        run: |
+          avdmanager="$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager"
+          "$avdmanager" list device -c > "$RUNNER_TEMP/devices.txt"
+          echo "Device ids on this runner:"; cat "$RUNNER_TEMP/devices.txt"
+          IFS='|' read -ra wants <<< "$WANT"
+          for id in "${wants[@]}"; do
+            if grep -qxF "$id" "$RUNNER_TEMP/devices.txt"; then
+              echo "Using: $id"
+              echo "id=$id" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          done
+          echo "::error title=Android emulator::None of these device profiles exist on this runner: $WANT"
+          exit 1
+
+      - name: "Phone tour on the emulator (${{ matrix.device }}: ${{ matrix.postures }})"
+        uses: reactivecircus/android-emulator-runner@v2.37.0
+        env:
+          DEVICE: ${{ matrix.device }}
+          POSTURES: ${{ matrix.postures }}
+          EMULATOR_RESULT: ${{ runner.temp }}/emulator-result.txt
+        with:
+          api-level: 34
+          # Play Store images ship the Chrome app; plain google_apis images do not (first run, 2026-10-15).
+          target: playstore
+          arch: x86_64
+          profile: ${{ steps.profile.outputs.id }}
+          cores: 4
+          ram-size: 4096M
+          disk-size: 6000M
+          emulator-options: -no-window -no-snapshot -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -camera-front none
+          disable-animations: true
+          working-directory: app
+          script: timeout --kill-after=60 50m bash e2e/emulator/run.sh
+
+      - name: Note test results (report-only)
+        if: always()
+        env:
+          EMULATOR_RESULT: ${{ runner.temp }}/emulator-result.txt
+        run: |
+          if [ -f "$EMULATOR_RESULT" ]; then
+            { echo "### Android emulator (${{ matrix.device }})"; sed 's/^/- /' "$EMULATOR_RESULT"; } >> "$GITHUB_STEP_SUMMARY"
+            if grep -q FAILED "$EMULATOR_RESULT"; then
+              echo "::warning title=Android emulator::Some tour screens failed on ${{ matrix.device }} (report-only for now). See the report and screenshots."
+            fi
+          fi
+
+      - name: Write the phone report
+        if: always()
+        working-directory: app
+        run: |
+          node e2e/phone-report.mjs phone-screens
+          if [ -f phone-screens/phone-report.md ]; then cat phone-screens/phone-report.md >> "$GITHUB_STEP_SUMMARY"; fi
+
+      - name: Upload screenshots and report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: emulator-screens-${{ matrix.device }}
+          path: app/phone-screens
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Upload Playwright report (on test failures)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-emulator-${{ matrix.device }}
+          path: |
+            app/playwright-report-emulator-*
+            app/test-results-emulator-*
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Stop local Supabase
+        if: always()
+        run: supabase stop --workdir db --no-backup
+
+  # Stores the screenshots on a branch so they can be fetched with git. Runs no repository code.
+  publish:
+    needs: emulator
+    if: >-
+      always() && (needs.emulator.result == 'success' || needs.emulator.result == 'failure') &&
+      (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        id: download
+        continue-on-error: true
+        with:
+          pattern: emulator-screens-*
+          path: emulator-screens
+      - name: Store on the emulator-screens branch
+        # Nothing to store when no job got as far as a screenshot.
+        if: steps.download.outcome == 'success' && hashFiles('emulator-screens/**') != ''
+        working-directory: emulator-screens
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          RESULT: ${{ needs.emulator.result }}
+        run: |
+          set -euo pipefail
+          if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
+            branch="emulator-screens-pr-${PR_NUMBER}"
+          else
+            branch="emulator-screens"
+          fi
+          case "$branch" in emulator-screens|emulator-screens-pr-[0-9]*) ;; *) echo "Unexpected branch $branch" >&2; exit 1 ;; esac
+          git init -q -b "$branch"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -q -m "Android emulator screenshots of ${HEAD_SHA} (${GITHUB_REF_NAME}, job: ${RESULT})"
+          git push -f "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "$branch"
+          echo "Stored on branch $branch"

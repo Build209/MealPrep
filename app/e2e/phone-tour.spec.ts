@@ -1,4 +1,5 @@
-import { expect, test, type BrowserContext, type Page, type Route } from '@playwright/test';
+import type { BrowserContext, Page, Route } from '@playwright/test';
+import { expect, test } from './device';
 import { adminClient, freshEmail } from './local-supabase';
 import { checkScreen, type Purpose } from './phone-checks';
 
