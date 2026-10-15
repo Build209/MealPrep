@@ -1,0 +1,57 @@
+{
+  "project": "emulator-flip-folded-720x748-cover-sim",
+  "engine": "chromium",
+  "order": "10",
+  "screen": "recipe-search",
+  "route": "/recipes/search?q=zpsaqhotjf",
+  "purpose": "none",
+  "viewport": "240x146",
+  "screenshots": [
+    "emulator-flip-folded-720x748-cover-sim/10-recipe-search.png",
+    "emulator-flip-folded-720x748-cover-sim/10-recipe-search-bottom.png"
+  ],
+  "checks": {
+    "noSidewaysScroll": true,
+    "tapTargets": true,
+    "textFits": true,
+    "tomatoRule": true
+  },
+  "sidewaysScroll": {
+    "scrollWidth": 240,
+    "innerWidth": 240
+  },
+  "tapTargetIssues": [],
+  "tapTargetAllowed": [],
+  "clippedText": [],
+  "truncatedText": [
+    {
+      "text": "Phone zpsaqhotjf egg fried rice",
+      "kind": "truncated",
+      "scroll": "68x120",
+      "client": "68x48"
+    },
+    {
+      "text": "Your recipe · Dinner · 20 min",
+      "kind": "truncated",
+      "scroll": "176x20",
+      "client": "68x20"
+    },
+    {
+      "text": "zpsaqhotjf weeknight fried rice recipe",
+      "kind": "truncated",
+      "scroll": "36x180",
+      "client": "36x40"
+    },
+    {
+      "text": "Phone Test Chef · Watch on YouTube",
+      "kind": "truncated",
+      "scroll": "206x16",
+      "client": "36x16"
+    }
+  ],
+  "offscreenControls": [],
+  "tomato": [],
+  "tomatoViolations": [],
+  "notes": [],
+  "reportOnly": {}
+}
