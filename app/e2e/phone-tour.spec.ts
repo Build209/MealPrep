@@ -540,6 +540,6 @@ screen('30', 'grocery-stores-switch', 'none', 'Grocery: the List | Stores switch
   await signIn(page);
   await page.goto('/stores');
   await expect(page.getByRole('radio', { name: 'Stores', exact: true })).toBeChecked();
-  await expect(page.getByRole('heading', { name: 'Stores near you' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Stores near you', exact: true })).toBeVisible();
   return ['Reached through /stores, which redirects to /grocery?view=stores.'];
 });

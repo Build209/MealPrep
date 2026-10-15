@@ -190,7 +190,7 @@ test('Recipes tab shows the feed with Search, Saved and Import; Grocery has List
   await expect(page.getByText('Your list is empty').filter({ visible: true })).toBeVisible();
   await page.getByRole('radio', { name: 'Stores', exact: true }).click();
   await expectAt(page, '/grocery', '?view=stores');
-  await expect(page.getByRole('heading', { name: 'Stores near you' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Stores near you', exact: true })).toBeVisible();
   await expect(page.getByRole('textbox', { name: 'ZIP code' })).toBeVisible();
   await page.getByRole('radio', { name: 'List', exact: true }).click();
   await expectAt(page, '/grocery');
@@ -199,7 +199,7 @@ test('Recipes tab shows the feed with Search, Saved and Import; Grocery has List
   await page.goto('/stores');
   await expectAt(page, '/grocery', '?view=stores');
   await expect(page.getByRole('radio', { name: 'Stores', exact: true })).toBeChecked();
-  await expect(page.getByRole('heading', { name: 'Stores near you' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Stores near you', exact: true })).toBeVisible();
 
   // Old /recipes?q= links were searches and still are.
   await page.goto('/recipes?q=egg');
