@@ -12,6 +12,7 @@ import {
   TARGET_PER_CATEGORY,
   type ViralRecipesCategory,
 } from './youtubeDiscovery.ts';
+import { bearerWithUser, clientAddressKey, createRateLimiter } from '../_shared/rateLimit.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -266,41 +267,16 @@ function parseCategory(input: unknown): ViralRecipesCategory | null {
   return null;
 }
 
+/** Account id for signed-in callers; network address for guests (who use the publishable key). */
 function rateLimitKey(req: Request): string {
-  const authHeader = req.headers.get('Authorization');
-  if (authHeader?.startsWith('Bearer ')) {
-    const token = authHeader.slice('Bearer '.length);
-    const parts = token.split('.');
-    if (parts.length === 3) {
-      try {
-        const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
-        const padded = base64 + '='.repeat((4 - (base64.length % 4)) % 4);
-        const payload = JSON.parse(atob(padded)) as { sub?: string };
-        if (payload.sub) return payload.sub;
-      } catch {
-        /* ignore */
-      }
-    }
-  }
-  const forwarded = req.headers.get('x-forwarded-for');
-  return forwarded?.split(',')[0]?.trim() || req.headers.get('cf-connecting-ip') || 'anon';
+  return bearerWithUser(req)?.userId ?? clientAddressKey(req);
 }
 
-const clientHits = new Map<string, { count: number; windowStart: number }>();
-const CLIENT_WINDOW_MS = 60_000;
-const CLIENT_MAX_PER_WINDOW = 40;
-
-function checkClientRateLimit(key: string): boolean {
-  const now = Date.now();
-  const bucket = clientHits.get(key);
-  if (!bucket || now - bucket.windowStart > CLIENT_WINDOW_MS) {
-    clientHits.set(key, { count: 1, windowStart: now });
-    return true;
-  }
-  if (bucket.count >= CLIENT_MAX_PER_WINDOW) return false;
-  bucket.count += 1;
-  return true;
-}
+/**
+ * 40 calls a minute. Signed-in: per account, counted in the database (in memory until its
+ * migration is live). Guests: per network address, in memory.
+ */
+const shelfRateLimiter = createRateLimiter('viral-recipes', 40);
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -315,7 +291,7 @@ Deno.serve(async (req) => {
   }
 
   const limitKey = rateLimitKey(req);
-  if (!checkClientRateLimit(limitKey)) {
+  if (!(await shelfRateLimiter.take(req, limitKey)).allowed) {
     return new Response(
       JSON.stringify({ error: 'Too many requests. Try again in a minute.', code: 'RATE_LIMIT' }),
       { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },

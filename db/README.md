@@ -18,6 +18,8 @@ new app's tests run against what is actually live.
 | `tests/daily_caps_check.sql` | Checks for daily caps: each tier stops at its cap with monthly room left, free uncapped, admin = Family, comped follows its tier, new Pacific day resets, refunds return one, own rows only, anon refused. Rolls back. |
 | `supabase/migrations/20261014100000_db_hardening.sql` | **Not on live; needs the owner's yes.** `user_id` indexes on pantry, grocery, deal votes, deals (`reported_by`) and recipes (`created_by`); `search_creator_videos` no longer callable signed out; new functions made by `postgres` no longer get EXECUTE for `anon` or PUBLIC by default. Header lists every function with its decision. |
 | `tests/db_hardening_check.sql` | Checks for that file: the indexes exist, anon can run only `is_admin` and `nearby_stores`, no PUBLIC grants except `is_admin`, signed-in and service-role callers keep their functions, signed-out reads of tables whose policies call `is_admin()` still work, a new function gets no anon/PUBLIC EXECUTE. Rolls back. |
+| `supabase/migrations/20261016000000_ai_rate_limits.sql` | **NOT on live — owner approval needed before live.** Per-minute limits for the AI/search edge functions kept in the database instead of each function copy's memory: table `ai_rate_limits` (RLS on, no client access, rows go with the account) and `take_rate_limit(fn, limit, window_seconds)` (signed-in only, counts `auth.uid()`, atomic). Edge functions fall back to the in-memory limit until it is on live. |
+| `tests/ai_rate_limits_check.sql` | Checks for that file: stops at the limit, separate per account and per function, anon refused, table out of client reach, bad input refused, a new window starts fresh, old windows cleaned up, rows go with the account. Rolls back. |
 | `tests/plain-postgres-stubs.sql` | Small stand-ins for Supabase's `auth` and `storage` schemas, to run the checks on a bare Postgres with no Docker. |
 | `scripts/check-baseline.sh` | Applies the baseline if needed, then runs the checks. Refuses hosted Supabase URLs. |
 
@@ -45,6 +47,7 @@ createdb scratch && DB_URL=postgresql:///scratch db/scripts/check-baseline.sh --
 | `20261014090000_daily_caps.sql` | No. Needs the owner's yes and compliance review. |
 | `20261014100000_db_hardening.sql` | Yes, 2026-10-14 (owner's yes). |
 | `20261014110000_scan_photo_retention.sql` | Yes, 2026-10-14 (owner's yes): #260, daily job `scan-photos-retention-daily` at 10:23 UTC. |
+| `20261016000000_ai_rate_limits.sql` | **No — NOT on live, owner approval needed before live.** Apply before (or after) deploying the edge functions; they work either way. |
 
 ## Rules
 

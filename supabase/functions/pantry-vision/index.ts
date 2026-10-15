@@ -35,6 +35,7 @@
 // It never contains the user id, the photo or the item names.
 
 import { tierForProfile, tierLimits, usageMonth, type PlanTier } from '../_shared/planTiers.ts';
+import { createRateLimiter } from '../_shared/rateLimit.ts';
 
 // BEGIN GEMINI_ORCHESTRATION (keep in sync with geminiOrchestration.ts — npm run test:pantry-vision-gemini)
 /** @sync mobile/config/geminiConfig.ts */
@@ -404,9 +405,8 @@ const RESPONSE_JSON_SCHEMA = {
   required: ['items'],
 } as const;
 
-const userHits = new Map<string, { count: number; windowStart: number }>();
-const USER_WINDOW_MS = 60_000;
-const USER_MAX_PER_WINDOW = 12;
+/** 12 scans a minute per account, counted in the database (in memory until its migration is live). */
+const scanRateLimiter = createRateLimiter('pantry-vision', 12);
 
 type DetectedPantryItem = {
   name: string;
@@ -665,18 +665,6 @@ function usageForResponse(tier: ScanTier, allowance: ScanAllowance, remaining: n
     limit: capped ? allowance.limit : null,
     remaining: capped ? remaining : null,
   };
-}
-
-function checkUserRateLimit(userId: string): boolean {
-  const now = Date.now();
-  const bucket = userHits.get(userId);
-  if (!bucket || now - bucket.windowStart > USER_WINDOW_MS) {
-    userHits.set(userId, { count: 1, windowStart: now });
-    return true;
-  }
-  if (bucket.count >= USER_MAX_PER_WINDOW) return false;
-  bucket.count += 1;
-  return true;
 }
 
 /** With Verify JWT enabled, only authenticated requests reach this handler. */
@@ -1866,7 +1854,7 @@ Deno.serve(async (req) => {
     );
   }
 
-  if (!checkUserRateLimit(userId)) {
+  if (!(await scanRateLimiter.take(req, userId)).allowed) {
     return jsonResponse(
       {
         error: 'Too many pantry scans. Wait a minute and try again.',
