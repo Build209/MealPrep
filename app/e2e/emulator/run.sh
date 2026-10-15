@@ -80,7 +80,7 @@ set_posture() {
       # The emulator's states are 1 CLOSED, 2 HALF_OPENED, 3 OPENED (print-states, 2026-10-15 run).
       # (First run: `adb emu fold` returned OK but the tour still saw the 1769px inner screen.)
       local before after cover
-      adb shell wm size reset
+      timeout 30 adb shell wm size reset || true
       sleep 2
       before="$(screen_size)"
       if [ "$1" = folded ]; then
@@ -88,7 +88,11 @@ set_posture() {
       else
         try_cmds=("adb shell cmd device_state state 3" "adb emu unfold" "adb emu posture 3")
       fi
-      adb shell cmd device_state print-states || true
+      # Book-style fold: the hinge commands hung the emulator for over an hour (2026-10-15), so go
+      # straight to the simulated cover screen. The flip profile keeps trying the real commands.
+      if [ "$DEVICE" = fold ]; then try_cmds=(); fi
+      [ ${#try_cmds[@]} -gt 0 ] && { timeout 20 adb shell cmd device_state print-states || true; }
+      after="$before"
       for c in "${try_cmds[@]}"; do
         echo "posture $1: $c"
         timeout 30 $c || echo "  (no answer in 30s)"
@@ -104,11 +108,11 @@ set_posture() {
           # Cover screen sizes: book-style fold like the Pixel Fold (1080x2092); flip phone like a
           # Galaxy Z Flip cover screen (720x748).
           cover="$([ "$DEVICE" = flip ] && echo 720x748 || echo 1080x2092)"
-          adb shell wm size "$cover"
+          timeout 30 adb shell wm size "$cover" || true
           POSTURE_NOTE="-cover-sim"
           echo "::warning title=Android emulator::Folding did not change the screen on $DEVICE; simulating its cover screen size ($cover)."
         else
-          adb shell wm size reset
+          timeout 30 adb shell wm size reset || true
           echo "::warning title=Android emulator::Posture '$1' did not change the screen size on $DEVICE ($after)."
         fi
       fi

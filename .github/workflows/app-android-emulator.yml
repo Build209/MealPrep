@@ -35,7 +35,7 @@ jobs:
   emulator:
     name: emulator (${{ matrix.device }})
     runs-on: ubuntu-latest
-    timeout-minutes: 75
+    timeout-minutes: 70
     strategy:
       fail-fast: false
       matrix:
@@ -166,7 +166,7 @@ jobs:
           emulator-options: -no-window -no-snapshot -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -camera-front none
           disable-animations: true
           working-directory: app
-          script: bash e2e/emulator/run.sh
+          script: timeout --kill-after=60 50m bash e2e/emulator/run.sh
 
       - name: Note test results (report-only)
         if: always()
