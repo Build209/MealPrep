@@ -1,0 +1,34 @@
+{
+  "project": "iphone",
+  "engine": "webkit",
+  "order": "26",
+  "screen": "help",
+  "route": "/help",
+  "purpose": "none",
+  "viewport": "393x659",
+  "screenshots": [
+    "iphone/26-help.png",
+    "iphone/26-help-bottom.png"
+  ],
+  "checks": {
+    "noSidewaysScroll": true,
+    "tapTargets": true,
+    "textFits": true,
+    "tomatoRule": true
+  },
+  "sidewaysScroll": {
+    "scrollWidth": 393,
+    "innerWidth": 393
+  },
+  "tapTargetIssues": [],
+  "tapTargetAllowed": [],
+  "clippedText": [],
+  "truncatedText": [],
+  "offscreenControls": [],
+  "tomato": [],
+  "tomatoViolations": [],
+  "notes": [
+    "Contact us opens an email (mailto:), not followed here."
+  ],
+  "reportOnly": {}
+}
