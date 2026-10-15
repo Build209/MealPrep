@@ -1,0 +1,66 @@
+{
+  "project": "emulator-pixel-7-landscape-2400x1080",
+  "engine": "chromium",
+  "order": "09",
+  "screen": "grocery-ticked",
+  "route": "/grocery",
+  "purpose": "none",
+  "viewport": "863x304",
+  "screenshots": [
+    "emulator-pixel-7-landscape-2400x1080/09-grocery-ticked.png",
+    "emulator-pixel-7-landscape-2400x1080/09-grocery-ticked-bottom.png"
+  ],
+  "checks": {
+    "noSidewaysScroll": true,
+    "tapTargets": true,
+    "textFits": true,
+    "tomatoRule": true
+  },
+  "sidewaysScroll": {
+    "scrollWidth": 863,
+    "innerWidth": 863
+  },
+  "tapTargetIssues": [],
+  "tapTargetAllowed": [],
+  "clippedText": [],
+  "truncatedText": [
+    {
+      "text": "Home",
+      "kind": "truncated",
+      "scroll": "38x18",
+      "client": "38x13"
+    },
+    {
+      "text": "Pantry",
+      "kind": "truncated",
+      "scroll": "42x18",
+      "client": "42x13"
+    },
+    {
+      "text": "Grocery",
+      "kind": "truncated",
+      "scroll": "51x18",
+      "client": "51x13"
+    },
+    {
+      "text": "Stores",
+      "kind": "truncated",
+      "scroll": "42x18",
+      "client": "42x13"
+    }
+  ],
+  "offscreenControls": [],
+  "tomato": [
+    {
+      "text": "Plan",
+      "tag": "h1",
+      "props": [
+        "color"
+      ],
+      "context": "brand"
+    }
+  ],
+  "tomatoViolations": [],
+  "notes": [],
+  "reportOnly": {}
+}
