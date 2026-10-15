@@ -1,4 +1,5 @@
-import { chromium, expect, test as base } from '@playwright/test';
+import { execFileSync } from 'node:child_process';
+import { chromium, expect, test as base, type Browser } from '@playwright/test';
 
 /**
  * The phone tour's `test`. Normally it is Playwright's own (phone-sized browser, app-phone.yml).
@@ -9,17 +10,47 @@ import { chromium, expect, test as base } from '@playwright/test';
  */
 const cdpUrl = process.env.EMULATOR_CDP_URL;
 
+function adb(...args: string[]) {
+  try {
+    execFileSync('adb', args, { stdio: 'ignore', timeout: 30_000 });
+  } catch {
+    // Best effort: the connect retry below reports the real failure.
+  }
+}
+
+/** (Re)starts Chrome on the emulator and its DevTools port forward (same steps as e2e/emulator/run.sh). */
+function restartChrome() {
+  adb('shell', 'am', 'force-stop', 'com.android.chrome');
+  adb('shell', 'am', 'start', '-a', 'android.intent.action.VIEW', '-d', 'about:blank', 'com.android.chrome');
+  adb('forward', 'tcp:9222', 'localabstract:chrome_devtools_remote');
+}
+
+let shared: Browser | null = null;
+
+async function connectChrome(url: string): Promise<Browser> {
+  let last: unknown;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      return await chromium.connectOverCDP(url, { timeout: 30_000 });
+    } catch (error) {
+      last = error;
+      console.warn(`Chrome on the emulator did not answer (try ${attempt + 1}); restarting it.`);
+      restartChrome();
+      await new Promise((r) => setTimeout(r, 8_000));
+    }
+  }
+  throw last;
+}
+
 export const test = cdpUrl
   ? base.extend({
-      browser: [
-        async ({}, use) => {
-          const browser = await chromium.connectOverCDP(cdpUrl, { timeout: 60_000 });
-          await use(browser);
-          await browser.close();
-        },
-        { scope: 'worker' },
-      ],
-      context: async ({ browser }, use) => {
+      // One connection, checked before every test: if Chrome on the emulator has gone away (it did
+      // after ~17 screens on the first run), start it again and reconnect instead of failing every
+      // test after it. Never browser.close(): over CDP that can quit Chrome itself. (Done here, not
+      // in a `browser` fixture, because `browser` is worker-scoped and cannot re-check per test.)
+      context: async ({}, use) => {
+        if (!shared || !shared.isConnected()) shared = await connectChrome(cdpUrl);
+        const browser = shared;
         const context = browser.contexts()[0];
         if (!context) throw new Error('Chrome on the emulator has no open profile.');
         await context.clearCookies();

@@ -90,11 +90,19 @@ set_posture() {
 for posture in $POSTURES; do
   set_posture "$posture"
   label="emulator-${DEVICE//_/-}-${posture}"
+  # Fresh Chrome for each posture, so one posture's trouble never carries into the next.
+  adb shell am force-stop com.android.chrome
+  adb shell am start -a android.intent.action.VIEW -d about:blank com.android.chrome >/dev/null
+  sleep 5
+  adb forward tcp:9222 localabstract:chrome_devtools_remote
   echo "== Tour: $label"
   if EMULATOR_LABEL="$label" npx playwright test -c playwright.emulator.config.ts; then
     echo "$label passed" >> "$RESULT_FILE"
   else
     echo "$label FAILED" >> "$RESULT_FILE"
+    # Why Chrome went away, if it did (crash or low memory).
+    adb logcat -d -b crash | tail -40 || true
+    adb shell dumpsys meminfo | grep -iE 'Total RAM|Free RAM|chrome' | head -10 || true
   fi
 done
 cat "$RESULT_FILE"
