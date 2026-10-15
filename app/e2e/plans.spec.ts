@@ -234,9 +234,11 @@ test('checkout return: success shows the unlocked line once the server has the p
 test('tabs: left sidebar on a computer-width window, bottom bar on a phone-width one', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await newSignedInUser(page, 'tabs-sidebar');
+  // The tab bar draws each icon twice (active and inactive, one hidden): measure the visible one.
+  const icon = () => page.getByTestId('tab-icon-pantry').filter({ visible: true }).first();
   const box = async () => {
-    await expect(page.getByTestId('tab-icon-pantry')).toBeVisible();
-    return (await page.getByTestId('tab-icon-pantry').boundingBox())!;
+    await expect(icon()).toBeVisible();
+    return (await icon().boundingBox())!;
   };
   const wide = await box();
   expect(wide.x).toBeLessThan(260);
