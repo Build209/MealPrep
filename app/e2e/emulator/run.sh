@@ -61,6 +61,8 @@ fi
 echo
 export EMULATOR_CDP_URL=http://127.0.0.1:9222
 
+screen_size() { adb shell wm size | tr -d '\r' | awk -F': ' '/Override size/ {o=$2} /Physical size/ {p=$2} END {print (o != "" ? o : p)}'; }
+
 set_posture() {
   case "$1" in
     portrait | landscape)
@@ -68,14 +70,27 @@ set_posture() {
       adb shell settings put system user_rotation "$([ "$1" = landscape ] && echo 1 || echo 0)"
       ;;
     folded | unfolded)
-      # Foldables: the emulator console moves the hinge itself; Android's device-state service as fallback.
-      adb shell cmd device_state print-states || true
+      # Foldables: try each way to move the hinge until the screen size actually changes.
+      # (First run: `adb emu fold` returned OK but the tour still saw the 1769px inner screen.)
+      local before after
+      before="$(screen_size)"
       if [ "$1" = folded ]; then
-        adb emu fold || adb shell cmd device_state state 0
+        try_cmds=("adb emu fold" "adb emu posture 1" "adb shell cmd device_state state 0")
       else
-        adb emu unfold || adb shell cmd device_state state reset
+        try_cmds=("adb emu unfold" "adb emu posture 3" "adb shell cmd device_state state reset")
       fi
-      adb shell cmd device_state print-state || true
+      adb shell cmd device_state print-states || true
+      for c in "${try_cmds[@]}"; do
+        echo "posture $1: $c"
+        $c || true
+        sleep 4
+        after="$(screen_size)"
+        echo "  screen: $before -> $after"
+        if [ "$after" != "$before" ]; then break; fi
+      done
+      if [ "$after" = "$before" ]; then
+        echo "::warning title=Android emulator::Posture '$1' did not change the screen size on $DEVICE ($after). Screens are labelled with the real size."
+      fi
       ;;
     *)
       echo "::error::Unknown posture $1"
@@ -89,7 +104,9 @@ set_posture() {
 : > "$RESULT_FILE"
 for posture in $POSTURES; do
   set_posture "$posture"
-  label="emulator-${DEVICE//_/-}-${posture}"
+  # Label with the posture asked for and the screen size actually in use, so a fold that did
+  # not happen can never pass for a folded screen.
+  label="emulator-${DEVICE//_/-}-${posture}-$(screen_size | tr 'x' 'x')"
   # Fresh Chrome for each posture, so one posture's trouble never carries into the next.
   adb shell am force-stop com.android.chrome
   adb shell am start -a android.intent.action.VIEW -d about:blank com.android.chrome >/dev/null
