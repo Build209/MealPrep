@@ -218,6 +218,49 @@ function matchesAnyPhrase(normalized: string, phrases: readonly string[]): boole
   return phrases.some((phrase) => nameIncludesPhrase(normalized, phrase));
 }
 
+// Peppers: "pepper" is on the spice list (the black pepper you grind), and spices are checked
+// before produce, so every fresh pepper used to land in spices. These rules run first.
+
+/** Dried or ground forms: stay spices ("black pepper", "red pepper flakes", "peppercorns"). */
+const SPICE_PEPPER =
+  /\b(black|white|pink|lemon|cayenne|sichuan|szechuan|ground|cracked|crushed|dried|powder(ed)?|flakes?|seasoning|salt|peppercorns?)\b/;
+
+/** Words that make "... pepper(s)" a fresh pepper from the produce aisle. */
+const FRESH_PEPPER_WORDS =
+  /\b(bell|sweet|mini|baby|red|green|yellow|orange|purple|hot|chil(e|i|li)|jalape(n|ñ)os?|serranos?|poblanos?|habaneros?|anaheim|banana|shishito|padron|fresno|cubanelle|hatch|scotch|bonnet|thai|roasted|stuffed|fresh)\b/;
+
+/** Fresh chiles often written without the word "pepper". */
+const FRESH_CHILE_NAMES = /\b(jalape(n|ñ)os?|poblanos?|habaneros?|serranos?|shishitos?|anaheims?)\b/;
+
+/**
+ * Where a pepper-ish name goes, or null to let the normal lists decide.
+ * "bell pepper", "jalapeño", "red peppers" → produce; "pepper jack" → dairy; "pepperoni" → meats;
+ * "black pepper", "cayenne pepper", "red pepper flakes", plain "pepper" → spices.
+ */
+function pepperCategory(normalized: string): PantryCategory | null {
+  if (/\bpepper ?jack\b/.test(normalized)) return 'dairy';
+  if (/\bpepperoni\b/.test(normalized)) return 'meats';
+  const hasPepperWord = /\bpeppers?\b/.test(normalized);
+  if (hasPepperWord) {
+    if (SPICE_PEPPER.test(normalized)) return 'spices';
+    if (FRESH_PEPPER_WORDS.test(normalized)) return 'produce';
+    return null; // plain "pepper": the spice list files it
+  }
+  // "jalapeños", "poblano" — but not "serrano ham" or "jalapeño cheddar" (meat / dairy lists).
+  if (FRESH_CHILE_NAMES.test(normalized) && !SPICE_PEPPER.test(normalized)) {
+    if (matchesAnyPhrase(normalized, MEAT_PHRASES) || matchesAnyPhrase(normalized, DAIRY_PHRASES)) return null;
+    return 'produce';
+  }
+  return null;
+}
+
+/** Spice list, except "salt" must be its own word ("unsalted butter" is not a spice). */
+function matchesSpice(normalized: string): boolean {
+  return SPICE_PHRASES.some((phrase) =>
+    phrase === 'salt' ? /\bsalt\b/.test(normalized) : nameIncludesPhrase(normalized, phrase),
+  );
+}
+
 /**
  * Guess grocery aisle from item name (manual adds, imports, recipe gaps).
  * Prefer dry-goods phrases before produce so “rice” is not treated as produce.
@@ -228,7 +271,9 @@ export function inferGroceryCategoryFromName(name: string): PantryCategory {
   if (isCookwareName(name)) return 'cookware';
 
   if (matchesAnyPhrase(normalized, DRY_GOODS_PHRASES)) return 'dry_goods';
-  if (matchesAnyPhrase(normalized, SPICE_PHRASES)) return 'spices';
+  const pepper = pepperCategory(normalized);
+  if (pepper) return pepper;
+  if (matchesSpice(normalized)) return 'spices';
   if (matchesAnyPhrase(normalized, MEAT_PHRASES)) return 'meats';
   if (matchesAnyPhrase(normalized, DAIRY_PHRASES)) return 'dairy';
   if (matchesAnyPhrase(normalized, FROZEN_PHRASES)) return 'frozen';
