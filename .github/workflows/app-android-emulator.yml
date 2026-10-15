@@ -117,11 +117,15 @@ jobs:
       # cover and inner). Newer tools have it; without it a "foldable" has one screen (2026-10-15 run).
       - name: Update Android command-line tools
         run: |
-          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "cmdline-tools;latest" > /dev/null || true
-          ls -d "$ANDROID_HOME"/cmdline-tools/*/
-          for d in "$ANDROID_HOME"/cmdline-tools/latest-2 "$ANDROID_HOME"/cmdline-tools/latest; do
-            if [ -x "$d/bin/avdmanager" ]; then echo "$d/bin" >> "$GITHUB_PATH"; echo "Using $d"; break; fi
-          done
+          sdk="$ANDROID_HOME/cmdline-tools"
+          yes | "$sdk/latest/bin/sdkmanager" --install "cmdline-tools;latest" > /dev/null
+          # sdkmanager puts the update next to the running copy (latest-2); swap it in, since the
+          # emulator step calls the tools in latest/ (2026-10-15 run).
+          if [ -d "$sdk/latest-2" ]; then
+            sudo rm -rf "$sdk/latest"
+            sudo mv "$sdk/latest-2" "$sdk/latest"
+          fi
+          "$sdk/latest/bin/avdmanager" list device -c | grep -x pixel_fold || echo "pixel_fold still missing"
 
       - name: Pick the device profile
         id: profile
