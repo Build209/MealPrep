@@ -118,7 +118,7 @@ jobs:
       - name: Update Android command-line tools
         run: |
           sdk="$ANDROID_HOME/cmdline-tools"
-          yes | "$sdk/latest/bin/sdkmanager" --install "cmdline-tools;latest" > /dev/null
+          yes | "$sdk/latest/bin/sdkmanager" --install "cmdline-tools;latest" > /dev/null || true
           # sdkmanager puts the update next to the running copy (latest-2); swap it in, since the
           # emulator step calls the tools in latest/ (2026-10-15 run).
           if [ -d "$sdk/latest-2" ]; then
@@ -132,7 +132,7 @@ jobs:
         env:
           WANT: ${{ matrix.profiles }}
         run: |
-          avdmanager="$(command -v avdmanager)"
+          avdmanager="$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager"
           "$avdmanager" list device -c > "$RUNNER_TEMP/devices.txt"
           echo "Device ids on this runner:"; cat "$RUNNER_TEMP/devices.txt"
           IFS='|' read -ra wants <<< "$WANT"
