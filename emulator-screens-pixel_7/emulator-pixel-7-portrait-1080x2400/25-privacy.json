@@ -1,0 +1,55 @@
+{
+  "project": "emulator-pixel-7-portrait-1080x2400",
+  "engine": "chromium",
+  "order": "25",
+  "screen": "privacy",
+  "route": "/privacy.html",
+  "purpose": "none",
+  "viewport": "412x783",
+  "screenshots": [
+    "emulator-pixel-7-portrait-1080x2400/25-privacy.png"
+  ],
+  "checks": {
+    "noSidewaysScroll": true,
+    "tapTargets": true,
+    "textFits": true,
+    "tomatoRule": true
+  },
+  "sidewaysScroll": {
+    "scrollWidth": 412,
+    "innerWidth": 412
+  },
+  "tapTargetIssues": [],
+  "tapTargetAllowed": [
+    {
+      "text": "google.com/policies/privacy",
+      "role": "a",
+      "width": 202.2,
+      "height": 18.7,
+      "why": "inline-link"
+    },
+    {
+      "text": "Account deletion page",
+      "role": "a",
+      "width": 159.3,
+      "height": 18.7,
+      "why": "inline-link"
+    },
+    {
+      "text": "support@mealplanatic.app",
+      "role": "a",
+      "width": 192.2,
+      "height": 18.7,
+      "why": "inline-link"
+    }
+  ],
+  "clippedText": [],
+  "truncatedText": [],
+  "offscreenControls": [],
+  "tomato": [],
+  "tomatoViolations": [],
+  "notes": [
+    "Static legal page (public/privacy.html), not an app screen."
+  ],
+  "reportOnly": {}
+}
