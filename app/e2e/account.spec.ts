@@ -120,6 +120,38 @@ test('account: Home opens Account with email and Free plan; no Manage subscripti
   expect(opened).toHaveLength(0);
 });
 
+test('account: the top bar Account button opens Account from every tab; Help and contact opens Help', async ({ page, context }) => {
+  await newSignedInUser(page, 'account-topbar');
+  const opened = await stubStripePages(context);
+  const accountButton = page.getByRole('button', { name: 'Account', exact: true });
+
+  for (const tab of ['/', '/pantry', '/grocery', '/stores']) {
+    await page.goto(tab);
+    await expect(accountButton).toBeVisible();
+    // Big enough to tap (DESIGN.md: 44px).
+    const box = await accountButton.boundingBox();
+    expect(box && box.width >= 44 && box.height >= 44, `${tab}: ${JSON.stringify(box)}`).toBeTruthy();
+    await accountButton.click();
+    await expect(page).toHaveURL(/\/account$/);
+    await expect(page.getByRole('heading', { name: 'Account', exact: true })).toBeVisible();
+  }
+
+  // Home keeps its text link too.
+  await page.goto('/');
+  await expect(accountLink(page)).toBeVisible();
+
+  await page.goto('/account');
+  await page.getByRole('link', { name: 'Help and contact' }).click();
+  await expect(page).toHaveURL(/\/help$/);
+  await expect(page.getByRole('heading', { name: 'Help', exact: true })).toBeVisible();
+  await expect(page.getByText('Forky is an AI helper and can be wrong.', { exact: false })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Contact us' })).toBeVisible();
+  for (const name of ['Read the Terms', 'Read the Privacy Policy', 'Accessibility statement']) {
+    await expect(page.getByRole('link', { name })).toBeVisible();
+  }
+  expect(opened).toHaveLength(0);
+});
+
 test('account: a subscriber sees the plan and Manage subscription opens the Stripe portal, as on /plans', async ({ page, context }) => {
   const { email, userId, accessToken } = await newSignedInUser(page, 'account-paid');
   const admin = adminClient();

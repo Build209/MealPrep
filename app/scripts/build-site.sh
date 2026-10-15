@@ -5,6 +5,7 @@
 #   /                      MealPlanatic app (Expo web export of app/, output "single")
 #   /404.html              copy of index.html, so direct links like /pantry open the app
 #   /terms.html, /privacy.html, /terms/, /privacy/   legal pages (app/public, verbatim)
+#   /accessibility.html    accessibility statement (app/public, verbatim)
 #   /209/                  209 Meal Prep static site (New/), plus redirects from its old root pages
 #   /app/...               redirect stubs for links to the old /MealPrep/app/ address
 #   /recipes, /smart-shop, ...   redirect stubs for old-app routes the new app does not have
@@ -46,7 +47,7 @@ cd "$SITE_DIR"
 
 # Files that come from app/public through the export. Legal pages are copied byte for byte
 # from mobile/public (approved wording); this script does not touch them.
-for f in terms.html privacy.html sw.js pwa-register.js zcta-centroids.json; do
+for f in terms.html privacy.html accessibility.html sw.js pwa-register.js zcta-centroids.json; do
   [ -f "$f" ] || fail "export is missing $f (expected from app/public)"
 done
 
@@ -130,7 +131,7 @@ for page in 209/*.html; do
 done
 
 # 6. Self-check ---------------------------------------------------------------------------------
-required=(index.html 404.html terms.html privacy.html terms/index.html privacy/index.html
+required=(index.html 404.html terms.html privacy.html accessibility.html terms/index.html privacy/index.html
   CNAME .nojekyll sw.js app/sw.js pwa-register.js 209/index.html app/index.html)
 for entry in "${retired_routes[@]}"; do
   old="${entry%%:*}"
@@ -145,6 +146,7 @@ done
 cmp -s index.html 404.html || fail "404.html differs from index.html"
 cmp -s terms.html "$REPO_DIR/app/public/terms.html" || fail "terms.html differs from app/public"
 cmp -s privacy.html "$REPO_DIR/app/public/privacy.html" || fail "privacy.html differs from app/public"
+cmp -s accessibility.html "$REPO_DIR/app/public/accessibility.html" || fail "accessibility.html differs from app/public"
 grep -q 'unregister' sw.js || fail "sw.js is not the clean-up worker"
 
 echo "build-site: site ready in $SITE_DIR ($(find . -type f | wc -l | tr -d ' ') files)"
