@@ -1,0 +1,98 @@
+{
+  "project": "emulator-flip-unfolded-1080x2636",
+  "engine": "chromium",
+  "order": "13",
+  "screen": "recipe-import",
+  "route": "/recipes/import",
+  "purpose": "none",
+  "viewport": "360x775",
+  "screenshots": [
+    "emulator-flip-unfolded-1080x2636/13-recipe-import.png"
+  ],
+  "checks": {
+    "noSidewaysScroll": true,
+    "tapTargets": true,
+    "textFits": true,
+    "tomatoRule": true
+  },
+  "sidewaysScroll": {
+    "scrollWidth": 360,
+    "innerWidth": 360
+  },
+  "tapTargetIssues": [],
+  "tapTargetAllowed": [],
+  "clippedText": [],
+  "truncatedText": [],
+  "offscreenControls": [],
+  "tomato": [
+    {
+      "text": "Take a photo of a recipe",
+      "tag": "button",
+      "props": [
+        "border-top"
+      ],
+      "context": "camera"
+    },
+    {
+      "text": "",
+      "tag": "div",
+      "props": [
+        "background"
+      ],
+      "context": "camera"
+    },
+    {
+      "text": "",
+      "tag": "div",
+      "props": [
+        "border-top"
+      ],
+      "context": "camera"
+    },
+    {
+      "text": "",
+      "tag": "div",
+      "props": [
+        "border-top"
+      ],
+      "context": "camera"
+    },
+    {
+      "text": "Choose a recipe photo",
+      "tag": "button",
+      "props": [
+        "border-top"
+      ],
+      "context": "camera"
+    },
+    {
+      "text": "",
+      "tag": "div",
+      "props": [
+        "background"
+      ],
+      "context": "camera"
+    },
+    {
+      "text": "",
+      "tag": "div",
+      "props": [
+        "border-top"
+      ],
+      "context": "camera"
+    },
+    {
+      "text": "",
+      "tag": "div",
+      "props": [
+        "border-top"
+      ],
+      "context": "camera"
+    }
+  ],
+  "tomatoViolations": [],
+  "notes": [
+    "Photo import uses the camera/file picker: only the screen is checked."
+  ],
+  "reportOnly": {}
+}
