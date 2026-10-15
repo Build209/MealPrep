@@ -1,0 +1,38 @@
+{
+  "project": "iphone",
+  "engine": "webkit",
+  "order": "10",
+  "screen": "recipe-search",
+  "route": "/recipes/search?q=zpdzemnnhn",
+  "purpose": "none",
+  "viewport": "393x659",
+  "screenshots": [
+    "iphone/10-recipe-search.png"
+  ],
+  "checks": {
+    "noSidewaysScroll": true,
+    "tapTargets": true,
+    "textFits": true,
+    "tomatoRule": true
+  },
+  "sidewaysScroll": {
+    "scrollWidth": 393,
+    "innerWidth": 393
+  },
+  "tapTargetIssues": [],
+  "tapTargetAllowed": [],
+  "clippedText": [],
+  "truncatedText": [
+    {
+      "text": "Phone Test Chef · Watch on YouTube",
+      "kind": "truncated",
+      "scroll": "206x16",
+      "client": "189x16"
+    }
+  ],
+  "offscreenControls": [],
+  "tomato": [],
+  "tomatoViolations": [],
+  "notes": [],
+  "reportOnly": {}
+}
