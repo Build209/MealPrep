@@ -90,5 +90,8 @@ assert.match(privacy, /Ask Forky/);
 assert.match(privacy, /Anthropic/, 'privacy page names the AI provider (compliance rule 2)');
 assert.match(privacy, /household size, the names of items you buy regularly, and the titles of meals you recently marked as made/);
 assert.match(privacy, /do not send your name, email, photos, or your dietary and allergy settings/);
+assert.ok(privacySqueezed.includes('<strong>Resend</strong>'), 'privacy.html names Resend, which sends the account emails');
+assert.match(privacy, /emails are sent through Resend, which receives your email address/);
+assert.doesNotMatch(privacy, /MealDB/i, 'privacy.html no longer names TheMealDB (the app stopped using it)');
 
 console.log('legal-pages-check: ok');
