@@ -33,7 +33,7 @@ export function PlansScreen() {
         </View>
       ) : profile.error || !profile.data || !state ? (
         <AppText variant="secondary" color="danger" bold accessibilityRole="alert">
-          {profile.error instanceof Error ? profile.error.message : PLANS_COPY.genericError}
+          {profile.error instanceof Error ? profile.error.message : PLANS_COPY.loadError}
         </AppText>
       ) : (
         <>
@@ -47,7 +47,7 @@ export function PlansScreen() {
           {/* Buying only for a free account with no live subscription, on the web (live app rule). */}
           {subscription.error ? (
             <AppText variant="secondary" color="danger" bold accessibilityRole="alert">
-              {subscription.error instanceof Error ? subscription.error.message : PLANS_COPY.genericError}
+              {subscription.error instanceof Error ? subscription.error.message : PLANS_COPY.loadError}
             </AppText>
           ) : state.showBuy ? (
             <PlanChoice />

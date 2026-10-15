@@ -29,7 +29,6 @@ test('LIVE wording is still word for word in the old app', () => {
   for (const line of [
     ACCOUNT_DELETE_COPY.deleteButton,
     ACCOUNT_DELETE_COPY.confirmTitle,
-    ACCOUNT_DELETE_COPY.confirmBody,
     ACCOUNT_DELETE_COPY.confirmAction,
     ACCOUNT_DELETE_COPY.cancel,
   ]) {
@@ -37,7 +36,6 @@ test('LIVE wording is still word for word in the old app', () => {
   }
   for (const line of [
     ACCOUNT_DELETE_COPY.title,
-    ACCOUNT_DELETE_COPY.whatIsDeleted,
     ACCOUNT_DELETE_COPY.signedOutHint,
     ACCOUNT_DELETE_COPY.deleted,
     ACCOUNT_DELETE_COPY.helpBefore,
@@ -58,8 +56,18 @@ test('the live delete-user-account function says CANCEL_FAILED in the same words
   assert.ok(fn.includes("code: 'CANCEL_FAILED'"), 'CANCEL_FAILED code changed in the function');
 });
 
-test('the confirm step says Plus is cancelled and that it cannot be undone', () => {
-  assert.match(ACCOUNT_DELETE_COPY.confirmBody, /If you have MealPlanatic Plus, it is cancelled now and you will not be charged again\./);
+test('the confirm step says any paid plan is cancelled and that it cannot be undone', () => {
+  // NEW wording (compliance review fix 2): names every paid plan, not only Plus. Pending sign-off.
+  assert.match(ACCOUNT_DELETE_COPY.confirmBody, /If you have a paid MealPlanatic plan, it is cancelled now and you will not be charged again\./);
   assert.match(ACCOUNT_DELETE_COPY.confirmBody, /This cannot be undone\.$/);
-  assert.match(ACCOUNT_DELETE_COPY.whatIsDeleted, /cancels MealPlanatic Plus and stops future charges\.$/);
+  assert.match(ACCOUNT_DELETE_COPY.whatIsDeleted, /cancels your MealPlanatic plan and stops future charges\.$/);
+  assert.doesNotMatch(`${ACCOUNT_DELETE_COPY.confirmBody} ${ACCOUNT_DELETE_COPY.whatIsDeleted}`, /MealPlanatic Plus/);
+});
+
+test('apart from the two plan-name changes, the delete wording is still the live text', () => {
+  const account = readOldApp('config/account.ts');
+  const page = squeeze(readOldApp('app/delete-account.tsx'));
+  const back = (s: string, plan: string) => s.replace(plan, 'MealPlanatic Plus');
+  assert.ok(account.includes(`'${back(ACCOUNT_DELETE_COPY.confirmBody, 'a paid MealPlanatic plan')}'`), 'confirm body drifted from live text');
+  assert.ok(page.includes(squeeze(back(ACCOUNT_DELETE_COPY.whatIsDeleted, 'your MealPlanatic plan'))), 'what-is-deleted drifted from live text');
 });

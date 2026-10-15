@@ -115,13 +115,13 @@ test('ask a question from the header: an answer with a recipe button that opens 
   await page.getByRole('button', { name: 'Ask Forky', exact: true }).first().click(); // Forky in the top bar
   await expect(page).toHaveURL(/\/forky$/);
   await expect(page.getByText(AI_NOTICE, { exact: true })).toBeVisible();
-  await expect(page.getByText('5 messages left this month', { exact: true })).toBeVisible();
+  await expect(page.getByText('5 questions left this month', { exact: true })).toBeVisible();
 
   await page.getByRole('textbox', { name: 'Your question for Forky' }).fill('What can I make with eggs?');
   await page.getByRole('button', { name: 'Send', exact: true }).click();
 
   await expect(page.getByText('Your eggs are perfect for fried rice tonight.')).toBeVisible();
-  await expect(page.getByText('4 messages left this month', { exact: true })).toBeVisible();
+  await expect(page.getByText('4 questions left this month', { exact: true })).toBeVisible();
   expect(captured).toHaveLength(1);
   const sent = captured[0]!;
   expect(sent.headers['authorization']).toBe(`Bearer ${accessToken}`);
@@ -147,7 +147,7 @@ test('allowance used up: the chat says so, offers See plans, and sends nothing',
   const captured = await stubAskForky(page, () => ({ status: 500, json: { error: 'must not be called' } }));
 
   await page.goto('/forky');
-  await expect(page.getByText('No messages left this month', { exact: true })).toBeVisible();
+  await expect(page.getByText('No questions left this month', { exact: true })).toBeVisible();
   await expect(page.getByText(LIMIT_FREE, { exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Send', exact: true })).toBeDisabled();
   await expect(page.getByRole('button', { name: 'What can I make tonight?' })).toHaveCount(0);
@@ -169,11 +169,11 @@ test('the server refuses the last question: the plain message and See plans', as
   }));
 
   await page.goto('/forky');
-  await expect(page.getByText('1 message left this month', { exact: true })).toBeVisible();
+  await expect(page.getByText('1 question left this month', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'What should I use up first?' }).click();
 
   await expect(page.getByText(LIMIT_FREE, { exact: true })).toBeVisible();
-  await expect(page.getByText('No messages left this month', { exact: true })).toBeVisible();
+  await expect(page.getByText('No questions left this month', { exact: true })).toBeVisible();
   await expect(page.getByRole('link', { name: 'See plans' })).toBeVisible();
   // The unanswered question goes back in the box.
   await expect(page.getByRole('textbox', { name: 'Your question for Forky' })).toHaveValue('What should I use up first?');

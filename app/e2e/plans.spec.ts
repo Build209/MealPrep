@@ -207,3 +207,25 @@ test("usage: this month's scans, imports and Ask Forky questions against the pla
   const text = await page.locator('body').innerText();
   expect(text).not.toMatch(/\bdaily\b|\bper day\b|\btoday\b/i);
 });
+
+// Coming back from Stripe (compliance review fix 4): the live app's words, once, then the marker is gone.
+test('checkout return: cancel says "not been charged" and clears the marker from the address', async ({ page }) => {
+  await newSignedInUser(page, 'checkout-cancel');
+  await page.goto('/?checkout=cancel');
+  await expect(page.getByText('Checkout closed. You have not been charged.', { exact: true })).toBeVisible();
+  expect(new URL(page.url()).search).not.toContain('checkout');
+  await page.getByRole('button', { name: 'Dismiss' }).click();
+  await expect(page.getByText('Checkout closed. You have not been charged.', { exact: true })).toHaveCount(0);
+});
+
+test('checkout return: success shows the unlocked line once the server has the plan as paid', async ({ page }) => {
+  const { userId } = await newSignedInUser(page, 'checkout-success');
+  // Stands in for the Stripe webhook: the server, never the page, switches the plan on.
+  const promoted = await adminClient().from('profiles').update({ plan: 'paid', plan_tier: 'plus' }).eq('id', userId);
+  expect(promoted.error).toBeNull();
+  await page.goto('/?checkout=success');
+  await expect(
+    page.getByText("You're on a paid MealPlanatic plan. Your new monthly limits are ready.", { exact: true }),
+  ).toBeVisible();
+  expect(new URL(page.url()).search).not.toContain('checkout');
+});

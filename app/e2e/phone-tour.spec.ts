@@ -400,7 +400,7 @@ screen('15', 'forky-answer', 'none', 'Ask Forky with a stubbed answer', async (p
   await page.getByRole('textbox', { name: 'Your question for Forky' }).fill('What can I cook tonight?');
   await page.getByRole('button', { name: 'Send', exact: true }).click();
   await expect(page.getByText(/perfect for egg fried rice tonight/)).toBeVisible();
-  await expect(page.getByText('4 messages left this month', { exact: true })).toBeVisible();
+  await expect(page.getByText('4 questions left this month', { exact: true })).toBeVisible();
   return ['The ask-forky function is stubbed: the answer text is the test\'s, not the AI\'s.'];
 });
 
