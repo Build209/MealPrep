@@ -214,7 +214,8 @@ jobs:
           pattern: emulator-screens-*
           path: emulator-screens
       - name: Store on the emulator-screens branch
-        if: steps.download.outcome == 'success'
+        # Nothing to store when no job got as far as a screenshot.
+        if: steps.download.outcome == 'success' && hashFiles('emulator-screens/**') != ''
         working-directory: emulator-screens
         env:
           GITHUB_TOKEN: ${{ github.token }}
