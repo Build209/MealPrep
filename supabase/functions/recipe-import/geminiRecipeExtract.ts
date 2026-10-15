@@ -14,6 +14,13 @@ import {
   type RecipeImportExtracted,
 } from './recipeImportSchema.ts';
 import type { RecipeImportSourceType } from './urlClassification.ts';
+import {
+  formatImportCostLine,
+  readGeminiUsage,
+  type GeminiUsageCounts,
+  type ImportLogKind,
+  type ImportLogLabel,
+} from './importCostLog.ts';
 
 const GEMINI_API_BASE = 'https://generativelanguage.googleapis.com/v1beta';
 const GEMINI_DETERMINISTIC_SEED = 42;
@@ -65,7 +72,9 @@ async function callGeminiJson(
   model: string,
   parts: Record<string, unknown>[],
   budget: RequestTimeBudget,
-): Promise<{ payload: unknown } | { error: GeminiAttemptError }> {
+): Promise<
+  { payload: unknown; usage: GeminiUsageCounts } | { error: GeminiAttemptError; usage?: GeminiUsageCounts }
+> {
   const timeoutMs = budget.perCallTimeoutMs(GEMINI_REQUEST_TIMEOUT_MS);
   if (timeoutMs == null) {
     return { error: { kind: 'timeout', detail: 'budget exhausted', retryable: false } };
@@ -118,18 +127,23 @@ async function callGeminiJson(
     };
   }
 
+  // A 200 answer is billed even when it is empty or unparseable, so keep its usage.
+  let usage: GeminiUsageCounts | undefined;
   try {
     const envelope = JSON.parse(text) as {
       candidates?: { content?: { parts?: { text?: string }[] } }[];
+      usageMetadata?: unknown;
     };
+    usage = readGeminiUsage(envelope.usageMetadata);
     const partText =
       envelope.candidates?.[0]?.content?.parts?.map((p) => p.text ?? '').join('') ?? '';
     if (!partText) {
-      return { error: { kind: 'http', status: 502, detail: 'empty model response', retryable: true } };
+      return { error: { kind: 'http', status: 502, detail: 'empty model response', retryable: true }, usage };
     }
-    return { payload: JSON.parse(partText) as unknown };
+    return { payload: JSON.parse(partText) as unknown, usage };
   } catch (error) {
     return {
+      usage,
       error: {
         kind: 'http',
         status: 502,
@@ -143,11 +157,14 @@ async function callGeminiJson(
 export interface GeminiExtractOptions {
   /** Use only the primary Gemini model — at most one generateContent call (no fallbacks). */
   singleModelAttempt?: boolean;
+  /** Only for the cost log line; defaults to 'link'. */
+  logKind?: ImportLogKind;
 }
 
 async function callGeminiWithFallback(
   apiKey: string,
   parts: Record<string, unknown>[],
+  label: ImportLogLabel,
   options?: GeminiExtractOptions,
 ): Promise<RecipeImportExtracted | null> {
   const budget = new RequestTimeBudget(GEMINI_REQUEST_TOTAL_BUDGET_MS);
@@ -163,11 +180,26 @@ async function callGeminiWithFallback(
     if (budget.isExhausted()) break;
     let httpRetries = 0;
     for (;;) {
+      const startedAt = Date.now();
       const result = await callGeminiJson(apiKey, model, parts, budget);
       if ('payload' in result) {
         const validated = validateGeminiRecipeImportPayload(result.payload);
+        console.info(
+          formatImportCostLine({
+            outcome: validated ? 'ok' : 'rejected',
+            label,
+            ms: Date.now() - startedAt,
+            usage: result.usage,
+            model,
+          }),
+        );
         if (validated) return validated;
         break;
+      }
+      if (result.usage) {
+        console.info(
+          formatImportCostLine({ outcome: 'failed', label, ms: Date.now() - startedAt, usage: result.usage, model }),
+        );
       }
       if (result.error.kind === 'timeout') {
         geminiModelTimeoutMemory.record(model);
@@ -193,7 +225,7 @@ export async function extractRecipeFromYouTubeVideo(
     { file_data: { mime_type: 'video/*', file_uri: youtubeUrl } },
     { text: YOUTUBE_EXTRACTION_PROMPT },
   ];
-  const extracted = await callGeminiWithFallback(apiKey, parts);
+  const extracted = await callGeminiWithFallback(apiKey, parts, { kind: 'video', source: 'youtube' });
   if (!extracted) return null;
   return attachImportMetadata(extracted, sourceUrl, sourceType);
 }
@@ -214,7 +246,12 @@ export async function extractRecipeFromPageText(
       text: `${prompt}\n\nSource URL: ${sourceUrl}\n\nText:\n${pageText}`,
     },
   ];
-  const extracted = await callGeminiWithFallback(apiKey, parts, options);
+  const extracted = await callGeminiWithFallback(
+    apiKey,
+    parts,
+    { kind: options?.logKind ?? 'link', source: sourceType },
+    options,
+  );
   if (!extracted) return null;
   return attachImportMetadata(extracted, sourceUrl, sourceType);
 }
@@ -225,8 +262,9 @@ export async function extractRecipeFromGeminiParts(
   sourceUrl: string,
   sourceType: RecipeImportSourceType,
   extras?: Parameters<typeof attachImportMetadata>[3],
+  label: ImportLogLabel = { kind: 'photo', source: sourceType },
 ): Promise<RecipeImportExtracted | null> {
-  const extracted = await callGeminiWithFallback(apiKey, parts);
+  const extracted = await callGeminiWithFallback(apiKey, parts, label);
   if (!extracted) return null;
   return attachImportMetadata(extracted, sourceUrl, sourceType, extras);
 }
@@ -247,7 +285,10 @@ export async function extractRecipeFromScreenshots(
   sourceType: RecipeImportSourceType,
 ): Promise<RecipeImportExtracted | null> {
   const withPrompt = [{ text: SCREENSHOT_RECIPE_PROMPT }, ...parts];
-  return extractRecipeFromGeminiParts(apiKey, withPrompt, sourceUrl, sourceType);
+  return extractRecipeFromGeminiParts(apiKey, withPrompt, sourceUrl, sourceType, undefined, {
+    kind: 'screenshot',
+    source: sourceType,
+  });
 }
 
 export async function extractRecipeFromUploadedVideo(
@@ -256,5 +297,8 @@ export async function extractRecipeFromUploadedVideo(
   sourceUrl: string,
 ): Promise<RecipeImportExtracted | null> {
   const withPrompt = [{ text: UPLOADED_VIDEO_PROMPT }, ...parts];
-  return extractRecipeFromGeminiParts(apiKey, withPrompt, sourceUrl, 'video');
+  return extractRecipeFromGeminiParts(apiKey, withPrompt, sourceUrl, 'video', undefined, {
+    kind: 'video',
+    source: 'upload',
+  });
 }

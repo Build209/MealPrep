@@ -554,6 +554,7 @@ async function importFromPlainText(
 
   const fromGemini = await extractRecipeFromPageText(apiKey, text, 'text-import', 'web', {
     singleModelAttempt: skipCache,
+    logKind: 'text',
   });
   if (!fromGemini) return null;
   if (!recipeLooksValid(fromGemini)) {
