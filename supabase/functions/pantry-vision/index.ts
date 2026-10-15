@@ -679,6 +679,9 @@ function checkUserRateLimit(userId: string): boolean {
   return true;
 }
 
+// SECURITY: this decodes the JWT payload without checking its signature. That is only safe because
+// the gateway verifies the token first (deployed WITHOUT --no-verify-jwt). Keep it that way:
+// supabase/scripts/verify-jwt-guard-check.ts fails CI if this function loses gateway JWT verification.
 /** With Verify JWT enabled, only authenticated requests reach this handler. */
 function userIdFromJwt(req: Request): string | null {
   const authHeader = req.headers.get('Authorization');
