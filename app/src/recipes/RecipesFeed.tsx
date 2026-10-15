@@ -23,7 +23,7 @@ function SectionTitle({ children }: { children: string }) {
  * "Cook from your pantry": every recipe the person can read (master, their own, the published
  * library), ranked against the pantry on the server. Both lists come from queries; nothing is copied.
  */
-export function HomeFeed() {
+export function RecipesFeed() {
   const router = useRouter();
   const recipes = useRecipes();
   const pantry = usePantryItems();

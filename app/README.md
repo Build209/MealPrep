@@ -45,9 +45,20 @@ it is in git history only. Edge functions are in `../supabase/functions`, the da
 - `src/forky/`: Ask Forky (`/forky`), the AI chat through the live `ask-forky` function (unchanged; same
   request as the old app), with "N messages left this month" from `forky_chat_usage` and the plan limits,
   recipe buttons to `/recipe/<id>`, and the AI notice always on screen. The chat is kept in memory for the
-  session only. Forky stands in the top bar (opens the chat) and shows short tips with the old app's
+  session only. On a short screen (under 480px tall: a flip phone's cover screen, a phone on its side) the question
+  box scrolls with the chat instead of being pinned, so Send is never covered. Forky stands in the top bar (opens the chat) and shows short tips with the old app's
   backoff rules (`tipBackoff.ts`). Tips that open by themselves are off under browser automation.
-- `src/recipes/`: Home "Cook from your pantry" (phase 3) and the recipe detail (`/recipe/[id]`). Recipes come
+- Tabs (owner, 2026-10-15): Home, Pantry, Recipes, Grocery. `src/home/`: Home is an Ask Forky box at the top
+  (`HomeForkyBox`: Send opens `/forky?q=...`, and the chat sends it with its own Send, so there is one place that
+  calls ask-forky; the allowance line comes from the shared `useForkyAllowance`, and the AI notice is shown word for
+  word), then three counters that open their tabs (`HomeCounters`: "Ready to cook" from the feed's own scoring,
+  `readyToCookCount` in `src/kitchen/recipeFeed.ts`; pantry items; grocery items not ticked; the recipes counter's
+  name is one line in `src/home/copy.ts`), then `HomePromoSlot`, a slot kept for ads or a small store: today it
+  loads nothing from outside and shows no ads (ads need privacy-page, consent and compliance changes first), only a
+  card linking to `/plans` in approved wording, on the web, for free accounts. Grocery has a "List" | "Stores"
+  switch (`/grocery?view=stores`); `/stores` redirects there (`src/app/stores.tsx`). Stripe's return markers are
+  still handled for every screen by `CheckoutReturnNotice`. End to end: `e2e/home.spec.ts`.
+- `src/recipes/`: the Recipes tab (`/recipes`, `RecipesScreen`; Home until 2026-10-15) "Cook from your pantry" (phase 3) and the recipe detail (`/recipe/[id]`). Recipes come
   from `recipes` (master + the person's own) and published `library_recipes` (`src/data/recipes.ts`), ranked
   against the pantry with the old app's rules (`src/kitchen/recipeMatch.ts`, `recipeFeed.ts`, tested in
   `tests/kitchen-recipe-*.test.ts`). Each card has a status sticker: leaf "Ready to cook" or banana "N missing".
@@ -67,8 +78,8 @@ it is in git history only. Edge functions are in `../supabase/functions`, the da
   - `/creators` and `CreatorVideosRow` (`src/creators/`): recent videos from enabled creators, read
     straight from `creator_videos`, with the old function's recipe-video rule (`videoFilter.ts`) and text
     cleaning (`videoText.ts`). Videos open outside the app, labelled "Watch on YouTube" in plain text.
-- Recipes wired together (phase 3): Home (`src/app/(tabs)/index.tsx`) starts with links to Search and
-  Saved and a secondary "Import a recipe" button (`src/recipes/HomeActions.tsx`), then the pantry feed,
+- Recipes wired together (phase 3): the Recipes tab (`src/recipes/RecipesScreen.tsx`) starts with links to Search and
+  Saved and a secondary "Import a recipe" button (`src/recipes/RecipesActions.tsx`), then the pantry feed,
   then `CreatorVideosRow` with "See all creator videos" (`/creators`). The recipe page has the heart
   (`SaveButton`) for recipes and library rows: `saveableFromAppRecipe()` (`src/data/savedRecipeRows.ts`)
   turns the page's `AppRecipe` into the same save target search builds, so both hearts write and find
@@ -85,7 +96,7 @@ it is in git history only. Edge functions are in `../supabase/functions`, the da
   removed from the device and sign-in says the account was deleted. Wording is the live app's word for word
   (`copy.ts`, checked by `tests/account-copy.test.ts`). No tomato: the delete button is ink. End to end:
   `e2e/account-delete.spec.ts` (the function is stubbed; nothing is deleted).
-- Account (`/account`, `src/account/AccountScreen.tsx`), Home's one "Account" link: the signed-in email, the
+- Account (`/account`, `src/account/AccountScreen.tsx`), Home's one "Account" link (and the person icon in the top bar): the signed-in email, the
   current plan with "Manage subscription" (the same card, plan read and rules as `/plans`, shared in
   `src/plans/CurrentPlan.tsx`; shown only for a live subscription), then "Plans & usage", "Delete account" and the
   sign-out card. It is the "Account, Manage subscription" the approved renewal terms name

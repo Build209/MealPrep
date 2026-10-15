@@ -32,7 +32,9 @@ function tabIcon(name: IconName, route: string) {
 }
 
 /**
- * Four tabs, as in DESIGN.md: Home, Pantry, Grocery, Stores, each a line icon over its label.
+ * Four tabs (owner, 2026-10-15): Home (Ask Forky and counters), Pantry, Recipes, Grocery (the list,
+ * and the stores that were their own tab), each a line icon over its label. /stores redirects to
+ * Grocery's Stores view (src/app/stores.tsx).
  * The tabs need a session (no guest mode): signed out, or a build without server settings, goes to sign-in.
  *
  * - Safe area: the bar is its base height plus the bottom inset (iPhone home indicator; on the web
@@ -92,8 +94,8 @@ export default function TabsLayout() {
       >
         <Tabs.Screen name="index" options={{ title: 'Home', tabBarIcon: tabIcon('home', 'index') }} />
         <Tabs.Screen name="pantry" options={{ title: 'Pantry', tabBarIcon: tabIcon('package', 'pantry') }} />
+        <Tabs.Screen name="recipes" options={{ title: 'Recipes', tabBarIcon: tabIcon('book-open', 'recipes') }} />
         <Tabs.Screen name="grocery" options={{ title: 'Grocery', tabBarIcon: tabIcon('shopping-cart', 'grocery') }} />
-        <Tabs.Screen name="stores" options={{ title: 'Stores', tabBarIcon: tabIcon('map-pin', 'stores') }} />
       </Tabs>
     </View>
   );

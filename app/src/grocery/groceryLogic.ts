@@ -10,6 +10,10 @@ import { parseQuantity } from '../pantry/form/itemForm';
 
 export const GROCERY_COPY = {
   title: 'Grocery',
+  /** The switch at the top of the Grocery tab (stores joined Grocery, owner 2026-10-15). */
+  viewChoiceA11y: 'Grocery view',
+  viewList: 'List',
+  viewStores: 'Stores',
   addItem: 'Add item',
   emptyTitle: 'Your list is empty',
   emptyBody: 'Add what you need. Tick it off in the store and it goes straight into your pantry.',

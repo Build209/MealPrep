@@ -8,7 +8,7 @@
 #   /accessibility.html    accessibility statement (app/public, verbatim)
 #   /209/                  209 Meal Prep static site (New/), plus redirects from its old root pages
 #   /app/...               redirect stubs for links to the old /MealPrep/app/ address
-#   /recipes, /smart-shop, ...   redirect stubs for old-app routes the new app does not have
+#   /smart-shop, /profile, ...   redirect stubs for old-app routes the new app does not have
 #   /sw.js, /app/sw.js     clean-up service worker for browsers that installed the old app's worker
 #   /CNAME, /.nojekyll
 #
@@ -88,9 +88,12 @@ redirect_page privacy/terms.html "'/terms.html'" /terms.html
 redirect_page terms/privacy.html "'/privacy.html'" /privacy.html
 
 # Old-app routes that the new app does not have. old path -> new path.
-# (/pantry, /grocery, /stores exist in the new app and open through 404.html; /delete-account has its own copy, above.)
+# (/pantry, /grocery, /stores, /recipes exist in the new app and open through 404.html;
+# /delete-account has its own copy, above.)
+# /recipes has no stub since the Recipes tab (2026-10-15) took that address: a recipes.html stub
+# would be served for /recipes itself and send it round in a loop. The app opens Search for an old
+# /recipes?q=... link, and /stores forwards to Grocery's Stores view.
 retired_routes=(
-  "recipes:/recipes/search"
   "discover-recipes:/recipes/search"
   "smart-shop:/stores"
   "pantry-staples:/pantry"
