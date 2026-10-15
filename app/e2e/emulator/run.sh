@@ -18,7 +18,8 @@ API_PORT="$(echo "${E2E_SUPABASE_URL:?set E2E_SUPABASE_URL}" | sed -E 's#^https?
 echo "== Emulator: $(adb shell getprop ro.product.model | tr -d '\r'), Android $(adb shell getprop ro.build.version.release | tr -d '\r')"
 adb shell wm size
 
-has_chrome() { adb shell pm list packages | tr -d '\r' | grep -qx 'package:com.android.chrome'; }
+# Read the list first: `grep -q` closing the pipe early fails the whole pipe under pipefail.
+has_chrome() { local pkgs; pkgs="$(adb shell pm list packages | tr -d '\r')"; grep -qx 'package:com.android.chrome' <<< "$pkgs"; }
 if ! has_chrome; then
   # Some images carry Chrome but do not install it for the user: try that before giving up.
   adb shell cmd package install-existing com.android.chrome || true
@@ -45,7 +46,7 @@ adb reverse "tcp:${API_PORT}" "tcp:${API_PORT}"
 
 adb shell am start -a android.intent.action.VIEW -d about:blank com.android.chrome >/dev/null
 for _ in $(seq 1 60); do
-  if adb shell cat /proc/net/unix | grep -q chrome_devtools_remote; then break; fi
+  if grep -q chrome_devtools_remote <<< "$(adb shell cat /proc/net/unix)"; then break; fi
   sleep 2
 done
 adb forward tcp:9222 localabstract:chrome_devtools_remote
