@@ -481,3 +481,18 @@ screen('25', 'privacy', 'none', 'Privacy (/privacy.html from the export)', async
   await expect(page.locator('body')).toContainText(/privacy/i);
   return ['Static legal page (public/privacy.html), not an app screen.'];
 });
+
+screen('26', 'help', 'none', 'Help (FAQ, Contact us, policies)', async (page) => {
+  await signIn(page);
+  await page.goto('/help');
+  await expect(page.getByRole('heading', { name: 'Help', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Contact us' })).toBeVisible();
+  return ['Contact us opens an email (mailto:), not followed here.'];
+});
+
+screen('27', 'accessibility', 'none', 'Accessibility statement (/accessibility.html from the export)', async (page) => {
+  const res = await page.goto('/accessibility.html');
+  expect(res?.status()).toBe(200);
+  await expect(page.getByRole('heading', { level: 1, name: 'Accessibility' })).toBeVisible();
+  return ['Static page (public/accessibility.html), not an app screen.'];
+});
