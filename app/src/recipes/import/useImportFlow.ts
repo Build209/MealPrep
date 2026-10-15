@@ -2,7 +2,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
 import { useAuth } from '../../auth/AuthProvider';
-import { DataError } from '../../data/errors';
+import { DataError, messages, offlineError } from '../../data/errors';
+import { isOnlineNow } from '../../data/online';
 import { importUsageAllKey, uploadImportPhotos, uploadImportVideo, useSaveImportedRecipe } from '../../data/recipeImport';
 import { env } from '../../lib/env';
 import { logEvent } from '../../lib/events';
@@ -65,6 +66,8 @@ export function useImportFlow(initialText = '') {
       let called = false;
       try {
         if (!session) throw new ImportError('signed-out', IMPORT_MESSAGES.signedOut);
+        // No connection: say so before anything is picked or uploaded, and never call the function.
+        if (!isOnlineNow()) throw offlineError();
         const request = await prepare();
         if (!request) return;
         setPhase({ name: 'reading', what });
@@ -163,6 +166,12 @@ export function useImportFlow(initialText = '') {
     setProblems(found);
     if (Object.keys(found).length > 0) {
       setError(found.content ?? 'Fix the fields marked below, then save.');
+      return;
+    }
+    // Checked here, not only in the save: offline, TanStack Query would hold the mutation
+    // (a save with no end) and send it later. Changes need a connection and say so.
+    if (!isOnlineNow()) {
+      setError(messages.offline);
       return;
     }
     setError(null);
