@@ -1,0 +1,64 @@
+# Local database used only by CI and by developers to test against the live schema.
+# This folder is separate from the root supabase/ folder (once mobile/supabase) on purpose: that folder deploys the live edge
+# functions, and a config.toml there could change how they deploy.
+project_id = "mealplanatic-rebuild-db"
+
+[db]
+port = 54322
+shadow_port = 54320
+# Live project runs PostgreSQL 17 (17.11 on 2026-10-13).
+major_version = 17
+
+[db.migrations]
+enabled = true
+
+[db.seed]
+enabled = false
+
+# ---------------------------------------------------------------------------------------------
+# Everything below is for the LOCAL stack only (CI end-to-end tests: .github/workflows/app-e2e.yml).
+# It never changes the live project; the live auth settings are set in the Supabase dashboard.
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[auth]
+enabled = true
+# The app's web build is served here during the e2e tests (app/e2e/serve.mjs).
+site_url = "http://127.0.0.1:4173"
+additional_redirect_urls = [
+  "http://127.0.0.1:4173",
+  "http://localhost:4173",
+  "http://127.0.0.1:4173/**",
+  "http://localhost:4173/**",
+]
+enable_signup = true
+
+[auth.email]
+enable_signup = true
+# Local only: tests sign up and sign in straight away, with no email to open.
+enable_confirmations = false
+
+# Not needed by the tests; switched off so the local stack starts faster. Storage stays on:
+# its service creates the storage schema the baseline's buckets and policies need.
+[studio]
+enabled = false
+
+[realtime]
+enabled = false
+
+[edge_runtime]
+enabled = false
+
+[analytics]
+enabled = false
+
+# Local mail catcher (Mailpit/Inbucket): the local auth server delivers its emails here instead
+# of sending them, and the forgot-password test reads the reset link from it
+# (app/e2e/reset-password.spec.ts). Local only: no real email is ever sent.
+[local_smtp]
+enabled = true

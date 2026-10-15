@@ -1,3 +1,6 @@
+# Deploys mealplanatic.app from main: builds the new app (app/) and assembles the whole site with
+# app/scripts/build-site.sh, which keeps every public address the old pages.yml served (see the script's header).
+# The same build is checked on pull requests by site-build.yml, which never deploys.
 name: Deploy GitHub Pages
 
 on:
@@ -28,62 +31,31 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
-          cache: npm
-          cache-dependency-path: mobile/package-lock.json
-      - name: Build Expo web app
-        working-directory: mobile
+          node-version: "22"
+      - name: Install
+        working-directory: app
+        # Switch to plain `npm ci` once app/package-lock.json is committed.
+        run: |
+          if [ -f package-lock.json ]; then npm ci; else npm install --no-audit --no-fund; fi
+      - name: Typecheck and unit tests
+        working-directory: app
+        run: |
+          npm run typecheck
+          npm test
+      - name: Build the site
         env:
+          # Public settings only (URL and publishable key), as today.
+          # No EXPO_PUBLIC_APP_CHANNEL: unset = no "Preview build" label.
           EXPO_PUBLIC_SUPABASE_URL: https://okkwapgyadpaifpmkcex.supabase.co
           EXPO_PUBLIC_SUPABASE_ANON_KEY: sb_publishable_PCMqSfDjdX6J55lc97km1g_I7U5n-pD
-        run: |
-          npm ci
-          npm run export:web
-      - name: Assemble site artifact
-        run: |
-          set -euo pipefail
-          # Site layout on https://mealplanatic.app:
-          #   /       MealPlanatic app (Expo web export)
-          #   /209/   209 Meal Prep static site (New/)
-          #   /app/   redirect stubs for links to the old /MealPrep/app/ address
-          mkdir -p _site/209
-          cp -a mobile/dist/. _site/
-          cp -a New/. _site/209/
-          touch _site/.nojekyll
-          test -f _site/404.html || (echo "missing SPA 404 fallback in mobile/dist" && exit 1)
-          routes="admin pantry grocery recipes smart-shop discover-recipes privacy terms delete-account"
-          cd _site
-          for route in $routes; do
-            if [ -f "$route.html" ]; then
-              mkdir -p "$route"
-              cp "$route.html" "$route/index.html"
-            fi
-          done
-          # Old /app/* links forward to the new paths. (The old the209bbq.github.io address stopped forwarding when the GitHub user was renamed to Build209.)
-          redirect_page() {
-            # $1 = output file, $2 = JS expression for the new path
-            mkdir -p "$(dirname "$1")"
-            printf '%s\n' '<!doctype html><meta charset="utf-8"><title>MealPlanatic</title>' \
-              '<meta name="robots" content="noindex">' \
-              "<script>location.replace($2 + location.search + location.hash);</script>" \
-              '<p><a href="/">Continue to MealPlanatic</a></p>' > "$1"
-          }
-          test ! -e app || (echo "app export now has an /app path; pick another redirect folder" && exit 1)
-          redirect_page app/index.html "location.pathname.replace(/^\\/app\\/?/, '/')"
-          for route in $routes; do
-            redirect_page "app/$route/index.html" "location.pathname.replace(/^\\/app\\/?/, '/')"
-          done
-          # Old 209 Meal Prep links: pages that used to sit at the site root now live under /209/.
-          for page in 209/*.html; do
-            name="$(basename "$page")"
-            if [ ! -e "$name" ]; then
-              redirect_page "$name" "'/209/$name'"
-            fi
-          done
+          EXPO_PUBLIC_GIT_SHA: ${{ github.sha }}
+        # Fails if index.html, 404.html, the legal pages, /209/, the redirect stubs,
+        # the clean-up service worker or CNAME are missing.
+        run: bash app/scripts/build-site.sh
       - name: Upload static site
         uses: actions/upload-pages-artifact@v3
         with:
-          path: _site
+          path: app/site
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4

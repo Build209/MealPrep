@@ -1,0 +1,48 @@
+name: New app (rebuild)
+
+# Typecheck, unit tests and a web build for the rebuilt app in app/.
+on:
+  pull_request:
+    paths:
+      - "app/**"
+      - ".github/workflows/app-ci.yml"
+  push:
+    branches: [rebuild/v1, main]
+    paths:
+      - "app/**"
+      - ".github/workflows/app-ci.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: app-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  app:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      # app/package-lock.json is committed, so this runs `npm ci` (same versions every run).
+      - name: Install
+        run: |
+          if [ -f package-lock.json ]; then npm ci; else npm install --no-audit --no-fund; fi
+      # Report only for now: shows known high/critical holes in shipped packages, never fails the job.
+      - name: Security audit (report only)
+        continue-on-error: true
+        run: npm audit --omit=dev --audit-level=high
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Unit tests
+        run: npm test
+      # Built without server settings; the phone preview build (later in phase 0) adds them.
+      - name: Web build
+        run: npm run export:web

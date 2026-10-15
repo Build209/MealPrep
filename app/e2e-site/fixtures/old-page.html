@@ -1,0 +1,11 @@
+<!doctype html>
+<meta charset="utf-8" />
+<title>Old MealPlanatic (test fixture)</title>
+<p>Stand-in for a page of the old app. It registers /sw.js with scope "/", as the old pwa-register.js did.</p>
+<script>
+  window.__oldWorkerReady = (async function () {
+    await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+    await navigator.serviceWorker.ready;
+    return true;
+  })();
+</script>

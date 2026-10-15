@@ -1,6 +1,9 @@
 name: CI checks
 
 # Runs on every PR and push so broken code is caught before the Pages deploy.
+# The old app's `mobile` job went with mobile/ at the switch-over. The new app, the edge functions
+# and the database have their own workflows: app-ci.yml, app-e2e.yml, functions-ci.yml, db-baseline.yml,
+# site-build.yml.
 on:
   pull_request:
   push:
@@ -14,44 +17,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  mobile:
-    runs-on: ubuntu-latest
-    timeout-minutes: 25
-    defaults:
-      run:
-        working-directory: mobile
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-          cache: npm
-          cache-dependency-path: mobile/package-lock.json
-      - run: npm ci
-      - name: Typecheck
-        run: npm run typecheck
-      # Advisory for now: existing lint errors must not block typecheck and tests.
-      # Remove continue-on-error once the lint errors are fixed.
-      - name: Lint
-        continue-on-error: true
-        run: npm run lint
-      # test:grocery includes a Python check that imports the store-ingest dependencies.
-      - name: Install Python test dependencies
-        run: pip install --quiet -r scripts/stores-ingest/requirements.txt
-      # Some checks drive a real browser (e.g. prepare-image-web-check).
-      - name: Install Playwright browser
-        run: npx playwright install --with-deps chromium
-      - name: Tests
-        run: |
-          set -o pipefail
-          # Hard stop so a hung browser check fails fast and still reports where it stopped.
-          if ! timeout --signal=TERM --kill-after=30s 12m npm test 2>&1 | tee "$RUNNER_TEMP/test.log"; then
-            # Surface the end of the log on the PR so the failing check is visible without opening logs.
-            tail_text="$(tail -n 30 "$RUNNER_TEMP/test.log" | sed -e 's/%/%25/g' | awk '{printf "%s%%0A", $0}')"
-            echo "::error title=Tests failed::${tail_text}"
-            exit 1
-          fi
-
+  # The 209 Meal Prep static site in New/ (served at /209/).
   static-site:
     runs-on: ubuntu-latest
     steps:

@@ -1,0 +1,10 @@
+node_modules/
+.expo/
+dist/
+site/
+*.tsbuildinfo
+playwright-report/
+test-results/
+phone-screens/
+playwright-report-phone/
+test-results-phone/

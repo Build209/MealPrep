@@ -2,6 +2,7 @@ name: Deploy Supabase function
 
 # Manual, one function at a time: Actions tab -> "Deploy Supabase function" -> Run workflow.
 # Deploys exactly what is on main, so the live function always matches the repo.
+# Sources: supabase/functions/<name>/ at the repo root (moved out of mobile/ for the switch-over).
 #
 # One-time setup: add a repository secret named SUPABASE_ACCESS_TOKEN
 # (Supabase dashboard -> Account -> Access Tokens). Never paste the token anywhere else.
@@ -56,7 +57,7 @@ jobs:
         with:
           version: latest
       - name: Deploy
-        working-directory: mobile
+        # Runs from the repo root: the CLI reads supabase/functions/<name>/.
         run: |
           set -euo pipefail
           test -f "supabase/functions/$FUNCTION_NAME/index.ts"

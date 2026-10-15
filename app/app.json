@@ -1,0 +1,37 @@
+{
+  "expo": {
+    "name": "MealPlanatic",
+    "slug": "mealplanatic-rebuild",
+    "scheme": "mealplanatic",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "web": {
+      "bundler": "metro",
+      "favicon": "./assets/favicon.png",
+      "output": "single"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Allow MealPlanatic to use your camera to scan shelves, your fridge and grocery receipts.",
+          "photosPermission": "Allow MealPlanatic to open a photo of a shelf, your fridge or a grocery receipt to scan it.",
+          "microphonePermission": false
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Allow MealPlanatic to use your location to find nearby grocery stores.",
+          "isIosBackgroundLocationEnabled": false,
+          "isAndroidBackgroundLocationEnabled": false,
+          "isAndroidForegroundServiceEnabled": false
+        }
+      ]
+    ]
+  }
+}
