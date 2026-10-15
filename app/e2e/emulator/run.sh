@@ -61,7 +61,12 @@ fi
 echo
 export EMULATOR_CDP_URL=http://127.0.0.1:9222
 
-screen_size() { adb shell wm size | tr -d '\r' | awk -F': ' '/Override size/ {o=$2} /Physical size/ {p=$2} END {print (o != "" ? o : p)}'; }
+screen_size() {
+  local cur
+  cur="$(adb shell dumpsys window displays | tr -d '\r' | grep -m1 -oE 'cur=[0-9]+x[0-9]+' | cut -d= -f2)"
+  if [ -n "$cur" ]; then echo "$cur"; return; fi
+  adb shell wm size | tr -d '\r' | awk -F': ' '/Override size/ {o=$2} /Physical size/ {p=$2} END {print (o != "" ? o : p)}'
+}
 
 set_posture() {
   case "$1" in
@@ -71,13 +76,14 @@ set_posture() {
       ;;
     folded | unfolded)
       # Foldables: try each way to move the hinge until the screen size actually changes.
+      # The emulator's states are 1 CLOSED, 2 HALF_OPENED, 3 OPENED (print-states, 2026-10-15 run).
       # (First run: `adb emu fold` returned OK but the tour still saw the 1769px inner screen.)
       local before after
       before="$(screen_size)"
       if [ "$1" = folded ]; then
-        try_cmds=("adb emu fold" "adb emu posture 1" "adb shell cmd device_state state 0")
+        try_cmds=("adb shell cmd device_state state 1" "adb emu fold" "adb emu posture 1")
       else
-        try_cmds=("adb emu unfold" "adb emu posture 3" "adb shell cmd device_state state reset")
+        try_cmds=("adb shell cmd device_state state 3" "adb emu unfold" "adb emu posture 3")
       fi
       adb shell cmd device_state print-states || true
       for c in "${try_cmds[@]}"; do
