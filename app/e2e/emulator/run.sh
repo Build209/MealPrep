@@ -18,7 +18,15 @@ API_PORT="$(echo "${E2E_SUPABASE_URL:?set E2E_SUPABASE_URL}" | sed -E 's#^https?
 echo "== Emulator: $(adb shell getprop ro.product.model | tr -d '\r'), Android $(adb shell getprop ro.build.version.release | tr -d '\r')"
 adb shell wm size
 
-if ! adb shell pm list packages | tr -d '\r' | grep -qx 'package:com.android.chrome'; then
+has_chrome() { adb shell pm list packages | tr -d '\r' | grep -qx 'package:com.android.chrome'; }
+if ! has_chrome; then
+  # Some images carry Chrome but do not install it for the user: try that before giving up.
+  adb shell cmd package install-existing com.android.chrome || true
+fi
+if ! has_chrome; then
+  echo "Image: $(adb shell getprop ro.build.fingerprint | tr -d '\r')"
+  echo "Browser-like packages (all users, incl. uninstalled):"
+  adb shell pm list packages -u | tr -d '\r' | grep -iE 'chrome|webview|browser|chromium' || echo "(none)"
   echo "::error title=Android emulator::Chrome is not installed on this emulator image."
   exit 2
 fi
