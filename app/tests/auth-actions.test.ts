@@ -1,10 +1,13 @@
 /// <reference types="node" />
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { requestPasswordReset, signIn, signOut, signUp, type AuthClient } from '../src/auth/actions';
+import { ageConfirmationMetadata, requestPasswordReset, signIn, signOut, signUp, type AuthClient } from '../src/auth/actions';
 import { AUTH_EMAIL_REDIRECT, AUTH_RESET_COPY, AUTH_RESULT_COPY } from '../src/auth/copy';
 
 type Call = { name: string; args: unknown[] };
+
+const FIXED_NOW = new Date('2026-10-15T12:00:00.000Z');
+const AGE_DATA = { age_confirmed: true, age_confirmed_at: '2026-10-15T12:00:00.000Z' };
 
 /** A stand-in for supabase.auth that records calls and returns what each test asks for. */
 function fakeAuth(replies: Record<string, unknown>): { auth: AuthClient; calls: Call[] } {
@@ -58,11 +61,11 @@ test('sign-up sends the confirmation link to the live site and asks to confirm',
   const { auth, calls } = fakeAuth({
     signUp: { data: { session: null, user: { identities: [{ id: '1' }] } }, error: null },
   });
-  const result = await signUp(auth, 'cook@example.com', 'secret1');
+  const result = await signUp(auth, 'cook@example.com', 'secret1', undefined, FIXED_NOW);
   assert.deepEqual(calls[0]?.args[0], {
     email: 'cook@example.com',
     password: 'secret1',
-    options: { emailRedirectTo: AUTH_EMAIL_REDIRECT },
+    options: { emailRedirectTo: AUTH_EMAIL_REDIRECT, data: AGE_DATA },
   });
   assert.deepEqual(result, { ok: true, notice: AUTH_RESULT_COPY.confirmEmail });
 });
@@ -71,12 +74,25 @@ test('sign-up can send the confirmation link to another address (the preview bui
   const { auth, calls } = fakeAuth({
     signUp: { data: { session: null, user: { identities: [{ id: '1' }] } }, error: null },
   });
-  await signUp(auth, 'cook@example.com', 'secret1', 'https://preview.example.dev/');
+  await signUp(auth, 'cook@example.com', 'secret1', 'https://preview.example.dev/', FIXED_NOW);
   assert.deepEqual(calls[0]?.args[0], {
     email: 'cook@example.com',
     password: 'secret1',
-    options: { emailRedirectTo: 'https://preview.example.dev/' },
+    options: { emailRedirectTo: 'https://preview.example.dev/', data: AGE_DATA },
   });
+});
+
+test('sign-up records the ticked 18+ box in the user metadata, with the time it was sent', async () => {
+  const { auth, calls } = fakeAuth({
+    signUp: { data: { session: null, user: { identities: [{ id: '1' }] } }, error: null },
+  });
+  await signUp(auth, 'cook@example.com', 'secret1');
+  const sent = calls[0]?.args[0] as { options: { data: Record<string, unknown> } };
+  assert.equal(sent.options.data.age_confirmed, true);
+  const at = sent.options.data.age_confirmed_at;
+  assert.equal(typeof at, 'string');
+  assert.ok(Math.abs(Date.parse(at as string) - Date.now()) < 60_000, 'timestamp is now');
+  assert.deepEqual(ageConfirmationMetadata(FIXED_NOW), AGE_DATA);
 });
 
 test('sign-up with an address that already has an account says so', async () => {

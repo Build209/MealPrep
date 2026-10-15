@@ -266,6 +266,9 @@ function parseCategory(input: unknown): ViralRecipesCategory | null {
   return null;
 }
 
+// SECURITY: this decodes the JWT payload without checking its signature. That is only safe because
+// the gateway verifies the token first (deployed WITHOUT --no-verify-jwt). Keep it that way:
+// supabase/scripts/verify-jwt-guard-check.ts fails CI if this function loses gateway JWT verification.
 function rateLimitKey(req: Request): string {
   const authHeader = req.headers.get('Authorization');
   if (authHeader?.startsWith('Bearer ')) {

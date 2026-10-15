@@ -1,11 +1,12 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1';
+import { secretsMatch } from '../_shared/secrets.ts';
 
 const ADMIN_SECRET_HEADER = 'x-library-admin-secret';
 
 export async function authorizeLibraryGenerate(req: Request): Promise<{ ok: true } | { ok: false; status: number; message: string }> {
   const expectedSecret = (Deno.env.get('LIBRARY_ADMIN_SECRET') ?? '').trim();
   const providedSecret = (req.headers.get(ADMIN_SECRET_HEADER) ?? '').trim();
-  if (expectedSecret && providedSecret && providedSecret === expectedSecret) {
+  if (secretsMatch(expectedSecret, providedSecret)) {
     return { ok: true };
   }
 
