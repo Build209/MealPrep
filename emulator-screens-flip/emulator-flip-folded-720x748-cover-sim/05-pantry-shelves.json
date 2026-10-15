@@ -1,0 +1,105 @@
+{
+  "project": "emulator-flip-folded-720x748-cover-sim",
+  "engine": "chromium",
+  "order": "05",
+  "screen": "pantry-shelves",
+  "route": "/pantry",
+  "purpose": "none",
+  "viewport": "240x146",
+  "screenshots": [
+    "emulator-flip-folded-720x748-cover-sim/05-pantry-shelves.png"
+  ],
+  "checks": {
+    "noSidewaysScroll": true,
+    "tapTargets": true,
+    "textFits": true,
+    "tomatoRule": true
+  },
+  "sidewaysScroll": {
+    "scrollWidth": 240,
+    "innerWidth": 240
+  },
+  "tapTargetIssues": [],
+  "tapTargetAllowed": [],
+  "clippedText": [],
+  "truncatedText": [
+    {
+      "text": "Extra sharp aged white cheddar cheese block",
+      "kind": "truncated",
+      "scroll": "86x64",
+      "client": "86x48"
+    },
+    {
+      "text": "Home",
+      "kind": "truncated",
+      "scroll": "38x24",
+      "client": "2x24"
+    },
+    {
+      "text": "Pantry",
+      "kind": "truncated",
+      "scroll": "42x24",
+      "client": "2x24"
+    },
+    {
+      "text": "Grocery",
+      "kind": "truncated",
+      "scroll": "51x24",
+      "client": "2x24"
+    },
+    {
+      "text": "Stores",
+      "kind": "truncated",
+      "scroll": "42x24",
+      "client": "2x24"
+    }
+  ],
+  "offscreenControls": [],
+  "tomato": [
+    {
+      "text": "Plan",
+      "tag": "h1",
+      "props": [
+        "color"
+      ],
+      "context": "brand"
+    },
+    {
+      "text": "Scan · 3 left this month",
+      "tag": "button",
+      "props": [
+        "border-top"
+      ],
+      "context": "camera"
+    },
+    {
+      "text": "",
+      "tag": "div",
+      "props": [
+        "background"
+      ],
+      "context": "camera"
+    },
+    {
+      "text": "",
+      "tag": "div",
+      "props": [
+        "border-top"
+      ],
+      "context": "camera"
+    },
+    {
+      "text": "",
+      "tag": "div",
+      "props": [
+        "border-top"
+      ],
+      "context": "camera"
+    }
+  ],
+  "tomatoViolations": [],
+  "notes": [
+    "Tomato is allowed here only on the Scan button (camera)."
+  ],
+  "reportOnly": {}
+}
