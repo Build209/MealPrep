@@ -91,7 +91,7 @@ set_posture() {
       adb shell cmd device_state print-states || true
       for c in "${try_cmds[@]}"; do
         echo "posture $1: $c"
-        $c || true
+        timeout 30 $c || echo "  (no answer in 30s)"
         sleep 4
         after="$(screen_size)"
         echo "  screen: $before -> $after"
@@ -119,7 +119,7 @@ set_posture() {
       ;;
   esac
   sleep 4
-  adb shell dumpsys window displays | grep -m2 -E 'cur=|init=' || true
+  timeout 20 adb shell dumpsys window displays | grep -m2 -E 'cur=|init=' || true
 }
 
 : > "$RESULT_FILE"
@@ -134,7 +134,8 @@ for posture in $POSTURES; do
   sleep 5
   adb forward tcp:9222 localabstract:chrome_devtools_remote
   echo "== Tour: $label"
-  if EMULATOR_LABEL="$label" npx playwright test -c playwright.emulator.config.ts; then
+  # Hard limit per posture: one stuck posture must not hold the job (a fold run hung >1h, 2026-10-15).
+  if EMULATOR_LABEL="$label" timeout --signal=INT --kill-after=60 20m npx playwright test -c playwright.emulator.config.ts; then
     echo "$label passed" >> "$RESULT_FILE"
   else
     echo "$label FAILED" >> "$RESULT_FILE"
