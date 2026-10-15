@@ -1,0 +1,97 @@
+{
+  "project": "emulator-flip-folded-720x748-cover-sim",
+  "engine": "chromium",
+  "order": "07",
+  "screen": "pantry-empty",
+  "route": "/pantry",
+  "purpose": "none",
+  "viewport": "240x146",
+  "screenshots": [
+    "emulator-flip-folded-720x748-cover-sim/07-pantry-empty.png"
+  ],
+  "checks": {
+    "noSidewaysScroll": true,
+    "tapTargets": true,
+    "textFits": true,
+    "tomatoRule": true
+  },
+  "sidewaysScroll": {
+    "scrollWidth": 240,
+    "innerWidth": 240
+  },
+  "tapTargetIssues": [],
+  "tapTargetAllowed": [],
+  "clippedText": [],
+  "truncatedText": [
+    {
+      "text": "Home",
+      "kind": "truncated",
+      "scroll": "38x18",
+      "client": "38x13"
+    },
+    {
+      "text": "Pantry",
+      "kind": "truncated",
+      "scroll": "42x18",
+      "client": "42x13"
+    },
+    {
+      "text": "Grocery",
+      "kind": "truncated",
+      "scroll": "51x18",
+      "client": "50x13"
+    },
+    {
+      "text": "Stores",
+      "kind": "truncated",
+      "scroll": "42x18",
+      "client": "42x13"
+    }
+  ],
+  "offscreenControls": [],
+  "tomato": [
+    {
+      "text": "Plan",
+      "tag": "h1",
+      "props": [
+        "color"
+      ],
+      "context": "brand"
+    },
+    {
+      "text": "Scan · 3 left this month",
+      "tag": "button",
+      "props": [
+        "border-top"
+      ],
+      "context": "camera"
+    },
+    {
+      "text": "",
+      "tag": "div",
+      "props": [
+        "background"
+      ],
+      "context": "camera"
+    },
+    {
+      "text": "",
+      "tag": "div",
+      "props": [
+        "border-top"
+      ],
+      "context": "camera"
+    },
+    {
+      "text": "",
+      "tag": "div",
+      "props": [
+        "border-top"
+      ],
+      "context": "camera"
+    }
+  ],
+  "tomatoViolations": [],
+  "notes": [],
+  "reportOnly": {}
+}
