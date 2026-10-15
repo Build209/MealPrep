@@ -1,6 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { useAuth } from '../auth/AuthProvider';
+import { OFFLINE_MESSAGE, isOnlineNow } from '../data/online';
 import { usePantryItems } from '../data/pantry';
 import { useSavePantryScan } from '../data/pantryScanSave';
 import { scanUsageAllKey } from '../data/scanUsage';
@@ -47,6 +48,12 @@ export function useScanFlow() {
   const start = useCallback(
     async (source: PhotoSource, target: ScanTarget) => {
       if (busy.current) return; // a double tap never starts a second scan
+      // No connection: say so before a photo is picked, and never send a scan.
+      if (!isOnlineNow()) {
+        setError(OFFLINE_MESSAGE);
+        setEmptyResult(false);
+        return;
+      }
       busy.current = true;
       setError(null);
       setEmptyResult(false);
@@ -109,6 +116,12 @@ export function useScanFlow() {
     setError(null);
     if (plan.inserts.length === 0 && plan.topUps.length === 0) {
       setError('Nothing to save. Tick at least one item.');
+      return;
+    }
+    // Checked here, not only in the save: offline, TanStack Query would hold the mutation
+    // ("Saving..." with no end) and send it later. Changes need a connection and say so.
+    if (!isOnlineNow()) {
+      setError(OFFLINE_MESSAGE);
       return;
     }
     save.mutate(rows, {
