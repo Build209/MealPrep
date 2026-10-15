@@ -22,6 +22,8 @@ new app's tests run against what is actually live.
 | `tests/ai_rate_limits_check.sql` | Checks for that file: stops at the limit, separate per account and per function, anon refused, table out of client reach, bad input refused, a new window starts fresh, old windows cleaned up, rows go with the account. Rolls back. |
 | `supabase/migrations/20261015000000_security_hardening.sql` | **NOT on live — needs the owner's yes.** Security audit 2026-10-15: `scan_corrections` gets size limits on its text columns, an insert policy that requires a signed-in caller and a training photo path in the caller's own folder (was `with check (true)`), and a 1000 rows/person/UTC day cap (extra rows skipped silently) counted in a new service-only table `scan_correction_daily_counts` (the feedback table stays unattributed). `is_admin()` EXECUTE for anon is deliberately kept (RLS policies that anon evaluates call it). Rows the old app sends still insert. |
 | `tests/security_hardening_check.sql` | Checks for that file: limits, policy and trigger exist; old-app rows insert; another person's photo path, oversized or empty values and anon inserts refused; the 1000th row is the last kept; members cannot read the counters; account deletion removes them; anon keeps `is_admin`. Rolls back. |
+| `supabase/migrations/20261017000000_rls_perf.sql` | **NOT on live — owner approval needed before live.** Supabase performance advisor fixes (2026-10-15): 36 public RLS policies rewritten to call `auth.uid()` / `auth.role()` / `is_admin()` once per query as `(select ...)` (29 flagged by the advisor + 7 `is_admin()` ones), same names, commands, roles and logic; indexes on the two unindexed foreign keys `billing_consents.user_id` and `user_saved_recipes.kitchen_recipe_id`. Multiple-permissive-policy warnings and storage policies left as they are (header says why). |
+| `tests/rls_perf_check.sql` | Checks for that file: no public policy calls those functions per row, each altered policy keeps its command and roles and uses the `(select ...)` form, both indexes exist, a user sees and changes only own pantry, grocery, profile and recipe rows, an admin still reads all pantry items and profiles, anon sees none of them. Rolls back. |
 | `tests/plain-postgres-stubs.sql` | Small stand-ins for Supabase's `auth` and `storage` schemas, to run the checks on a bare Postgres with no Docker. |
 | `scripts/check-baseline.sh` | Applies the baseline if needed, then runs the checks. Refuses hosted Supabase URLs. |
 
@@ -51,6 +53,7 @@ createdb scratch && DB_URL=postgresql:///scratch db/scripts/check-baseline.sh --
 | `20261014110000_scan_photo_retention.sql` | Yes, 2026-10-14 (owner's yes): #260, daily job `scan-photos-retention-daily` at 10:23 UTC. |
 | `20261016000000_ai_rate_limits.sql` | **No — NOT on live, owner approval needed before live.** Apply before (or after) deploying the edge functions; they work either way. |
 | `20261015000000_security_hardening.sql` | **NOT on live — needs the owner's yes.** scan_corrections limits, own-photo insert policy and daily cap. |
+| `20261017000000_rls_perf.sql` | **No — NOT on live, owner approval needed before live.** RLS policies called once per query, two foreign-key indexes. No change to who sees what. |
 
 ## Rules
 

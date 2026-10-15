@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'reac
 import { Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../auth/AuthProvider';
+import { OFFLINE_MESSAGE, isOnlineNow } from '../data/online';
 import { useForkyMessagesUsed, useForkyRecipes, useRefreshForkyUsage } from '../data/forkyChat';
 import { usePantryItems } from '../data/pantry';
 import { useProfile } from '../data/profile';
@@ -124,6 +125,11 @@ export function ForkyChatScreen() {
     if (!question || busy || usedUp) return;
     if (question.length > ASK_FORKY_LIMITS.questionChars) {
       setError(ASK_FORKY_COPY.tooLong);
+      return;
+    }
+    // No connection: the question stays in the box and nothing is sent or counted.
+    if (!isOnlineNow()) {
+      setError(OFFLINE_MESSAGE);
       return;
     }
     const history: ForkyTurn[] = chat.messages.map((m) => ({ role: m.role, text: m.text }));
