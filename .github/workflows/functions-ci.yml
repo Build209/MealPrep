@@ -8,12 +8,14 @@ on:
       - "supabase/**"
       - ".github/workflows/functions-ci.yml"
       - ".github/workflows/deploy-function.yml"
+      - ".github/workflows/ops-alerts.yml"
   push:
     branches: [rebuild/v1, main]
     paths:
       - "supabase/**"
       - ".github/workflows/functions-ci.yml"
       - ".github/workflows/deploy-function.yml"
+      - ".github/workflows/ops-alerts.yml"
 
 permissions:
   contents: read

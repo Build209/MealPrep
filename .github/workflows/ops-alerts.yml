@@ -1,0 +1,58 @@
+name: Owner alerts
+
+# Every 30 minutes, reads the last 35 minutes of Supabase edge function logs and opens a
+# GitHub issue labelled "ops-alert" (GitHub emails the repo owner) when:
+#   - any function logs a line containing ALERT (e.g. pantry-vision: Google refused billing/key)
+#   - an AI provider says credit/quota ran out (Gemini or Anthropic 402, "credits are depleted")
+#   - an AI provider rate-limits in a burst (5+ 429s) or a model is retired (3+ "no longer available")
+#   - one function returns 5 or more 5xx responses
+# If an ops-alert issue is already open it comments there instead, and the same problem is not
+# repeated within 3 hours. If the logs cannot be read (e.g. the token expired), it says so at
+# most once a day.
+# Logic and thresholds: supabase/scripts/ops-alerts.mjs (tests: ops-alerts.test.mjs).
+#
+# Uses the SUPABASE_ACCESS_TOKEN secret that deploy-function.yml already uses. No new secret,
+# no new service. Log lines are sanitised (no tokens, emails, user ids) before posting.
+#
+# Scheduled runs only happen from the default branch (main). Run it by hand any time:
+# Actions tab -> "Owner alerts" -> Run workflow (tick "dry run" to print instead of posting).
+#
+# To turn it off: Actions tab -> "Owner alerts" -> "..." -> Disable workflow
+# (or delete this file).
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Print what would be posted instead of opening an issue
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: ops-alerts
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: supabase/scripts
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Check logs and alert
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_REF: okkwapgyadpaifpmkcex
+          GITHUB_TOKEN: ${{ github.token }}
+          WINDOW_MINUTES: "35"
+          DRY_RUN: ${{ inputs.dry_run && '1' || '0' }}
+        run: node supabase/scripts/ops-alerts.mjs
