@@ -8,7 +8,7 @@
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
     "test": "tsx --test tests/*.test.ts",
-    "export:web": "expo export -p web",
+    "export:web": "expo export -p web && tsx scripts/web-head.ts",
     "e2e": "playwright test"
   },
   "dependencies": {

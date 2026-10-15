@@ -57,7 +57,9 @@ jobs:
                    smart-shop.html smart-shop/index.html pantry-staples.html pantry-staples/index.html \
                    profile.html profile/index.html admin.html admin/index.html \
                    preview/video-recipe-detail.html preview/video-recipe-detail/index.html \
-                   privacy/terms.html terms/privacy.html zcta-centroids.json; do
+                   privacy/terms.html terms/privacy.html zcta-centroids.json \
+                   manifest.webmanifest og-image.png robots.txt sitemap.xml \
+                   icons/icon-192.png icons/icon-512.png icons/apple-touch-icon.png; do
             test -f "$f" || { echo "missing: $f"; exit 1; }
           done
           # SPA fallback is the app itself.
@@ -74,6 +76,12 @@ jobs:
           # Assets are linked from the site root, and the live settings are in the bundle.
           grep -q 'src="/_expo/static/js/web/' index.html
           grep -rqF 'okkwapgyadpaifpmkcex.supabase.co' _expo/static/js/web/
+          # Search, share and install tags survive the site build (404.html is the same file).
+          grep -qF '<meta name="description" content="Plan meals from what you already have.' index.html
+          grep -qF '<link rel="manifest" href="/manifest.webmanifest" />' index.html
+          grep -qF '<meta property="og:url" content="https://mealplanatic.app/" />' index.html
+          grep -qF 'Sitemap: https://mealplanatic.app/sitemap.xml' robots.txt
+          if grep -q '^Disallow: *[^ ]' robots.txt; then echo "robots.txt must not block anything"; exit 1; fi
           # Redirect stubs point where they should.
           grep -qF "'/recipes/search'" recipes/index.html
           grep -qF "'/stores'" smart-shop/index.html
