@@ -32,11 +32,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-      # No lockfile yet: the first one is produced by this job and uploaded below,
-      # then committed in a follow-up so later runs can use `npm ci`.
+      # app/package-lock.json is committed, so this runs `npm ci` (same versions every run).
       - name: Install
         run: |
           if [ -f package-lock.json ]; then npm ci; else npm install --no-audit --no-fund; fi
+      # Report only for now: shows known high/critical holes in shipped packages, never fails the job.
+      - name: Security audit (report only)
+        continue-on-error: true
+        run: npm audit --omit=dev --audit-level=high
       - name: Typecheck
         run: npm run typecheck
       - name: Unit tests
@@ -44,10 +47,3 @@ jobs:
       # Built without server settings; the phone preview build (later in phase 0) adds them.
       - name: Web build
         run: npm run export:web
-      - name: Keep the generated lockfile
-        if: always() && hashFiles('app/package-lock.json') != ''
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-package-lock
-          path: app/package-lock.json
-          if-no-files-found: ignore
