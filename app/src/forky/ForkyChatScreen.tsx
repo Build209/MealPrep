@@ -7,6 +7,7 @@ import { useForkyMessagesUsed, useForkyRecipes, useRefreshForkyUsage } from '../
 import { usePantryItems } from '../data/pantry';
 import { useProfile } from '../data/profile';
 import { env } from '../lib/env';
+import { logEvent } from '../lib/events';
 import { currentUsagePeriod } from '../scan/allowance';
 import { colors, fonts, layout, radius, space, touch, type as typeScale } from '../theme/tokens';
 import { AppText } from '../ui/AppText';
@@ -148,6 +149,7 @@ export function ForkyChatScreen() {
         recipes: reply.offTopic ? [] : recipeButtons(reply.recipeIds, sentShortlist),
         safetyNote: needsSafetyNote(question, reply),
       });
+      logEvent('ask_forky_asked'); // no question text, only that one was answered
       if (reply.limit !== null && reply.remaining !== null) {
         forkyChat.setServerUsage(userId, { period, limit: reply.limit, remaining: reply.remaining });
       }
