@@ -1,4 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query';
+import { router, useGlobalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { Platform, Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -17,7 +18,9 @@ import { parseCheckoutReturn, PLAN_UNLOCK_POLL, stripCheckoutReturn } from './ch
  *   if it is still not paid after the last try, the pending line. The server switches the plan on
  *   when Stripe confirms payment, never this page.
  * - `?billing=return` (billing portal): re-reads the plan and subscription, no message.
- * The markers are removed from the address first, so a reload does not repeat the message.
+ * The markers are removed from the address first, so a reload does not repeat the message. They are
+ * also removed from the router's own params: otherwise Expo Router writes them back into the address
+ * on its next update.
  * Mounted once in the root layout, pinned to the top so it shows over any screen.
  */
 export function CheckoutReturnNotice() {
@@ -27,6 +30,8 @@ export function CheckoutReturnNotice() {
   const insets = useSafeAreaInsets();
   const handled = useRef(false);
   const [message, setMessage] = useState<string | null>(null);
+  const params = useGlobalSearchParams<{ checkout?: string; billing?: string }>();
+  const routerHasMarker = params.checkout !== undefined || params.billing !== undefined;
 
   useEffect(() => {
     if (Platform.OS !== 'web' || typeof window === 'undefined' || handled.current) return undefined;
@@ -82,6 +87,16 @@ export function CheckoutReturnNotice() {
       if (timer) clearTimeout(timer);
     };
   }, [ready, userId, queryClient]);
+
+  // Once handled, drop the markers from the router's params too, so it does not put them back.
+  useEffect(() => {
+    if (Platform.OS !== 'web' || !handled.current || !routerHasMarker) return;
+    try {
+      router.setParams({ checkout: undefined, billing: undefined });
+    } catch {
+      // Router not ready yet; this runs again when the params or session change.
+    }
+  }, [routerHasMarker, ready, userId]);
 
   if (!message) return null;
   return (
