@@ -1,4 +1,5 @@
 import { daysUntilPantryExpiry } from '../../kitchen/expiry';
+import { isDrinkName, isPreparedDishName } from '../../kitchen/scanFiling';
 import type { PantryStorageLocation } from '../../kitchen/storage';
 import type { ShelvedItem as PantryItem } from '../types';
 
@@ -163,8 +164,10 @@ export function packageShapeFromUnit(unit: string): PackageShape | null {
  * Fresh fruit and vegetables: the produce category, unless the unit says it came sealed in a
  * jar, can, bottle, tube or the like (jarred peppers, ginger paste). A bag of grapes is fresh.
  */
-export function isFreshProduce(item: Pick<PantryItem, 'category' | 'unit'>): boolean {
+export function isFreshProduce(item: Pick<PantryItem, 'category' | 'unit'> & { name?: string }): boolean {
   if (item.category !== 'produce') return false;
+  // Juice and cooked dishes filed as produce are not loose fruit and vegetables.
+  if (item.name && (isDrinkName(item.name) || isPreparedDishName(item.name))) return false;
   const fromUnit = packageShapeFromUnit(item.unit);
   return fromUnit === null || fromUnit === 'bag';
 }
