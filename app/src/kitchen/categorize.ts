@@ -1,161 +1,20 @@
 // Copied from the old app (mobile/lib/grocery/categorize.ts).
 import type { PantryCategory } from './categories';
+import {
+  CONDIMENT_PHRASES,
+  DAIRY_PHRASES,
+  DRY_GOODS_PHRASES,
+  FILING_EXCEPTIONS,
+  FROZEN_PHRASES,
+  MEAT_PHRASES,
+  PRODUCE_PHRASES,
+  SPICE_PHRASES,
+} from './categorizeWords';
+import { filingWords, wordsIncludePhrase } from './filingWords';
 import { normalizeIngredientName } from './ingredientNormalize';
 
-/** Pantry staples / dry goods — checked before produce heuristics. */
-const DRY_GOODS_PHRASES = [
-  'all purpose flour',
-  'all-purpose flour',
-  'bread flour',
-  'cake flour',
-  'whole wheat flour',
-  'brown rice',
-  'white rice',
-  'jasmine rice',
-  'basmati rice',
-  'wild rice',
-  'rice',
-  'pasta',
-  'spaghetti',
-  'penne',
-  'macaroni',
-  'noodles',
-  'ramen',
-  'couscous',
-  'quinoa',
-  'oats',
-  'rolled oats',
-  'steel cut oats',
-  'oatmeal',
-  'flour',
-  'sugar',
-  'brown sugar',
-  'powdered sugar',
-  'baking soda',
-  'baking powder',
-  'cornstarch',
-  'corn starch',
-  'beans',
-  'black beans',
-  'pinto beans',
-  'kidney beans',
-  'chickpeas',
-  'garbanzo beans',
-  'lentils',
-  'canned beans',
-  'dry beans',
-  'bread crumbs',
-  'breadcrumbs',
-  'crackers',
-  'cereal',
-  'granola',
-  'tortilla chips',
-  'chips',
-  'popcorn',
-  'peanut butter',
-  'jam',
-  'jelly',
-  'honey',
-  'maple syrup',
-  'canned tomatoes',
-  'tomato paste',
-  'tomato sauce',
-  'coconut milk',
-  'broth',
-  'stock',
-  'bouillon',
-];
-
-const PRODUCE_PHRASES = [
-  'apple',
-  'banana',
-  'orange',
-  'lemon',
-  'lime',
-  'lettuce',
-  'spinach',
-  'kale',
-  'broccoli',
-  'carrot',
-  'celery',
-  'onion',
-  'garlic',
-  'potato',
-  'tomato',
-  'cucumber',
-  'pepper',
-  'bell pepper',
-  'zucchini',
-  'squash',
-  'avocado',
-  'berries',
-  'strawberry',
-  'blueberry',
-  'grape',
-  'mushroom',
-  'cilantro',
-  'parsley',
-  'basil',
-  'ginger root',
-];
-
-const MEAT_PHRASES = [
-  'chicken',
-  'beef',
-  'pork',
-  'turkey',
-  'bacon',
-  'sausage',
-  'ham',
-  'steak',
-  'ground beef',
-  'ground turkey',
-  'fish',
-  'salmon',
-  'shrimp',
-];
-
-const DAIRY_PHRASES = [
-  'milk',
-  'cheese',
-  'butter',
-  'yogurt',
-  'cream',
-  'sour cream',
-  'cottage cheese',
-  'half and half',
-];
-
-const FROZEN_PHRASES = ['frozen'];
-
-const CONDIMENT_PHRASES = [
-  'ketchup',
-  'mustard',
-  'mayonnaise',
-  'mayo',
-  'soy sauce',
-  'hot sauce',
-  'salsa',
-  'vinegar',
-  'olive oil',
-  'vegetable oil',
-  'cooking oil',
-  'salad dressing',
-];
-
-const SPICE_PHRASES = [
-  'salt',
-  'pepper',
-  'cumin',
-  'paprika',
-  'oregano',
-  'thyme',
-  'cinnamon',
-  'chili powder',
-  'garlic powder',
-  'onion powder',
-  'seasoning',
-];
+// Word lists live in categorizeWords.ts. Every phrase matches whole words (filingWords.ts):
+// "pepper" matches "peppers" but not "peppermint", "egg" matches "eggs" but not "eggplant".
 
 // Cookware: added in the rebuild (the old app never guessed it from a name).
 
@@ -207,15 +66,32 @@ function cleanForCookware(name: string): string {
     .trim();
 }
 
-function nameIncludesPhrase(normalized: string, phrase: string): boolean {
-  const p = normalizeIngredientName(phrase);
-  if (!p) return false;
-  if (normalized === p) return true;
-  return normalized.includes(p);
+/** A phrase list split into matching words once (phrases are normalised like names are). */
+function compile(phrases: readonly string[]): string[][] {
+  return phrases.map((phrase) => filingWords(normalizeIngredientName(phrase))).filter((w) => w.length > 0);
 }
 
-function matchesAnyPhrase(normalized: string, phrases: readonly string[]): boolean {
-  return phrases.some((phrase) => nameIncludesPhrase(normalized, phrase));
+const DRY_GOODS = compile(DRY_GOODS_PHRASES);
+const PRODUCE = compile(PRODUCE_PHRASES);
+const MEATS = compile(MEAT_PHRASES);
+const DAIRY = compile(DAIRY_PHRASES);
+const FROZEN = compile(FROZEN_PHRASES);
+const CONDIMENTS = compile(CONDIMENT_PHRASES);
+const SPICES = compile(SPICE_PHRASES);
+const EXCEPTIONS = FILING_EXCEPTIONS.map(
+  ([phrase, category]) => [filingWords(normalizeIngredientName(phrase)), category] as const,
+);
+
+function matchesAnyPhrase(words: readonly string[], phrases: readonly string[][]): boolean {
+  return phrases.some((phrase) => wordsIncludePhrase(words, phrase));
+}
+
+/** The category an exceptions-list phrase gives the name, or null. */
+function exceptionCategory(words: readonly string[]): PantryCategory | null {
+  for (const [phrase, category] of EXCEPTIONS) {
+    if (wordsIncludePhrase(words, phrase)) return category;
+  }
+  return null;
 }
 
 // Peppers: "pepper" is on the spice list (the black pepper you grind), and spices are checked
@@ -237,7 +113,7 @@ const FRESH_CHILE_NAMES = /\b(jalape(n|ñ)os?|poblanos?|habaneros?|serranos?|shi
  * "bell pepper", "jalapeño", "red peppers" → produce; "pepper jack" → dairy; "pepperoni" → meats;
  * "black pepper", "cayenne pepper", "red pepper flakes", plain "pepper" → spices.
  */
-function pepperCategory(normalized: string): PantryCategory | null {
+function pepperCategory(normalized: string, words: readonly string[]): PantryCategory | null {
   if (/\bpepper ?jack\b/.test(normalized)) return 'dairy';
   if (/\bpepperoni\b/.test(normalized)) return 'meats';
   const hasPepperWord = /\bpeppers?\b/.test(normalized);
@@ -248,37 +124,35 @@ function pepperCategory(normalized: string): PantryCategory | null {
   }
   // "jalapeños", "poblano" — but not "serrano ham" or "jalapeño cheddar" (meat / dairy lists).
   if (FRESH_CHILE_NAMES.test(normalized) && !SPICE_PEPPER.test(normalized)) {
-    if (matchesAnyPhrase(normalized, MEAT_PHRASES) || matchesAnyPhrase(normalized, DAIRY_PHRASES)) return null;
+    if (matchesAnyPhrase(words, MEATS) || matchesAnyPhrase(words, DAIRY)) return null;
     return 'produce';
   }
   return null;
 }
 
-/** Spice list, except "salt" must be its own word ("unsalted butter" is not a spice). */
-function matchesSpice(normalized: string): boolean {
-  return SPICE_PHRASES.some((phrase) =>
-    phrase === 'salt' ? /\bsalt\b/.test(normalized) : nameIncludesPhrase(normalized, phrase),
-  );
-}
-
 /**
  * Guess grocery aisle from item name (manual adds, imports, recipe gaps).
- * Prefer dry-goods phrases before produce so “rice” is not treated as produce.
+ * Prefer dry-goods phrases before produce so “rice” is not treated as produce. A short
+ * exceptions list (categorizeWords.ts) settles names two lists would fight over.
  */
 export function inferGroceryCategoryFromName(name: string): PantryCategory {
   const normalized = normalizeIngredientName(name);
   if (!normalized) return 'dry_goods';
   if (isCookwareName(name)) return 'cookware';
 
-  if (matchesAnyPhrase(normalized, DRY_GOODS_PHRASES)) return 'dry_goods';
-  const pepper = pepperCategory(normalized);
+  const words = filingWords(normalized);
+  const exception = exceptionCategory(words);
+  if (exception) return exception;
+
+  if (matchesAnyPhrase(words, DRY_GOODS)) return 'dry_goods';
+  const pepper = pepperCategory(normalized, words);
   if (pepper) return pepper;
-  if (matchesSpice(normalized)) return 'spices';
-  if (matchesAnyPhrase(normalized, MEAT_PHRASES)) return 'meats';
-  if (matchesAnyPhrase(normalized, DAIRY_PHRASES)) return 'dairy';
-  if (matchesAnyPhrase(normalized, FROZEN_PHRASES)) return 'frozen';
-  if (matchesAnyPhrase(normalized, CONDIMENT_PHRASES)) return 'condiments';
-  if (matchesAnyPhrase(normalized, PRODUCE_PHRASES)) return 'produce';
+  if (matchesAnyPhrase(words, SPICES)) return 'spices';
+  if (matchesAnyPhrase(words, MEATS)) return 'meats';
+  if (matchesAnyPhrase(words, DAIRY)) return 'dairy';
+  if (matchesAnyPhrase(words, FROZEN)) return 'frozen';
+  if (matchesAnyPhrase(words, CONDIMENTS)) return 'condiments';
+  if (matchesAnyPhrase(words, PRODUCE)) return 'produce';
 
   return 'dry_goods';
 }

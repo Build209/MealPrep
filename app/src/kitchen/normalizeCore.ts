@@ -157,7 +157,7 @@ const PLURAL_KEEP_TOKENS = new Set(['beans', 'gras']);
 /** Singular -ie nouns whose plural is -ies (cookies → cookie, not cooky). */
 const PLURAL_IES_TO_IE = new Set(['cookie', 'brownie', 'bogie']);
 
-function singularizeToken(token: string): string {
+export function singularizeToken(token: string): string {
   if (token === 'halves') return 'half';
   if (PLURAL_KEEP_TOKENS.has(token)) return token;
   if (token.length <= 3) return token;
