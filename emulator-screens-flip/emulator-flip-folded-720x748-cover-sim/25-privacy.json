@@ -1,0 +1,62 @@
+{
+  "project": "emulator-flip-folded-720x748-cover-sim",
+  "engine": "chromium",
+  "order": "25",
+  "screen": "privacy",
+  "route": "/privacy.html",
+  "purpose": "none",
+  "viewport": "240x146",
+  "screenshots": [
+    "emulator-flip-folded-720x748-cover-sim/25-privacy.png"
+  ],
+  "checks": {
+    "noSidewaysScroll": true,
+    "tapTargets": true,
+    "textFits": false,
+    "tomatoRule": true
+  },
+  "sidewaysScroll": {
+    "scrollWidth": 240,
+    "innerWidth": 240
+  },
+  "tapTargetIssues": [],
+  "tapTargetAllowed": [
+    {
+      "text": "google.com/policies/privacy",
+      "role": "a",
+      "width": 202.2,
+      "height": 19,
+      "why": "inline-link"
+    },
+    {
+      "text": "Account deletion page",
+      "role": "a",
+      "width": 159.3,
+      "height": 19,
+      "why": "inline-link"
+    },
+    {
+      "text": "support@mealplanatic.app",
+      "role": "a",
+      "width": 192.2,
+      "height": 19,
+      "why": "inline-link"
+    }
+  ],
+  "clippedText": [
+    {
+      "text": "Recipe videos come from YouTube. MealPlanatic uses YouTube API Services to li...",
+      "kind": "spills",
+      "scroll": "206x471",
+      "client": "200x471"
+    }
+  ],
+  "truncatedText": [],
+  "offscreenControls": [],
+  "tomato": [],
+  "tomatoViolations": [],
+  "notes": [
+    "Static legal page (public/privacy.html), not an app screen."
+  ],
+  "reportOnly": {}
+}
