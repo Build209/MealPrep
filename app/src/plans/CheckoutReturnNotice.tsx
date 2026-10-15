@@ -9,7 +9,13 @@ import { keys } from '../data/keys';
 import { colors, layout, radius, space, touch } from '../theme/tokens';
 import { AppText } from '../ui/AppText';
 import { CHECKOUT_RETURN_COPY } from './copy';
-import { parseCheckoutReturn, PLAN_UNLOCK_POLL, stripCheckoutReturn } from './checkoutReturn';
+import { parseCheckoutReturn, PLAN_UNLOCK_POLL, stripCheckoutReturn, type CheckoutReturn } from './checkoutReturn';
+
+/** The return marker in the address the page was opened with; cleared once its message is shown. */
+let startupOutcome: CheckoutReturn | null =
+  Platform.OS === 'web' && typeof window !== 'undefined' ? parseCheckoutReturn(window.location.search) : null;
+/** Whether the page was opened with a marker, so the router's copy of it should be cleared too. */
+const openedWithMarker = startupOutcome !== null;
 
 /**
  * Web only. Handles the trip back from Stripe the way the live app does (CheckoutReturnHandler):
@@ -18,9 +24,10 @@ import { parseCheckoutReturn, PLAN_UNLOCK_POLL, stripCheckoutReturn } from './ch
  *   if it is still not paid after the last try, the pending line. The server switches the plan on
  *   when Stripe confirms payment, never this page.
  * - `?billing=return` (billing portal): re-reads the plan and subscription, no message.
- * The markers are removed from the address first, so a reload does not repeat the message. They are
- * also removed from the router's own params: otherwise Expo Router writes them back into the address
- * on its next update.
+ * The address is read once, when the bundle loads: Expo Router rewrites it while the app starts
+ * (the tabs mount only after the saved session is read), so reading it later can miss the marker.
+ * The markers are removed from the address, so a reload does not repeat the message, and from the
+ * router's own params: otherwise Expo Router writes them back into the address on its next update.
  * Mounted once in the root layout, pinned to the top so it shows over any screen.
  */
 export function CheckoutReturnNotice() {
@@ -35,20 +42,22 @@ export function CheckoutReturnNotice() {
 
   useEffect(() => {
     if (Platform.OS !== 'web' || typeof window === 'undefined' || handled.current) return undefined;
-    const outcome = parseCheckoutReturn(window.location.search);
+    const outcome = startupOutcome;
     if (!outcome) return undefined;
+    const cleaned = `${window.location.pathname}${stripCheckoutReturn(window.location.search)}${window.location.hash}`;
+    window.history.replaceState(window.history.state, '', cleaned);
     // Wait for the saved session before reading the plan; a cancel needs no account.
     if (outcome !== 'cancel' && (!ready || !userId)) return undefined;
 
     handled.current = true;
-    const cleaned = `${window.location.pathname}${stripCheckoutReturn(window.location.search)}${window.location.hash}`;
-    window.history.replaceState(window.history.state, '', cleaned);
 
     if (outcome === 'cancel') {
+      startupOutcome = null;
       setMessage(CHECKOUT_RETURN_COPY.cancelled);
       return undefined;
     }
     if (outcome === 'portal') {
+      startupOutcome = null;
       void queryClient.invalidateQueries({ queryKey: keys.profile.all });
       void queryClient.invalidateQueries({ queryKey: ['billing'] });
       return undefined;
@@ -70,11 +79,13 @@ export function CheckoutReturnNotice() {
       }
       if (stopped) return;
       if (paid) {
+        startupOutcome = null;
         void queryClient.invalidateQueries({ queryKey: ['billing'] });
         setMessage(CHECKOUT_RETURN_COPY.unlocked);
         return;
       }
       if (attempt >= PLAN_UNLOCK_POLL.attempts) {
+        startupOutcome = null;
         setMessage(CHECKOUT_RETURN_COPY.pending);
         return;
       }
@@ -85,12 +96,14 @@ export function CheckoutReturnNotice() {
     return () => {
       stopped = true;
       if (timer) clearTimeout(timer);
+      // Stopped before an answer (the effect re-ran or the layout remounted): poll again next run.
+      handled.current = false;
     };
   }, [ready, userId, queryClient]);
 
-  // Once handled, drop the markers from the router's params too, so it does not put them back.
+  // Drop the markers from the router's params too, so it does not put them back in the address.
   useEffect(() => {
-    if (Platform.OS !== 'web' || !handled.current || !routerHasMarker) return;
+    if (Platform.OS !== 'web' || !openedWithMarker || !routerHasMarker) return;
     try {
       router.setParams({ checkout: undefined, billing: undefined });
     } catch {
