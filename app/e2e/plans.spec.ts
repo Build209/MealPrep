@@ -229,3 +229,20 @@ test('checkout return: success shows the unlocked line once the server has the p
   ).toBeVisible();
   expect(new URL(page.url()).search).not.toContain('checkout');
 });
+
+// Owner, 2026-10-15: on a computer the tabs sit in a sidebar on the left; on a phone, at the bottom.
+test('tabs: left sidebar on a computer-width window, bottom bar on a phone-width one', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await newSignedInUser(page, 'tabs-sidebar');
+  // The tab bar draws each icon twice (active and inactive, one hidden): measure the visible one.
+  const icon = () => page.getByTestId('tab-icon-pantry').filter({ visible: true }).first();
+  const box = async () => {
+    await expect(icon()).toBeVisible();
+    return (await icon().boundingBox())!;
+  };
+  const wide = await box();
+  expect(wide.x).toBeLessThan(260);
+  expect(wide.y).toBeLessThan(400);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect.poll(async () => (await box()).y).toBeGreaterThan(700);
+});
