@@ -4,6 +4,7 @@ import { ActivityIndicator, Image, Linking, Pressable, View } from 'react-native
 import { useAuth } from '../auth/AuthProvider';
 import { DataError, OFFLINE_MESSAGE, useIsOnline, usePantryItems } from '../data';
 import { useGroceryItems } from '../data/grocery';
+import { newPantryItemVars, useAddPantryItem } from '../data/pantryMutations';
 import { useAddMissingToGrocery } from '../data/recipeMutations';
 import { servingsAndTime, useRecipe, type AppRecipe } from '../data/recipes';
 import { saveableFromAppRecipe, saveTargetForRecipe } from '../data/savedRecipes';
@@ -15,6 +16,7 @@ import { AppText } from '../ui/AppText';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { Screen } from '../ui/Screen';
+import { canAddToPantry, pantryAddForIngredient, stapleHeldInPantry } from './pantryAdd';
 import { addMissingMessage, DETAIL_COPY, ingredientRowText } from './recipeLogic';
 import { SaveButton } from './saved/SaveButton';
 import { StatusSticker } from './StatusSticker';
@@ -23,16 +25,21 @@ function messageOf(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-function IngredientRow({ line }: { line: CartStatusLine }) {
-  const text = ingredientRowText(line);
+type RowAdd = { testId: string; saving: boolean; disabled: boolean; onPress: () => void };
+
+function IngredientRow({ line, heldStaple = false, add }: { line: CartStatusLine; heldStaple?: boolean; add?: RowAdd }) {
+  const text = ingredientRowText(line, heldStaple);
   const have = line.status !== 'missing';
   const inCart = line.status === 'cart';
   return (
     <View
-      accessible
-      accessibilityLabel={`${text.name}${text.amount ? `, ${text.amount}` : ''}, ${text.status}`}
-      style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 10, paddingVertical: 6 }}
+      style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 6 }}
     >
+      <View
+        accessible
+        accessibilityLabel={`${text.name}${text.amount ? `, ${text.amount}` : ''}, ${text.status}`}
+        style={{ flex: 1, flexDirection: 'row', alignItems: 'flex-start', gap: 10 }}
+      >
       <View
         style={{
           width: 12,
@@ -54,6 +61,32 @@ function IngredientRow({ line }: { line: CartStatusLine }) {
           {text.status}
         </AppText>
       </View>
+      </View>
+      {add ? (
+        <Pressable
+          testID={add.testId}
+          accessibilityRole="button"
+          accessibilityLabel={DETAIL_COPY.addToPantryLabel(text.name)}
+          accessibilityState={{ disabled: add.disabled, busy: add.saving }}
+          disabled={add.disabled}
+          onPress={add.onPress}
+          style={{
+            minHeight: touch.min,
+            minWidth: touch.min,
+            paddingHorizontal: 12,
+            justifyContent: 'center',
+            alignItems: 'center',
+            borderRadius: radius.pill,
+            borderWidth: 2,
+            borderColor: colors.ink,
+            opacity: add.disabled ? 0.5 : 1,
+          }}
+        >
+          <AppText variant="secondary" bold>
+            {add.saving ? DETAIL_COPY.addingToPantry : DETAIL_COPY.addToPantry}
+          </AppText>
+        </Pressable>
+      ) : null}
     </View>
   );
 }
@@ -102,7 +135,11 @@ export function RecipeDetailScreen({ id }: { id: string }) {
   const grocery = useGroceryItems();
   const online = useIsOnline();
   const addMissing = useAddMissingToGrocery();
+  const addToPantry = useAddPantryItem();
   const [notice, setNotice] = useState<string | null>(null);
+  const [pantryNotice, setPantryNotice] = useState<string | null>(null);
+  // Rows being saved right now (by line position), so a second tap does nothing.
+  const [saving, setSaving] = useState<ReadonlySet<number>>(new Set());
 
   // Pantry first, then the open grocery rows ("cart") cover the rest. The grocery list is waited for,
   // so a row never flashes "Missing" before the cart is known.
@@ -161,6 +198,7 @@ export function RecipeDetailScreen({ id }: { id: string }) {
 
   const r = recipe.data;
   const neededCount = cartMatch?.neededCount ?? 0;
+  const pantryRows = pantry.data ?? [];
   const inCartCount = cartMatch?.inCartCount ?? 0;
 
   function onAddMissing() {
@@ -173,6 +211,29 @@ export function RecipeDetailScreen({ id }: { id: string }) {
         onError: (error) => setNotice(DETAIL_COPY.addFailed(messageOf(error))),
       },
     );
+  }
+
+  function onAddToPantry(index: number, line: CartStatusLine) {
+    const input = pantryAddForIngredient(line.ingredient, pantryRows);
+    if (!input || saving.has(index)) return;
+    const name = input.fields.name;
+    setPantryNotice(null);
+    if (!online) {
+      setPantryNotice(OFFLINE_MESSAGE);
+      return;
+    }
+    setSaving((prev) => new Set(prev).add(index));
+    const done = () =>
+      setSaving((prev) => {
+        const next = new Set(prev);
+        next.delete(index);
+        return next;
+      });
+    addToPantry.mutate(newPantryItemVars({ ...input.fields, ingredientId: input.ingredientId }), {
+      onSuccess: () => setPantryNotice(DETAIL_COPY.addedToPantry(name)),
+      onError: (error) => setPantryNotice(DETAIL_COPY.addToPantryFailed(name, messageOf(error))),
+      onSettled: done,
+    });
   }
 
   return (
@@ -240,10 +301,40 @@ export function RecipeDetailScreen({ id }: { id: string }) {
         {r.ingredients.length === 0 ? (
           <AppText color="muted">{DETAIL_COPY.noIngredients}</AppText>
         ) : cartMatch ? (
-          cartMatch.lines.map((line, index) => <IngredientRow key={`${index}-${line.ingredient.ingredientId}`} line={line} />)
+          cartMatch.lines.map((line, index) => {
+            const canAdd = canAddToPantry(line, cartMatch.pantry.lines[index], pantryRows) && !!pantryAddForIngredient(line.ingredient);
+            const isSaving = saving.has(index);
+            return (
+              <IngredientRow
+                key={`${index}-${line.ingredient.ingredientId}`}
+                line={line}
+                heldStaple={stapleHeldInPantry(line, pantryRows)}
+                add={
+                  canAdd
+                    ? {
+                        testId: `recipe-ingredient-add-pantry-${line.ingredient.ingredientId || index}`,
+                        saving: isSaving,
+                        disabled: isSaving || !online,
+                        onPress: () => onAddToPantry(index, line),
+                      }
+                    : undefined
+                }
+              />
+            );
+          })
         ) : (
           <ActivityIndicator color={colors.ink} />
         )}
+        {pantryNotice ? (
+          <AppText variant="secondary" accessibilityRole="alert">
+            {pantryNotice}
+          </AppText>
+        ) : null}
+        {!online && cartMatch && cartMatch.lines.some((line, index) => canAddToPantry(line, cartMatch.pantry.lines[index], pantryRows)) ? (
+          <AppText variant="secondary" color="muted">
+            {OFFLINE_MESSAGE}
+          </AppText>
+        ) : null}
         {inCartCount > 0 ? (
           <AppText variant="label" color="muted">
             {DETAIL_COPY.cartHint}
