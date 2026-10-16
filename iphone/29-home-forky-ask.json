@@ -1,0 +1,33 @@
+{
+  "project": "iphone",
+  "engine": "webkit",
+  "order": "29",
+  "screen": "home-forky-ask",
+  "route": "/forky",
+  "purpose": "none",
+  "viewport": "393x659",
+  "screenshots": [
+    "iphone/29-home-forky-ask.png"
+  ],
+  "checks": {
+    "noSidewaysScroll": true,
+    "tapTargets": true,
+    "textFits": true,
+    "tomatoRule": true
+  },
+  "sidewaysScroll": {
+    "scrollWidth": 393,
+    "innerWidth": 393
+  },
+  "tapTargetIssues": [],
+  "tapTargetAllowed": [],
+  "clippedText": [],
+  "truncatedText": [],
+  "offscreenControls": [],
+  "tomato": [],
+  "tomatoViolations": [],
+  "notes": [
+    "The ask-forky function is stubbed: the answer text is the test's, not the AI's."
+  ],
+  "reportOnly": {}
+}
