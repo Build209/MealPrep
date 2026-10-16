@@ -31,7 +31,7 @@ async function newSignedInUser(page: Page, label: string): Promise<{ userId: str
   await page.getByRole('textbox', { name: 'Email' }).fill(email);
   await page.getByLabel('Password', { exact: true }).fill(password);
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
-  await expect(page.getByRole('link', { name: 'Account', exact: true })).toBeVisible();
+  await expect(page.getByTestId('topbar-account')).toBeVisible();
   const raw = await page.evaluate(() => {
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
@@ -87,7 +87,7 @@ test('plans: Home, Account links to plans; the renewal terms sit directly above 
   const opened = await stubOutsidePages(context);
   const checkout = await stubBillingFunction(page, 'stripe-checkout', CHECKOUT_URL);
 
-  await page.getByRole('link', { name: 'Account', exact: true }).click();
+  await page.getByTestId('topbar-account').click();
   await page.getByRole('link', { name: 'Plans & usage' }).click();
   await expect(page).toHaveURL(/\/plans$/);
   // Account stays mounted (hidden) under /plans and has its own plan card: match the visible one.

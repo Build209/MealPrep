@@ -1,5 +1,6 @@
 import type { FavoriteStore } from './favorites';
 import { favoriteStoreKey } from './kroger';
+import { resolveWeeklyAdLink, type LinkStore } from './links';
 import { sortStoresByDistanceMiles, storeDisplayName, type SearchOrigin, type Store } from './logic';
 
 /**
@@ -19,7 +20,20 @@ export type RowStore = {
   /** What the badge is drawn from. */
   chain: string;
   kind: 'favorite' | 'nearby';
+  /** What the weekly-ad link is worked out from (resolveWeeklyAdLink): the full store, not just its circle. */
+  link: Pick<LinkStore, 'name' | 'chain' | 'krogerLocationId' | 'pricingSource' | 'website'>;
 };
+
+/** What a circle on Home's weekly-deals row opens. */
+export type DealsTarget =
+  | { kind: 'weekly-ad'; url: string; thirdParty: boolean }
+  /** The chain has no weekly-ad page in our table: open the store in the Stores view, like the Grocery row. */
+  | { kind: 'stores'; key: string };
+
+export function dealsTargetFor(store: RowStore): DealsTarget {
+  const ad = resolveWeeklyAdLink(store.link);
+  return ad ? { kind: 'weekly-ad', url: ad.url, thirdParty: ad.thirdParty === true } : { kind: 'stores', key: store.key };
+}
 
 /** A location the shopper chose (device location or their own ZIP), not the app's default ZIP. */
 export function hasSavedLocation(origin: SearchOrigin): boolean {
@@ -61,7 +75,17 @@ export function pickRowStores(input: {
   for (const f of favoritesForRow(input.favorites, size)) {
     if (keys.has(f.id)) continue;
     const name = f.chain || f.name;
-    out.push({ key: f.id, name, chain: name, kind: 'favorite' });
+    out.push({
+      key: f.id,
+      name,
+      chain: name,
+      kind: 'favorite',
+      link: {
+        name: f.name,
+        chain: f.chain,
+        ...(f.krogerLocationId ? { krogerLocationId: f.krogerLocationId, pricingSource: 'kroger' as const } : {}),
+      },
+    });
     keys.add(f.id);
     chainsShown.add(chainKey(name));
   }
@@ -72,7 +96,19 @@ export function pickRowStores(input: {
     const key = favoriteStoreKey(store);
     const name = storeDisplayName(store);
     if (keys.has(key) || chainsShown.has(chainKey(name))) continue;
-    out.push({ key, name, chain: name, kind: 'nearby' });
+    out.push({
+      key,
+      name,
+      chain: name,
+      kind: 'nearby',
+      link: {
+        name: store.name,
+        chain: store.chain,
+        website: store.website,
+        krogerLocationId: store.krogerLocationId,
+        pricingSource: store.pricingSource,
+      },
+    });
     keys.add(key);
     chainsShown.add(chainKey(name));
   }

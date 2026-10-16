@@ -8,7 +8,9 @@ import { colors } from '../src/theme/tokens';
 import type { FavoriteStore } from '../src/stores/favorites';
 import type { Store } from '../src/stores/logic';
 import { BADGE_COLORS, badgeColorsFor, normalizeChainKey, storeInitials } from '../src/stores/storeBadge';
-import { favoritesForRow, hasSavedLocation, pickRowStores, showFindStores, STORE_ROW_SIZE } from '../src/stores/storeRow';
+import { dealsTargetFor, favoritesForRow, hasSavedLocation, pickRowStores, showFindStores, STORE_ROW_SIZE } from '../src/stores/storeRow';
+import { favoriteFromRow } from '../src/stores/favorites';
+import { HOME_COPY } from '../src/home/copy';
 
 function fav(id: string, chain: string, sortOrder: number, name = chain): FavoriteStore {
   return { id, rowId: `row-${id}`, name, chain, sortOrder };
@@ -131,4 +133,50 @@ test('badge colours are theme colours with readable text, never tomato or danger
     const ratio = contrastRatio(colors[fg], colors[bg]);
     assert.ok(ratio >= 4.5, `${fg} on ${bg} is ${ratio.toFixed(2)}:1`);
   }
+});
+
+// Home's weekly-deals row uses the same stores; a circle opens that store's weekly ad.
+test('deals row: a chain with a weekly-ad page opens it; the circle carries the store it was picked from', () => {
+  const [safeway] = pickRowStores({ favorites: [fav('k1', 'Safeway', 0)] });
+  assert.deepEqual(dealsTargetFor(safeway!), { kind: 'weekly-ad', url: 'https://www.safeway.com/weeklyad', thirdParty: false });
+  const [near] = pickRowStores({ favorites: [], chains: [store('n1', 'Aldi', 1, { name: 'ALDI #12' })] });
+  assert.equal(near!.link.name, 'ALDI #12');
+  assert.deepEqual(dealsTargetFor(near!), { kind: 'weekly-ad', url: 'https://www.aldi.us/weekly-specials', thirdParty: false });
+});
+
+test('deals row: a store outside the chain table falls back to the Stores view at that store', () => {
+  const [local] = pickRowStores({ favorites: [], local: [store('loc-1', 'Joes Corner Market', 1, { knownBrand: false })] });
+  assert.deepEqual(dealsTargetFor(local!), { kind: 'stores', key: 'loc-1' });
+});
+
+test('deals row: a favourite from a Kroger-family row keeps its Kroger id for the link', () => {
+  const cols = {
+    store_key: 'kr-1',
+    user_id: 'u',
+    name: 'Fred Meyer',
+    chain: 'Fred Meyer',
+    address_line: '',
+    city: 'X',
+    state: 'OR',
+    zip: '97000',
+    lat: null,
+    lng: null,
+    source: 'kroger',
+    sort_order: 1,
+    id: 'r',
+    created_at: '2026-10-14T00:00:00Z',
+  };
+  const withId = favoriteFromRow({ ...cols, kroger_location_id: '70100001' });
+  assert.equal(withId.krogerLocationId, '70100001');
+  assert.equal('krogerLocationId' in favoriteFromRow({ ...cols, kroger_location_id: null }), false);
+  const [picked] = pickRowStores({ favorites: [withId] });
+  assert.equal(picked!.link.krogerLocationId, '70100001');
+  assert.equal(dealsTargetFor(picked!).kind, 'weekly-ad');
+});
+
+test('deals row words: no savings claims, no "partner"; the third-party label says so', () => {
+  assert.equal(HOME_COPY.dealsStoreA11y('Safeway', false), 'Weekly ad: Safeway');
+  assert.equal(HOME_COPY.dealsStoreA11y('Aldi', true), 'Weekly ad (third-party): Aldi');
+  const words = `${HOME_COPY.dealsTitle} ${HOME_COPY.dealsHelper}`;
+  assert.doesNotMatch(words, /save|saving|cheap|partner|%|\$/i);
 });

@@ -17,7 +17,7 @@ const passwordBox = (page: Page) => page.getByLabel('Password', { exact: true })
 
 async function expectHome(page: Page) {
   await expect(page).toHaveURL(/^http:\/\/[^/]+\/$/);
-  await expect(page.getByRole('link', { name: 'Account', exact: true })).toBeVisible();
+  await expect(page.getByTestId('topbar-account')).toBeVisible();
 }
 
 test('forgot password: email link, choose a new password, sign in with it', async ({ page }) => {
@@ -60,7 +60,7 @@ test('forgot password: email link, choose a new password, sign in with it', asyn
   await expectHome(page);
 
   // Sign out (from Account), then back in with the new password.
-  await page.getByRole('link', { name: 'Account', exact: true }).click();
+  await page.getByTestId('topbar-account').click();
   await expect(page.getByTestId('account-email')).toHaveText(email);
   await page.getByRole('button', { name: 'Sign out' }).click();
   await expect(page).toHaveURL(/\/sign-in$/);

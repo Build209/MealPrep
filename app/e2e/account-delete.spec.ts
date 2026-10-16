@@ -30,7 +30,7 @@ async function newSignedInUser(page: Page, label: string): Promise<{ email: stri
   await page.getByRole('textbox', { name: 'Email' }).fill(email);
   await page.getByLabel('Password', { exact: true }).fill(password);
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
-  await expect(page.getByRole('link', { name: 'Account', exact: true })).toBeVisible();
+  await expect(page.getByTestId('topbar-account')).toBeVisible();
   return { email, accessToken: (await savedAccessToken(page))! };
 }
 
@@ -85,7 +85,7 @@ test('delete account: Home, Account links to it, it says what is deleted, confir
   });
   const { captured } = await stubDeleteFunction(page, { status: 200, json: { ok: true }, gate });
 
-  await page.getByRole('link', { name: 'Account', exact: true }).click();
+  await page.getByTestId('topbar-account').click();
   await page.getByRole('link', { name: 'Delete account' }).click();
   await expect(page).toHaveURL(/\/delete-account$/);
   await expect(page.getByRole('heading', { name: 'Delete your MealPlanatic account' })).toBeVisible();
