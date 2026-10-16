@@ -9,6 +9,7 @@ import { servingsAndTime, useRecipe, type AppRecipe } from '../data/recipes';
 import { saveableFromAppRecipe, saveTargetForRecipe } from '../data/savedRecipes';
 import { groceryLinesForMissing, recipeStatus } from '../kitchen/recipeFeed';
 import { scoreRecipeWithCart, type CartStatusLine } from '../kitchen/recipeCart';
+import { RecipeNutritionSection } from '../nutrition-ui/RecipeNutritionSection';
 import { colors, radius, space, touch } from '../theme/tokens';
 import { AppText } from '../ui/AppText';
 import { Button } from '../ui/Button';
@@ -252,6 +253,8 @@ export function RecipeDetailScreen({ id }: { id: string }) {
           {DETAIL_COPY.checkLabels}
         </AppText>
       </Card>
+
+      <RecipeNutritionSection recipe={r} />
 
       <Card>
         <AppText variant="sectionTitle" bold accessibilityRole="header">
