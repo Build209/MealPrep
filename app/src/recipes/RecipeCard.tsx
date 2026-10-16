@@ -1,5 +1,7 @@
 import { useRouter } from 'expo-router';
 import { Image, Pressable, View } from 'react-native';
+import { containsLine } from '../allergens/copy';
+import type { AllergenKey } from '../allergens/types';
 import { recipeHref, servingsAndTime, type AppRecipe } from '../data/recipes';
 import { recipeStatus, recipeStatusLabel } from '../kitchen/recipeFeed';
 import type { RecipePantryMatch } from '../kitchen/recipeMatch';
@@ -10,13 +12,14 @@ import { StatusSticker } from './StatusSticker';
 const THUMB = 72;
 
 /** One recipe in the feed: photo, name, servings and time, and its status sticker. Opens the detail. */
-export function RecipeCard({ recipe, match }: { recipe: AppRecipe; match: RecipePantryMatch }) {
+export function RecipeCard({ recipe, match, allergens = [] }: { recipe: AppRecipe; match: RecipePantryMatch; allergens?: readonly AllergenKey[] }) {
   const router = useRouter();
   const status = recipeStatus(match);
+  const contains = containsLine(allergens);
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`${recipe.name}, ${recipeStatusLabel(status)}`}
+      accessibilityLabel={`${recipe.name}, ${recipeStatusLabel(status)}${contains ? `, ${contains}` : ''}`}
       accessibilityHint="Opens the recipe"
       onPress={() => router.push(recipeHref(recipe.source, recipe.rowId))}
       style={({ pressed }) => ({
@@ -48,6 +51,11 @@ export function RecipeCard({ recipe, match }: { recipe: AppRecipe; match: Recipe
           {servingsAndTime(recipe)}
         </AppText>
         <StatusSticker status={status} />
+        {contains ? (
+          <AppText variant="secondary" color="danger" bold testID="allergen-contains">
+            {contains}
+          </AppText>
+        ) : null}
       </View>
     </Pressable>
   );

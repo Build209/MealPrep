@@ -3,7 +3,9 @@ import { useMemo } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { usePantryItems } from '../data';
 import { useRecipes } from '../data/recipes';
-import { rankRecipeFeed } from '../kitchen/recipeFeed';
+import { ALLERGEN_COPY } from '../allergens/copy';
+import { rankFeedWithAllergens } from '../allergens/rank';
+import { useAllergenPrefs } from '../allergens/useAllergenPrefs';
 import { colors, space } from '../theme/tokens';
 import { AppText } from '../ui/AppText';
 import { Button } from '../ui/Button';
@@ -27,13 +29,15 @@ export function RecipesFeed() {
   const router = useRouter();
   const recipes = useRecipes();
   const pantry = usePantryItems();
+  const prefs = useAllergenPrefs();
+  const userAllergens = prefs.allergens;
 
   const feed = useMemo(
-    () => (recipes.data && pantry.data ? rankRecipeFeed(recipes.data, pantry.data) : null),
-    [recipes.data, pantry.data],
+    () => (recipes.data && pantry.data ? rankFeedWithAllergens(recipes.data, pantry.data, userAllergens) : null),
+    [recipes.data, pantry.data, userAllergens],
   );
 
-  if (recipes.isPending || pantry.isPending) {
+  if (recipes.isPending || pantry.isPending || prefs.isLoading) {
     return (
       <View style={{ paddingVertical: space.groupGap, alignItems: 'center' }}>
         <ActivityIndicator color={colors.ink} accessibilityLabel={FEED_COPY.loading} />
@@ -101,8 +105,25 @@ export function RecipesFeed() {
             </AppText>
           ) : null}
         </View>
-      ) : feed.cookable.length === 0 ? (
+      ) : feed.cookable.length === 0 && feed.flagged.length === 0 ? (
         <AppText color="muted">{FEED_COPY.noRecipes}</AppText>
+      ) : null}
+
+      {feed.flagged.length > 0 ? (
+        <View style={{ gap: space.gap }}>
+          <SectionTitle>{ALLERGEN_COPY.flaggedTitle}</SectionTitle>
+          <AppText variant="secondary" color="muted">
+            {ALLERGEN_COPY.flaggedIntro}
+          </AppText>
+          {feed.flagged.map(({ recipe, match, allergens }) => (
+            <RecipeCard key={recipe.id} recipe={recipe} match={match} allergens={allergens} />
+          ))}
+          {feed.flaggedHidden > 0 ? (
+            <AppText variant="secondary" color="muted">
+              {ALLERGEN_COPY.flaggedHidden(feed.flaggedHidden)}
+            </AppText>
+          ) : null}
+        </View>
       ) : null}
     </View>
   );
