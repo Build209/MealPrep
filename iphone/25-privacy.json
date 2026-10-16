@@ -1,0 +1,55 @@
+{
+  "project": "iphone",
+  "engine": "webkit",
+  "order": "25",
+  "screen": "privacy",
+  "route": "/privacy.html",
+  "purpose": "none",
+  "viewport": "393x659",
+  "screenshots": [
+    "iphone/25-privacy.png"
+  ],
+  "checks": {
+    "noSidewaysScroll": true,
+    "tapTargets": true,
+    "textFits": true,
+    "tomatoRule": true
+  },
+  "sidewaysScroll": {
+    "scrollWidth": 393,
+    "innerWidth": 393
+  },
+  "tapTargetIssues": [],
+  "tapTargetAllowed": [
+    {
+      "text": "google.com/policies/privacy",
+      "role": "a",
+      "width": 195.6,
+      "height": 17,
+      "why": "inline-link"
+    },
+    {
+      "text": "Account deletion page",
+      "role": "a",
+      "width": 158.3,
+      "height": 17,
+      "why": "inline-link"
+    },
+    {
+      "text": "support@mealplanatic.app",
+      "role": "a",
+      "width": 190.6,
+      "height": 17,
+      "why": "inline-link"
+    }
+  ],
+  "clippedText": [],
+  "truncatedText": [],
+  "offscreenControls": [],
+  "tomato": [],
+  "tomatoViolations": [],
+  "notes": [
+    "Static legal page (public/privacy.html), not an app screen."
+  ],
+  "reportOnly": {}
+}
