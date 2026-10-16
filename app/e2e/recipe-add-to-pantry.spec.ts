@@ -2,11 +2,12 @@ import { expect, test, type Page } from '@playwright/test';
 import { adminClient, freshEmail } from './local-supabase';
 
 /**
- * Recipe detail "Add to pantry", end to end against the local stack (follows recipes-feed.spec.ts):
- * a master recipe and a small pantry are seeded with the local service key; the detail shows an
- * "Add to pantry" control on each ingredient the pantry lacks (an open grocery row for one of them
- * makes it "In cart"); one tap saves it through the pantry's own add, the row flips to "In pantry",
- * the counts update and the cart row is not counted twice; offline, nothing is saved.
+ * Recipe detail ingredient checkboxes, end to end against the local stack (follows recipes-feed.spec.ts):
+ * a master recipe and a small pantry are seeded with the local service key; the detail shows a checkbox
+ * on each ingredient the pantry lacks (an open grocery row for one of them makes it "In cart"); ticking
+ * rows shows "Add N to pantry" / "Add N to cart", which save every ticked row through the pantry's own add
+ * or the grocery add, the rows flip to "In pantry" / "In cart", the counts update and the cart row is not
+ * counted twice; select all; offline, nothing is saved.
  * Serial: later tests use the account the first one creates. Not run locally when written (needs the local stack).
  */
 test.describe.configure({ mode: 'serial' });
@@ -81,29 +82,39 @@ test('an ingredient the pantry lacks is added from the recipe with one tap', asy
   await expect(page.getByText('1 item needed', { exact: true })).toBeVisible(); // radish
   await expect(page.getByText('1 in pantry · 1 in cart', { exact: true })).toBeVisible();
 
-  // No control where the pantry already has it; one on the others, including the oil.
-  await expect(page.getByTestId('recipe-ingredient-add-pantry-lettuce')).toHaveCount(0);
-  await expect(page.getByTestId('recipe-ingredient-add-pantry-radish')).toBeVisible();
-  await expect(page.getByTestId('recipe-ingredient-add-pantry-cilantro')).toBeVisible();
-  await expect(page.getByTestId('recipe-ingredient-add-pantry-olive-oil')).toBeVisible();
+  // No box where the pantry already has it; a box on the others, including the oil. All start unticked.
+  const check = (id: string) => page.getByTestId(`recipe-ingredient-check-${id}`);
+  await expect(check('lettuce')).toHaveCount(0);
+  for (const id of ['radish', 'cilantro', 'olive-oil']) {
+    await expect(check(id)).toBeVisible();
+    await expect(check(id)).toHaveAttribute('aria-checked', 'false');
+  }
+  await expect(page.getByTestId('recipe-ingredient-actions')).toHaveCount(0);
+  await expect(page.getByRole('checkbox', { name: 'Select Radish', exact: true })).toBeVisible();
 
-  // Radish: the row flips at once, the counts follow, and the server has the pantry row.
-  await page.getByTestId('recipe-ingredient-add-pantry-radish').click();
+  // Tick radish and cilantro: the bar shows the count; both go to the pantry in one go.
+  await check('radish').click();
+  await check('cilantro').click();
+  await expect(check('radish')).toHaveAttribute('aria-checked', 'true');
+  await page.getByRole('button', { name: 'Add 2 to pantry', exact: true }).click();
+  await expect(page.getByText('Added 2 items to your pantry.')).toBeVisible();
   await expect(page.getByLabel('Radish, 4 each, In pantry', { exact: true })).toBeVisible();
-  await expect(page.getByTestId('recipe-ingredient-add-pantry-radish')).toHaveCount(0);
-  await expect(page.getByText('0 items needed', { exact: true })).toBeVisible();
-  await expect(page.getByText('2 in pantry · 1 in cart', { exact: true })).toBeVisible();
-  await expect.poll(async () => (await pantryRows()).filter((r) => r.name === 'Radish')).toEqual([
-    { name: 'Radish', quantity: 4, unit: 'each', ingredient_id: 'radish' },
-  ]);
-
   // Cilantro was In cart: once in the pantry it reads In pantry and is not counted in the cart as well.
-  await page.getByTestId('recipe-ingredient-add-pantry-cilantro').click();
   await expect(page.getByLabel('Cilantro, 1 bunch, In pantry', { exact: true })).toBeVisible();
+  await expect(check('radish')).toHaveCount(0);
+  await expect(page.getByTestId('recipe-ingredient-actions')).toHaveCount(0); // ticks cleared
+  await expect(page.getByText('0 items needed', { exact: true })).toBeVisible();
   await expect(page.getByText('3 in pantry · 0 in cart', { exact: true })).toBeVisible();
+  await expect
+    .poll(async () => (await pantryRows()).filter((r) => ['Radish', 'Cilantro'].includes(r.name)))
+    .toEqual([
+      { name: 'Cilantro', quantity: 1, unit: 'bunch', ingredient_id: 'cilantro' },
+      { name: 'Radish', quantity: 4, unit: 'each', ingredient_id: 'radish' },
+    ]);
 
-  // The oil is a staple: it reads In pantry once it is in the pantry.
-  await page.getByTestId('recipe-ingredient-add-pantry-olive-oil').click();
+  // The oil is a staple: it keeps its box until the pantry has a row for it.
+  await check('olive-oil').click();
+  await page.getByRole('button', { name: 'Add 1 to pantry', exact: true }).click();
   await expect(page.getByLabel('Olive oil, 2 tbsp, In pantry', { exact: true })).toBeVisible();
   await expect.poll(async () => (await pantryRows()).map((r) => r.name)).toEqual(['Cilantro', 'Lettuce', 'Olive oil', 'Radish']);
 
@@ -112,7 +123,7 @@ test('an ingredient the pantry lacks is added from the recipe with one tap', asy
   await expect(page.getByLabel('Radish, 4 each, In pantry', { exact: true })).toBeVisible();
 });
 
-test('offline: the control cannot save and nothing is added', async ({ page, context }) => {
+test('offline: the buttons cannot save and nothing is added', async ({ page, context }) => {
   await page.goto('/sign-in');
   await emailBox(page).fill(email);
   await passwordBox(page).fill(password);
@@ -136,11 +147,56 @@ test('offline: the control cannot save and nothing is added', async ({ page, con
   seededRecipeIds.push(recipes.data!.id as string);
 
   await page.goto(`/recipe/r_${recipes.data!.id}`);
-  const add = page.getByTestId('recipe-ingredient-add-pantry-kale');
-  await expect(add).toBeVisible();
+  const box = page.getByTestId('recipe-ingredient-check-kale');
+  await expect(box).toBeVisible();
+  await box.click();
+  const add = page.getByRole('button', { name: 'Add 1 to pantry', exact: true });
+  const addCart = page.getByRole('button', { name: 'Add 1 to cart', exact: true });
+  await expect(add).toBeEnabled();
   await context.setOffline(true);
   await expect(add).toBeDisabled();
+  await expect(addCart).toBeDisabled();
   await expect(page.getByLabel('Kale, 1 bunch, Missing', { exact: true })).toBeVisible();
   await context.setOffline(false);
   expect((await pantryRows()).some((r) => r.name === 'Kale')).toBe(false);
+});
+
+test('select all missing, then add the ticked rows to the cart (the grocery list)', async ({ page }) => {
+  await page.goto('/sign-in');
+  await emailBox(page).fill(email);
+  await passwordBox(page).fill(password);
+  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
+  await expect(page.getByTestId('topbar-account')).toBeVisible();
+
+  const admin = adminClient();
+  const recipes = await admin
+    .from('recipes')
+    .insert({
+      name: `${recipeName} Cart`,
+      servings: 2,
+      minutes: 5,
+      is_master: true,
+      ingredients: [
+        { ingredientId: 'beet', name: 'Beet', quantity: 2, unit: 'each' },
+        { ingredientId: 'leek', name: 'Leek', quantity: 1, unit: 'each' },
+      ],
+      steps: ['Roast.'],
+    })
+    .select('id')
+    .single();
+  expect(recipes.error).toBeNull();
+  seededRecipeIds.push(recipes.data!.id as string);
+
+  await page.goto(`/recipe/r_${recipes.data!.id}`);
+  await page.getByTestId('recipe-ingredient-select-all').click();
+  await expect(page.getByTestId('recipe-ingredient-check-beet')).toHaveAttribute('aria-checked', 'true');
+  await expect(page.getByTestId('recipe-ingredient-check-leek')).toHaveAttribute('aria-checked', 'true');
+  await page.getByRole('button', { name: 'Add 2 to cart', exact: true }).click();
+  await expect(page.getByText('Added 2 items to your grocery list.')).toBeVisible();
+  await expect(page.getByLabel('Beet, 2 each, In cart', { exact: true })).toBeVisible();
+  await expect(page.getByLabel('Leek, 1 each, In cart', { exact: true })).toBeVisible();
+  await expect(page.getByTestId('recipe-ingredient-actions')).toHaveCount(0); // ticks cleared
+  const { data, error } = await admin.from('grocery_list_items').select('name').eq('user_id', userId).in('name', ['Beet', 'Leek']);
+  expect(error).toBeNull();
+  expect((data ?? []).map((r) => r.name).sort()).toEqual(['Beet', 'Leek']);
 });

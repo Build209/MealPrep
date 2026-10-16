@@ -16,7 +16,21 @@ import { AppText } from '../ui/AppText';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { Screen } from '../ui/Screen';
-import { canAddToPantry, pantryAddForIngredient, stapleHeldInPantry } from './pantryAdd';
+import {
+  allSelected,
+  cartBatch,
+  cartBatchMessage,
+  pantryBatch,
+  pantryBatchMessage,
+  pruneSelection,
+  selectableIndexes,
+  tickedIndexes,
+  toggleSelectAll,
+  toggleSelection,
+  withoutIndexes,
+  type Selection,
+} from './ingredientSelect';
+import { stapleHeldInPantry } from './pantryAdd';
 import { addMissingMessage, DETAIL_COPY, ingredientRowText } from './recipeLogic';
 import { SaveButton } from './saved/SaveButton';
 import { StatusSticker } from './StatusSticker';
@@ -25,68 +39,72 @@ function messageOf(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-type RowAdd = { testId: string; saving: boolean; disabled: boolean; onPress: () => void };
+type RowCheck = { testId: string; checked: boolean; disabled: boolean; label: string; onToggle: () => void };
 
-function IngredientRow({ line, heldStaple = false, add }: { line: CartStatusLine; heldStaple?: boolean; add?: RowAdd }) {
+function IngredientRow({ line, heldStaple = false, check }: { line: CartStatusLine; heldStaple?: boolean; check?: RowCheck }) {
   const text = ingredientRowText(line, heldStaple);
   const have = line.status !== 'missing';
   const inCart = line.status === 'cart';
   return (
-    <View
-      style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 6 }}
-    >
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 2 }}>
+      {check ? (
+        <Pressable
+          testID={check.testId}
+          accessibilityRole="checkbox"
+          accessibilityLabel={check.label}
+          accessibilityState={{ checked: check.checked, disabled: check.disabled }}
+          disabled={check.disabled}
+          onPress={check.onToggle}
+          style={{ width: touch.min, height: touch.min, alignItems: 'center', justifyContent: 'center', opacity: check.disabled ? 0.5 : 1 }}
+        >
+          <View
+            style={{
+              width: 24,
+              height: 24,
+              borderRadius: 6,
+              borderWidth: 2,
+              borderColor: colors.ink,
+              backgroundColor: check.checked ? colors.ink : colors.card,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            {check.checked ? (
+              <AppText variant="secondary" bold color="onPrimary">
+                {'\u2713'}
+              </AppText>
+            ) : null}
+          </View>
+        </Pressable>
+      ) : (
+        // In pantry (or nothing to tick): a quiet status dot, no box to press.
+        <View style={{ width: touch.min, alignItems: 'center', justifyContent: 'center' }}>
+          <View
+            style={{
+              width: 12,
+              height: 12,
+              borderRadius: radius.pill,
+              backgroundColor: have && !inCart ? colors.success : colors.card,
+              borderWidth: 2,
+              borderColor: have ? colors.success : colors.ink,
+              borderStyle: inCart ? 'dashed' : 'solid',
+            }}
+          />
+        </View>
+      )}
       <View
         accessible
         accessibilityLabel={`${text.name}${text.amount ? `, ${text.amount}` : ''}, ${text.status}`}
-        style={{ flex: 1, flexDirection: 'row', alignItems: 'flex-start', gap: 10 }}
+        style={{ flex: 1, paddingVertical: 4 }}
       >
-      <View
-        style={{
-          width: 12,
-          height: 12,
-          marginTop: 6,
-          borderRadius: radius.pill,
-          backgroundColor: have && !inCart ? colors.success : colors.card,
-          borderWidth: 2,
-          borderColor: have ? colors.success : colors.ink,
-          borderStyle: inCart ? 'dashed' : 'solid',
-        }}
-      />
-      <View style={{ flex: 1 }}>
         <AppText>
           {text.name}
-          {text.amount ? <AppText color="muted">{` · ${text.amount}`}</AppText> : null}
+          {text.amount ? <AppText color="muted">{` \u00b7 ${text.amount}`}</AppText> : null}
         </AppText>
         <AppText variant="secondary" color={line.status === 'missing' || inCart ? 'ink' : 'muted'} bold={line.status === 'missing' || inCart}>
           {text.status}
         </AppText>
       </View>
-      </View>
-      {add ? (
-        <Pressable
-          testID={add.testId}
-          accessibilityRole="button"
-          accessibilityLabel={DETAIL_COPY.addToPantryLabel(text.name)}
-          accessibilityState={{ disabled: add.disabled, busy: add.saving }}
-          disabled={add.disabled}
-          onPress={add.onPress}
-          style={{
-            minHeight: touch.min,
-            minWidth: touch.min,
-            paddingHorizontal: 12,
-            justifyContent: 'center',
-            alignItems: 'center',
-            borderRadius: radius.pill,
-            borderWidth: 2,
-            borderColor: colors.ink,
-            opacity: add.disabled ? 0.5 : 1,
-          }}
-        >
-          <AppText variant="secondary" bold>
-            {add.saving ? DETAIL_COPY.addingToPantry : DETAIL_COPY.addToPantry}
-          </AppText>
-        </Pressable>
-      ) : null}
     </View>
   );
 }
@@ -138,8 +156,9 @@ export function RecipeDetailScreen({ id }: { id: string }) {
   const addToPantry = useAddPantryItem();
   const [notice, setNotice] = useState<string | null>(null);
   const [pantryNotice, setPantryNotice] = useState<string | null>(null);
-  // Rows being saved right now (by line position), so a second tap does nothing.
-  const [saving, setSaving] = useState<ReadonlySet<number>>(new Set());
+  // Ticked ingredient rows (by line position), and which batch is saving right now, so a second tap does nothing.
+  const [selection, setSelection] = useState<Selection>(new Set());
+  const [batch, setBatch] = useState<'pantry' | 'cart' | null>(null);
 
   // Pantry first, then the open grocery rows ("cart") cover the rest. The grocery list is waited for,
   // so a row never flashes "Missing" before the cart is known.
@@ -155,6 +174,12 @@ export function RecipeDetailScreen({ id }: { id: string }) {
     () => (cartMatch && pantry.data ? groceryLinesForMissing({ missing: cartMatch.stillMissing }, pantry.data) : []),
     [cartMatch, pantry.data],
   );
+  // Rows that get a checkbox, and the ticks that are still valid for them.
+  const selectable = useMemo(
+    () => (cartMatch && pantry.data ? selectableIndexes(cartMatch.lines, cartMatch.pantry.lines, pantry.data) : []),
+    [cartMatch, pantry.data],
+  );
+  const activeSelection = useMemo(() => pruneSelection(selection, selectable), [selection, selectable]);
   // The heart: same saved row as the search heart (user_saved_recipes, old app's keys).
   const saveTarget = useMemo(() => {
     const saveable = recipe.data ? saveableFromAppRecipe(recipe.data) : null;
@@ -213,27 +238,52 @@ export function RecipeDetailScreen({ id }: { id: string }) {
     );
   }
 
-  function onAddToPantry(index: number, line: CartStatusLine) {
-    const input = pantryAddForIngredient(line.ingredient, pantryRows);
-    if (!input || saving.has(index)) return;
-    const name = input.fields.name;
+  const tickedCount = activeSelection.size;
+  const busy = batch !== null;
+
+  async function onAddTickedToPantry() {
+    if (busy || tickedCount === 0) return;
     setPantryNotice(null);
     if (!online) {
       setPantryNotice(OFFLINE_MESSAGE);
       return;
     }
-    setSaving((prev) => new Set(prev).add(index));
-    const done = () =>
-      setSaving((prev) => {
-        const next = new Set(prev);
-        next.delete(index);
-        return next;
-      });
-    addToPantry.mutate(newPantryItemVars({ ...input.fields, ingredientId: input.ingredientId }), {
-      onSuccess: () => setPantryNotice(DETAIL_COPY.addedToPantry(name)),
-      onError: (error) => setPantryNotice(DETAIL_COPY.addToPantryFailed(name, messageOf(error))),
-      onSettled: done,
-    });
+    const items = pantryBatch(tickedIndexes(activeSelection), cartMatch?.lines ?? [], pantryRows);
+    setBatch('pantry');
+    const done: number[] = [];
+    const failed: { name: string; message: string }[] = [];
+    // One at a time through the pantry's own add; a failure does not stop the rest.
+    for (const item of items) {
+      try {
+        await addToPantry.mutateAsync(newPantryItemVars({ ...item.add.fields, ingredientId: item.add.ingredientId }));
+        done.push(item.index);
+      } catch (error) {
+        failed.push({ name: item.name, message: messageOf(error) });
+      }
+    }
+    setSelection((prev) => withoutIndexes(prev, done));
+    setPantryNotice(pantryBatchMessage(done.length, failed));
+    setBatch(null);
+  }
+
+  async function onAddTickedToCart() {
+    if (busy || tickedCount === 0 || !r) return;
+    setPantryNotice(null);
+    if (!online) {
+      setPantryNotice(OFFLINE_MESSAGE);
+      return;
+    }
+    const { lines: cartLines, alreadyInCart } = cartBatch(tickedIndexes(activeSelection), cartMatch?.lines ?? [], pantryRows);
+    setBatch('cart');
+    try {
+      const result = cartLines.length > 0 ? await addMissing.mutateAsync({ recipeId: r.id, lines: cartLines }) : null;
+      setSelection(new Set());
+      setPantryNotice(cartBatchMessage(result, alreadyInCart));
+    } catch (error) {
+      setPantryNotice(DETAIL_COPY.addTickedFailed(messageOf(error)));
+    } finally {
+      setBatch(null);
+    }
   }
 
   return (
@@ -266,7 +316,7 @@ export function RecipeDetailScreen({ id }: { id: string }) {
             <Button
               label={addMissing.isPending ? DETAIL_COPY.adding : DETAIL_COPY.addMissing(neededCount)}
               main
-              disabled={addMissing.isPending || !online || lines.length === 0}
+              disabled={addMissing.isPending || busy || !online || lines.length === 0}
               onPress={onAddMissing}
             />
           ) : inCartCount > 0 ? (
@@ -301,27 +351,62 @@ export function RecipeDetailScreen({ id }: { id: string }) {
         {r.ingredients.length === 0 ? (
           <AppText color="muted">{DETAIL_COPY.noIngredients}</AppText>
         ) : cartMatch ? (
-          cartMatch.lines.map((line, index) => {
-            const canAdd = canAddToPantry(line, cartMatch.pantry.lines[index], pantryRows) && !!pantryAddForIngredient(line.ingredient);
-            const isSaving = saving.has(index);
-            return (
-              <IngredientRow
-                key={`${index}-${line.ingredient.ingredientId}`}
-                line={line}
-                heldStaple={stapleHeldInPantry(line, pantryRows)}
-                add={
-                  canAdd
-                    ? {
-                        testId: `recipe-ingredient-add-pantry-${line.ingredient.ingredientId || index}`,
-                        saving: isSaving,
-                        disabled: isSaving || !online,
-                        onPress: () => onAddToPantry(index, line),
-                      }
-                    : undefined
-                }
+          <>
+            {selectable.length > 0 ? (
+              <Button
+                label={allSelected(activeSelection, selectable) ? DETAIL_COPY.clearSelection : DETAIL_COPY.selectAll}
+                kind="secondary"
+                testID="recipe-ingredient-select-all"
+                disabled={busy}
+                onPress={() => setSelection(toggleSelectAll(activeSelection, selectable))}
+                style={{ alignSelf: 'flex-start' }}
               />
-            );
-          })
+            ) : null}
+            {cartMatch.lines.map((line, index) => {
+              const tickable = selectable.includes(index);
+              return (
+                <IngredientRow
+                  key={`${index}-${line.ingredient.ingredientId}`}
+                  line={line}
+                  heldStaple={stapleHeldInPantry(line, pantryRows)}
+                  check={
+                    tickable
+                      ? {
+                          testId: `recipe-ingredient-check-${line.ingredient.ingredientId || index}`,
+                          checked: activeSelection.has(index),
+                          disabled: busy,
+                          label: DETAIL_COPY.selectLabel(ingredientRowText(line).name),
+                          onToggle: () => setSelection(toggleSelection(activeSelection, index)),
+                        }
+                      : undefined
+                  }
+                />
+              );
+            })}
+            {tickedCount > 0 ? (
+              <View style={{ gap: 8 }} testID="recipe-ingredient-actions">
+                <AppText variant="secondary" bold>
+                  {DETAIL_COPY.tickedCount(tickedCount)}
+                </AppText>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                  <Button
+                    label={batch === 'pantry' ? DETAIL_COPY.addingTicked : DETAIL_COPY.addTickedToPantry(tickedCount)}
+                    kind="primary"
+                    testID="recipe-ingredient-add-pantry"
+                    disabled={busy || !online}
+                    onPress={() => void onAddTickedToPantry()}
+                  />
+                  <Button
+                    label={batch === 'cart' ? DETAIL_COPY.addingTicked : DETAIL_COPY.addTickedToCart(tickedCount)}
+                    kind="secondary"
+                    testID="recipe-ingredient-add-cart"
+                    disabled={busy || !online}
+                    onPress={() => void onAddTickedToCart()}
+                  />
+                </View>
+              </View>
+            ) : null}
+          </>
         ) : (
           <ActivityIndicator color={colors.ink} />
         )}
@@ -330,7 +415,7 @@ export function RecipeDetailScreen({ id }: { id: string }) {
             {pantryNotice}
           </AppText>
         ) : null}
-        {!online && cartMatch && cartMatch.lines.some((line, index) => canAddToPantry(line, cartMatch.pantry.lines[index], pantryRows)) ? (
+        {!online && selectable.length > 0 ? (
           <AppText variant="secondary" color="muted">
             {OFFLINE_MESSAGE}
           </AppText>
