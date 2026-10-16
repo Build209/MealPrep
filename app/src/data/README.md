@@ -19,6 +19,10 @@ The server (Supabase) is the only source of truth. This folder is the only place
    kind has settled.
 5. **Online-first.** Last loaded data stays readable offline (queries pause). Changes are refused
    offline with "You're offline. Changes need a connection." `useIsOnline()` drives the banner.
+   The QueryClient (`src/lib/queryClient.ts`) enforces this for every mutation: its mutation
+   cache runs `refuseWhenOffline()` before each mutation's own onMutate (so nothing changes on
+   screen), and mutations use `networkMode: 'always'` so TanStack Query never pauses one offline
+   and sends it later. A new mutation needs no offline check of its own.
 6. **Plain errors.** Everything throws `DataError`: `message` is words a person can read, `kind`
    is for code (`not-configured`, `signed-out`, `offline`, `not-found`, `forbidden`, `network`,
    `invalid`, `server`). Permanent kinds are not retried.
