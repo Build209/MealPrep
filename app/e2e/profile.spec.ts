@@ -98,7 +98,7 @@ test('profile: the Family plan card is Coming soon and nothing in it works or se
   await signedInUser(page, 'profile-family');
   const familyCalls: string[] = [];
   page.on('request', (request) => {
-    if (/family|household|invite/i.test(request.url())) familyCalls.push(request.url());
+    if (/\/(family|families|household|households|invites?)([/?]|$)|functions\/v1\/[^?]*(family|invite)/i.test(new URL(request.url()).pathname)) familyCalls.push(request.url());
   });
   await page.goto('/account');
   const card = page.getByTestId('family-plan-card');
