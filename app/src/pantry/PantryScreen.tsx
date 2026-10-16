@@ -5,17 +5,23 @@ import type { PantryItemFields } from '../data/pantryFields';
 import { isTempId } from '../data/listOps';
 import {
   newPantryItemVars,
+  PartialClearError,
   useAddPantryItem,
+  useClearPantryItems,
   useEditPantryItem,
   useRemovePantryItem,
   useRestorePantryItem,
+  useRestorePantryItems,
 } from '../data/pantryMutations';
+import type { PantryItem } from '../data/rows';
 import type { PantryStorageLocation } from '../kitchen/storage';
 import { colors, space } from '../theme/tokens';
 import { AppText } from '../ui/AppText';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { Screen } from '../ui/Screen';
+import { ClearItemsButton, ClearItemsSheet } from './clear/ClearItemsSheet';
+import { CLEAR_COPY, clearCounts, idsInScope, type ClearScope } from './clear/clearScope';
 import { changedPantryFields, manualIngredientId } from './form/itemForm';
 import { PantryItemSheet, type PantrySheetState } from './form/PantryItemSheet';
 import { PantryList } from './list/PantryList';
@@ -60,7 +66,11 @@ export type PantryScreenProps = {
   emptyActions?: ReactNode;
 };
 
-type Notice = { text: string; undo?: boolean } | null;
+/**
+ * The bar at the bottom. `undo` offers Undo for the last single delete; `rows` offers Undo for
+ * a clear and holds the rows the server returned, so Undo still works after the list refetches.
+ */
+type Notice = { text: string; undo?: boolean; rows?: readonly PantryItem[] } | null;
 
 function messageOf(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
@@ -73,14 +83,18 @@ export function PantryScreen({ headerActions, emptyActions }: PantryScreenProps)
   const edit = useEditPantryItem();
   const remove = useRemovePantryItem();
   const restore = useRestorePantryItem();
+  const clear = useClearPantryItems();
+  const restoreMany = useRestorePantryItems();
 
   const [sheet, setSheet] = useState<PantrySheetState>({ mode: 'closed' });
+  const [clearOpen, setClearOpen] = useState(false);
   const [viewMode, setViewMode] = useState<PantryViewMode>(() => readPantryViewMode());
   const [place, setPlace] = useState<PantryStorageLocation | null>(null);
   const [notice, setNotice] = useState<Notice>(null);
 
   const items = useMemo(() => (query.data ?? []).map(toShelvedItem), [query.data]);
   const summary = pantryShelfSummary(items);
+  const counts = clearCounts(items);
   const shelfPlace = place ?? resolveShelfPlace('all', items);
 
   // The undo bar folds away by itself.
@@ -130,7 +144,40 @@ export function PantryScreen({ headerActions, emptyActions }: PantryScreenProps)
     );
   }
 
+  function onClear(scope: ClearScope) {
+    // Only rows the server has (an item still being added has nothing to delete yet).
+    const ids = idsInScope(items, scope).filter((id) => !isTempId(id));
+    if (ids.length === 0) return;
+    clear.mutate(
+      { ids },
+      {
+        onSuccess: (rows) => setNotice(rows.length > 0 ? { text: CLEAR_COPY.removed(scope, rows.length), rows } : null),
+        onError: (error) =>
+          setNotice(
+            error instanceof PartialClearError
+              ? { text: CLEAR_COPY.partlyRemoved(error.removed.length, error.message), rows: error.removed }
+              : { text: CLEAR_COPY.failed(messageOf(error)) },
+          ),
+      },
+    );
+  }
+
+  function onUndoClear(rows: readonly PantryItem[]) {
+    restoreMany.mutate(
+      { rows },
+      {
+        onSuccess: (back) => setNotice({ text: CLEAR_COPY.restored(back.length) }),
+        // Keep the rows so Undo can be tried again.
+        onError: (error) => setNotice({ text: CLEAR_COPY.undoFailed(messageOf(error)), rows }),
+      },
+    );
+  }
+
   function onUndo() {
+    if (notice?.rows) {
+      onUndoClear(notice.rows);
+      return;
+    }
     // The row the server returned from the delete (TanStack keeps it as the mutation's result).
     const row = remove.data;
     if (!row) return;
@@ -183,9 +230,12 @@ export function PantryScreen({ headerActions, emptyActions }: PantryScreenProps)
   } else {
     body = (
       <View style={{ gap: space.gap }}>
-        <AppText variant="secondary" color="muted">
-          {SHELF_VIEW_COPY.summary(summary.total, summary.soon)}
-        </AppText>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+          <AppText variant="secondary" color="muted" style={{ flexShrink: 1 }}>
+            {SHELF_VIEW_COPY.summary(summary.total, summary.soon)}
+          </AppText>
+          <ClearItemsButton disabled={!online || clear.isPending} onPress={() => setClearOpen(true)} />
+        </View>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
           {addButton}
           {headerActions}
@@ -223,9 +273,9 @@ export function PantryScreen({ headerActions, emptyActions }: PantryScreenProps)
       {notice ? (
         <UndoBar
           message={notice.text}
-          actionLabel={notice.undo && remove.data ? PANTRY_SCREEN_COPY.undo : undefined}
+          actionLabel={notice.rows || (notice.undo && remove.data) ? PANTRY_SCREEN_COPY.undo : undefined}
           onAction={onUndo}
-          actionDisabled={!online || restore.isPending}
+          actionDisabled={!online || restore.isPending || restoreMany.isPending}
           onDismiss={() => setNotice(null)}
         />
       ) : null}
@@ -238,6 +288,14 @@ export function PantryScreen({ headerActions, emptyActions }: PantryScreenProps)
         onClose={() => setSheet({ mode: 'closed' })}
         onSave={onSave}
         onDelete={onDelete}
+      />
+      <ClearItemsSheet
+        open={clearOpen}
+        counts={counts}
+        online={online}
+        offlineMessage={OFFLINE_MESSAGE}
+        onClose={() => setClearOpen(false)}
+        onConfirm={onClear}
       />
     </View>
   );
