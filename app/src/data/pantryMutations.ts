@@ -1,16 +1,22 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { DataError, messages, run } from './errors';
+import { DataError, messages, run, toDataError } from './errors';
 import { keys, mutationKeys } from './keys';
 import { addItem, removeItem, replaceItem, tempId, updateItem } from './listOps';
 import { isOnlineNow } from './online';
 import { listMutation } from './optimistic';
 import {
+  chunked,
   cleanPantryFields,
   pantryFieldsToColumns,
+  pantryRestoreColumns,
   placeholderPantryItem,
+  removeMany,
   restoreItem,
+  restoreMany,
   validatePantryFields,
   type AddPantryItemVars,
+  type ClearPantryItemsVars,
+  type RestorePantryItemsVars,
   type EditPantryItemVars,
   type PantryItemFields,
   type RemovePantryItemVars,
@@ -21,10 +27,12 @@ import { requireClient, requireUserId, useSessionUserId } from './session';
 
 export type {
   AddPantryItemVars,
+  ClearPantryItemsVars,
   EditPantryItemVars,
   PantryItemFields,
   RemovePantryItemVars,
   RestorePantryItemVars,
+  RestorePantryItemsVars,
 } from './pantryFields';
 
 /**
@@ -43,6 +51,8 @@ export const pantryMutationKeys = {
   edit: () => ['pantry', 'edit'] as const,
   remove: () => ['pantry', 'remove'] as const,
   restore: () => ['pantry', 'restore'] as const,
+  clear: () => ['pantry', 'clear'] as const,
+  restoreMany: () => ['pantry', 'restore-many'] as const,
 } as const;
 
 export function newPantryItemVars(fields: PantryItemFields & { ingredientId: string }): AddPantryItemVars {
@@ -106,26 +116,68 @@ export async function restorePantryItem(
   const owner = requireUserId(userId);
   if (item.userId !== owner) throw new DataError('forbidden', messages.forbidden);
   const row = await run<PantryItemRow>(
-    client
-      .from('pantry_items')
-      .insert({
-        id: item.id,
-        user_id: owner,
-        ingredient_id: item.ingredientId,
-        name: item.name,
-        category: item.category,
-        quantity: item.quantity,
-        unit: item.unit,
-        location: item.location,
-        photo_url: item.photoUrl,
-        expires_on: item.expiresOn,
-        scan_photo_path: item.scanPhotoPath,
-        updated_at: new Date().toISOString(),
-      })
-      .select(PANTRY_ITEM_COLUMNS)
-      .single(),
+    client.from('pantry_items').insert(pantryRestoreColumns(owner, item)).select(PANTRY_ITEM_COLUMNS).single(),
   );
   return pantryItemFromRow(row);
+}
+
+/**
+ * A clear that the server refused part-way through a very large pantry (more than
+ * CLEAR_BATCH_SIZE items, so more than one request). `removed` is what the server did
+ * delete, so the screen can still offer Undo for those rows.
+ */
+export class PartialClearError extends DataError {
+  readonly removed: PantryItem[];
+  constructor(cause: DataError, removed: PantryItem[]) {
+    super(cause.kind, cause.message, { cause });
+    this.name = 'PartialClearError';
+    this.removed = removed;
+  }
+}
+
+/**
+ * Deletes the given rows (one request per CLEAR_BATCH_SIZE ids, so one request for any
+ * normal pantry) and returns them as the server had them, for Undo. Filtered by owner as
+ * well as by row level security. Ids the server no longer has are simply not returned.
+ */
+export async function deletePantryItems(
+  userId: string | null | undefined,
+  { ids }: ClearPantryItemsVars,
+): Promise<PantryItem[]> {
+  const client = requireClient();
+  const owner = requireUserId(userId);
+  const removed: PantryItem[] = [];
+  for (const batch of chunked([...new Set(ids)])) {
+    try {
+      const rows = await run<PantryItemRow[]>(
+        client.from('pantry_items').delete().eq('user_id', owner).in('id', batch).select(PANTRY_ITEM_COLUMNS),
+      );
+      removed.push(...rows.map(pantryItemFromRow));
+    } catch (error) {
+      const plain = toDataError(error);
+      throw removed.length > 0 ? new PartialClearError(plain, removed) : plain;
+    }
+  }
+  return removed;
+}
+
+/** Puts cleared rows back with the same ids and values, in one request. */
+export async function restorePantryItems(
+  userId: string | null | undefined,
+  { rows: items }: RestorePantryItemsVars,
+): Promise<PantryItem[]> {
+  const client = requireClient();
+  const owner = requireUserId(userId);
+  if (items.length === 0) return [];
+  if (items.some((item) => item.userId !== owner)) throw new DataError('forbidden', messages.forbidden);
+  const now = new Date();
+  const rows = await run<PantryItemRow[]>(
+    client
+      .from('pantry_items')
+      .insert(items.map((item) => pantryRestoreColumns(owner, item, now)))
+      .select(PANTRY_ITEM_COLUMNS),
+  );
+  return rows.map(pantryItemFromRow);
 }
 
 // ----------------------------------------------------------------------- hooks
@@ -206,6 +258,47 @@ export function useRestorePantryItem() {
       queryKey,
       mutationKey: mutationKeys.pantry.all,
       change: ({ row }) => restoreItem(row),
+      isOnline: isOnlineNow,
+    }),
+  });
+}
+
+/**
+ * Clear several rows (a whole place, or everything). The rows leave the screen at once and
+ * come back if the server refuses. On success `data` is the deleted rows: pass them to
+ * useRestorePantryItems for Undo. A PartialClearError carries the rows that did go.
+ */
+export function useClearPantryItems() {
+  const { queryClient, userId, queryKey } = usePantryScope();
+  return useMutation({
+    mutationKey: pantryMutationKeys.clear(),
+    mutationFn: (vars: ClearPantryItemsVars) => deletePantryItems(userId, vars),
+    ...listMutation<PantryItem, ClearPantryItemsVars, PantryItem[]>({
+      queryClient,
+      queryKey,
+      mutationKey: mutationKeys.pantry.all,
+      change: ({ ids }) => removeMany<PantryItem>(ids),
+      applyResult: (list, removed) => {
+        const gone = new Set(removed.map((row) => row.id));
+        return list.filter((item) => !gone.has(item.id));
+      },
+      isOnline: isOnlineNow,
+    }),
+  });
+}
+
+/** Undo of a clear: every removed row goes back through the server with the same id and values. */
+export function useRestorePantryItems() {
+  const { queryClient, userId, queryKey } = usePantryScope();
+  return useMutation({
+    mutationKey: pantryMutationKeys.restoreMany(),
+    mutationFn: (vars: RestorePantryItemsVars) => restorePantryItems(userId, vars),
+    ...listMutation<PantryItem, RestorePantryItemsVars, PantryItem[]>({
+      queryClient,
+      queryKey,
+      mutationKey: mutationKeys.pantry.all,
+      change: ({ rows }) => restoreMany<PantryItem>(rows),
+      applyResult: (list, saved) => saved.reduce<PantryItem[]>((acc, row) => replaceItem(acc, row), [...list]),
       isOnline: isOnlineNow,
     }),
   });

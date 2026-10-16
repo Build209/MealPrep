@@ -337,6 +337,24 @@ screen('07', 'pantry-empty', 'none', 'Pantry, empty (second account)', async (pa
   await expect(page.getByText('Your pantry is empty').filter({ visible: true })).toBeVisible();
 });
 
+screen('07a', 'pantry-clear-menu', 'none', 'Pantry: Clear items menu with counts', async (page) => {
+  await signIn(page);
+  await page.goto('/pantry');
+  await page.getByRole('button', { name: /^Clear items/ }).click();
+  await expect(page.getByRole('button', { name: 'Fridge, 3 items', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Spice rack, no items', exact: true })).toBeDisabled();
+  return ['Neutral (ink) control, never tomato. Spice rack is empty in the seed, so its choice is disabled.'];
+});
+
+screen('07b', 'pantry-clear-confirm', 'none', 'Pantry: Clear items confirm (nothing is removed)', async (page) => {
+  await signIn(page);
+  await page.goto('/pantry');
+  await page.getByRole('button', { name: /^Clear items/ }).click();
+  await page.getByRole('button', { name: 'Fridge, 3 items', exact: true }).click();
+  await expect(page.getByText('Remove all 3 items from the Fridge?')).toBeVisible();
+  return ['The tour stops at the confirm; the seeded rows stay for the other screens.'];
+});
+
 screen('08', 'scan', 'camera', 'the scan screen (no camera in the browser)', async (page) => {
   await signIn(page);
   await page.goto('/scan');
