@@ -1,0 +1,100 @@
+{
+  "project": "emulator-pixel-7-landscape-2400x1080",
+  "engine": "chromium",
+  "order": "06",
+  "screen": "pantry-list",
+  "route": "/pantry",
+  "purpose": "none",
+  "viewport": "412x783",
+  "screenshots": [
+    "emulator-pixel-7-landscape-2400x1080/06-pantry-list.png",
+    "emulator-pixel-7-landscape-2400x1080/06-pantry-list-bottom.png"
+  ],
+  "checks": {
+    "noSidewaysScroll": true,
+    "tapTargets": true,
+    "textFits": true,
+    "tomatoRule": true
+  },
+  "sidewaysScroll": {
+    "scrollWidth": 412,
+    "innerWidth": 412
+  },
+  "tapTargetIssues": [],
+  "tapTargetAllowed": [],
+  "clippedText": [],
+  "truncatedText": [
+    {
+      "text": "Home",
+      "kind": "truncated",
+      "scroll": "38x18",
+      "client": "38x13"
+    },
+    {
+      "text": "Pantry",
+      "kind": "truncated",
+      "scroll": "42x18",
+      "client": "42x13"
+    },
+    {
+      "text": "Recipes",
+      "kind": "truncated",
+      "scroll": "52x18",
+      "client": "52x13"
+    },
+    {
+      "text": "Grocery",
+      "kind": "truncated",
+      "scroll": "51x18",
+      "client": "51x13"
+    }
+  ],
+  "offscreenControls": [],
+  "tomato": [
+    {
+      "text": "Plan",
+      "tag": "h1",
+      "props": [
+        "color"
+      ],
+      "context": "brand"
+    },
+    {
+      "text": "Scan · 3 left this month",
+      "tag": "button",
+      "props": [
+        "border-top"
+      ],
+      "context": "camera"
+    },
+    {
+      "text": "",
+      "tag": "div",
+      "props": [
+        "background"
+      ],
+      "context": "camera"
+    },
+    {
+      "text": "",
+      "tag": "div",
+      "props": [
+        "border-top"
+      ],
+      "context": "camera"
+    },
+    {
+      "text": "",
+      "tag": "div",
+      "props": [
+        "border-top"
+      ],
+      "context": "camera"
+    }
+  ],
+  "tomatoViolations": [],
+  "notes": [
+    "Includes a long item name (\"Extra sharp aged white cheddar cheese block\") to test wrapping."
+  ],
+  "reportOnly": {}
+}

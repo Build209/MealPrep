@@ -1,0 +1,34 @@
+{
+  "project": "emulator-pixel-7-landscape-2400x1080",
+  "engine": "chromium",
+  "order": "26",
+  "screen": "help",
+  "route": "/help",
+  "purpose": "none",
+  "viewport": "412x783",
+  "screenshots": [
+    "emulator-pixel-7-landscape-2400x1080/26-help.png",
+    "emulator-pixel-7-landscape-2400x1080/26-help-bottom.png"
+  ],
+  "checks": {
+    "noSidewaysScroll": true,
+    "tapTargets": true,
+    "textFits": true,
+    "tomatoRule": true
+  },
+  "sidewaysScroll": {
+    "scrollWidth": 412,
+    "innerWidth": 412
+  },
+  "tapTargetIssues": [],
+  "tapTargetAllowed": [],
+  "clippedText": [],
+  "truncatedText": [],
+  "offscreenControls": [],
+  "tomato": [],
+  "tomatoViolations": [],
+  "notes": [
+    "Contact us opens an email (mailto:), not followed here."
+  ],
+  "reportOnly": {}
+}
