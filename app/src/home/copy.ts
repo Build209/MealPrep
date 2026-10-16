@@ -26,7 +26,7 @@ export const HOME_COPY = {
    * opens. Alternatives for the owner: "Check your local stores for this week's deals" and
    * "Peek at this week's ads from your stores".
    */
-  dealsTitle: "See this week's deals at your stores",
+  dealsTitle: "Check your stores for deals",
   dealsHelper: 'Tap a store to open its weekly ad.',
   /** Screen readers: "Weekly ad: Safeway", or "Weekly ad (third-party): Safeway" when the ad is on another company's site. */
   dealsStoreA11y: (name: string, thirdParty: boolean) => `${thirdParty ? 'Weekly ad (third-party)' : 'Weekly ad'}: ${name}`,

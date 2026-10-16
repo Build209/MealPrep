@@ -195,7 +195,7 @@ test('Home: the weekly-deals row shows the same circles; a circle opens that sto
   await page.goto('/');
   const deals = page.getByTestId('home-deals-row');
   await expect(deals).toBeVisible();
-  await expect(deals.getByText("See this week's deals at your stores")).toBeVisible();
+  await expect(deals.getByText("Check your stores for deals")).toBeVisible();
   await expect(deals.getByText('Tap a store to open its weekly ad.')).toBeVisible();
   await expect(page.getByTestId('grocery-store-row')).toHaveCount(0);
   await expect
