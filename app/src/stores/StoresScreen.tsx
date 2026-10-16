@@ -318,7 +318,6 @@ export function StoresScreen({
             kind="secondary"
             accessibilityLabel={STORES_COPY.changeLocationA11y}
             onPress={() => setPanelOpen((open) => !open)}
-            style={{ minHeight: 36 }}
           />
         </View>
       </View>
