@@ -1,0 +1,32 @@
+{
+  "project": "android",
+  "engine": "chromium",
+  "order": "12",
+  "screen": "recipe-page",
+  "route": "/recipe/r_6965867e-792a-477f-a661-2062a9511b6a",
+  "purpose": "none",
+  "viewport": "412x839",
+  "screenshots": [
+    "android/12-recipe-page.png",
+    "android/12-recipe-page-bottom.png"
+  ],
+  "checks": {
+    "noSidewaysScroll": true,
+    "tapTargets": true,
+    "textFits": true,
+    "tomatoRule": true
+  },
+  "sidewaysScroll": {
+    "scrollWidth": 412,
+    "innerWidth": 412
+  },
+  "tapTargetIssues": [],
+  "tapTargetAllowed": [],
+  "clippedText": [],
+  "truncatedText": [],
+  "offscreenControls": [],
+  "tomato": [],
+  "tomatoViolations": [],
+  "notes": [],
+  "reportOnly": {}
+}
