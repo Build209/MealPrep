@@ -2,16 +2,17 @@
  * Talking to the live ask-forky function exactly as the old app does
  * (mobile/lib/forky/askForky.ts, askForkyRequest.ts): POST JSON to
  * <supabase url>/functions/v1/ask-forky with the signed-in person's access token.
- * The function is live and must not change. Pure functions only (tests/forky-request.test.ts);
+ * Pure functions only (tests/forky-request.test.ts);
  * api.ts does the fetch.
  *
  * Function contract (supabase/functions/ask-forky/index.ts):
  *   Request:  { question, history: [{role,text}], pantry: [{name,amount?,expiresOn?}],
- *               recipes: [{id,title,have?,total?,missing?}], household?: {size?, ...} }
+ *               recipes: [{id,title,have?,total?,missing?}], household?: {size?, ...}, allergens?: string[] }
  *   200 { answer, recipeIds, offTopic, safetyNote, remaining, limit, isPlus, tier }
  *   401 UNAUTHENTICATED · 403 FEATURE_OFF · 429 LIMIT_REACHED · 400/413 BAD_REQUEST
  *   502 UPSTREAM_ERROR · 503 NOT_CONFIGURED
  */
+import { cleanAllergens } from '../allergens/types';
 import { ASK_FORKY_COPY, ASK_FORKY_LIMITS } from './copy';
 
 export type ForkyTurn = { role: 'user' | 'forky'; text: string };
@@ -24,8 +25,13 @@ export type ForkyRecipeInput = { id: string; title: string; have: number; total:
 export type ForkyContext = {
   pantry: ForkyPantryInput[];
   recipes: ForkyRecipeInput[];
-  /** From the profile. No diet, allergy or health details are ever sent. */
+  /** From the profile: household size only (no diet or health details in the household block). */
   householdSize?: number | null;
+  /**
+   * The person's saved allergens (public.user_diet_prefs). Sent as the separate optional `allergens`
+   * field so Forky avoids them; unknown strings are dropped here and again on the server.
+   */
+  allergens?: readonly string[];
 };
 
 /** Client wait, above the function's own 25 s model timeout. */
@@ -45,7 +51,8 @@ function amountText(quantity: number, unit: string): string {
 /**
  * The JSON body, field for field as the old app sends it (buildAskForkyBody): item names, amounts
  * and use-by dates (soonest first so they survive the cap), a short list of recipe titles, and the
- * household size when known. No user ids, photos or notes.
+ * household size when known, and the saved allergens only when there are some. No user ids, photos
+ * or free-text notes. Old functions that do not know `allergens` ignore it.
  */
 export function buildAskForkyBody(question: string, history: ForkyTurn[], context: ForkyContext) {
   const pantry = [...context.pantry]
@@ -77,12 +84,15 @@ export function buildAskForkyBody(question: string, history: ForkyTurn[], contex
   const household =
     typeof size === 'number' && Number.isInteger(size) && size >= 1 && size <= 20 ? { size } : null;
 
+  const allergens = cleanAllergens(context.allergens);
+
   return {
     question: question.trim(),
     history: history.slice(-ASK_FORKY_LIMITS.historyTurns).map((turn) => ({ role: turn.role, text: turn.text })),
     pantry,
     recipes,
     ...(household ? { household } : {}),
+    ...(allergens.length ? { allergens } : {}),
   };
 }
 

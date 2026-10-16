@@ -9,6 +9,8 @@
  *
  * Pure functions only (tests/forky-shortlist.test.ts).
  */
+import { recipeAllergenStatus } from '../allergens/detect';
+import type { AllergenKey } from '../allergens/types';
 import { bestPantryMatch, type PantryMatchRow } from '../kitchen/pantryMatch';
 import { ASK_FORKY_LIMITS } from './copy';
 import type { ForkyRecipeInput } from './request';
@@ -43,12 +45,15 @@ export function ingredientNames(raw: unknown): string[] {
 
 /**
  * Best pantry matches first: the share of ingredients on hand, then how many, then the title.
- * Recipes with no ingredients are left out. At most 8 (the function's cap).
+ * Recipes with no ingredients are left out. At most 8 (the function's cap). Recipes whose ingredient
+ * names match one of `userAllergens` are left out BEFORE the cap, so they never reach Forky and
+ * cannot use up a slot. (Name-based estimate, not a safety check; the function is told too.)
  */
 export function rankShortlist(
   recipes: readonly ShortlistRecipe[],
   pantry: readonly PantryMatchRow[],
   max: number = ASK_FORKY_LIMITS.recipes,
+  userAllergens: readonly AllergenKey[] = [],
 ): ForkyRecipeInput[] {
   const memo = new Map<string, boolean>();
   const have = (name: string) => {
@@ -64,6 +69,7 @@ export function rankShortlist(
   const seen = new Set<string>();
   for (const recipe of recipes) {
     if (!recipe.id || !recipe.title.trim() || seen.has(recipe.id) || recipe.ingredients.length === 0) continue;
+    if (userAllergens.length > 0 && recipeAllergenStatus({ ingredients: recipe.ingredients.map((name) => ({ name })) }, userAllergens).length > 0) continue;
     seen.add(recipe.id);
     const missing: string[] = [];
     let matched = 0;

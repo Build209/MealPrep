@@ -53,7 +53,7 @@
   </head>
   <body>
     <h1>Privacy Policy</h1>
-    <p class="muted">MealPlanatic · Last updated: October 11, 2026</p>
+    <p class="muted">MealPlanatic · Last updated: October 16, 2026</p>
 
     <p>
       MealPlanatic helps you plan meals, track your pantry, build grocery lists, compare store prices, and discover
@@ -68,7 +68,11 @@
         Supabase). You can sign in with email and password.
       </li>
       <li>
-        <strong>Profile:</strong> optional profile photo, home ZIP, household size, and dietary notes you enter.
+        <strong>Profile:</strong> your display name, home ZIP, household size, dietary notes, diets, and allergens you
+        choose, and an optional profile photo or preset avatar. Diets, allergens and dietary notes can be health-related,
+        so we treat them with care. We use them to personalise recipes and to mark recipes whose ingredient names match
+        your allergens. That marking is an estimate based on ingredient names, not a guarantee, so always check the
+        label. Your profile photo is private to your account.
       </li>
       <li>
         <strong>Kitchen data:</strong> pantry items, recipes you save, meal plans, grocery lists, and Smart Shop saved
@@ -151,7 +155,9 @@
         few facts about your household that the app works out from your own activity (your household size, the names
         of items you buy regularly, and the titles of meals you recently marked as made) are
         sent to <strong>Anthropic</strong> (the maker of the Claude AI model, via our Supabase Edge Function) to write
-        the answer. We do not send your name, email, photos, or your dietary and allergy settings, and we do not store your questions or Forky's answers
+        the answer. If you have saved allergens, they are also sent to Anthropic with your question so Forky's suggestions can
+        avoid them; we do not share your allergens with anyone else for this. We do not send your name, email, photos,
+        diets, or dietary notes, and we do not store your questions or Forky's answers
         on our servers; we keep only a count of messages and their size.
       </li>
       <li>Provide nutrition information where available (including USDA-sourced data served through our backend).</li>
@@ -172,8 +178,8 @@
         tuning recognition — not for advertising.
       </li>
       <li>
-        <strong>Profile photo:</strong> if you add one, it is stored at a web address that is not listed anywhere
-        but can be opened by anyone who has that address. Remove or replace it in Account at any time.
+        <strong>Profile photo:</strong> if you add one, it is stored in private storage tied to your account, so only
+        you can see it. Remove or replace it in Account at any time, and we delete it when you delete your account.
       </li>
     </ul>
 
@@ -211,7 +217,7 @@
     <p>
       You can delete your account in the app (<strong>Home → Account → Delete account</strong>) or on the web at
       <a href="https://mealplanatic.app/delete-account">Account deletion page</a>. That removes your
-      profile, pantry, meal plans, grocery lists, saved stores, personal recipes, usage log, auth account, and the scan photos and
+      profile (including your diets, allergens and dietary notes), pantry, meal plans, grocery lists, saved stores, personal recipes, usage log, auth account, and the scan photos and
       profile photo tied to your account.
     </p>
     <p>

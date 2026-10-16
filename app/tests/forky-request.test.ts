@@ -64,6 +64,21 @@ test('the body is the old app\'s: soonest use-by first, amounts, recipes, househ
   assert.equal('household' in buildAskForkyBody('q', [], { ...context, householdSize: null }), false);
 });
 
+test('allergens: sent only when there are some, whitelisted, deduped, fixed order', () => {
+  assert.equal('allergens' in buildAskForkyBody('q', [], context), false, 'absent when not given');
+  assert.equal('allergens' in buildAskForkyBody('q', [], { ...context, allergens: [] }), false, 'absent when empty');
+  assert.equal('allergens' in buildAskForkyBody('q', [], { ...context, allergens: ['lactose', 'gluten'] }), false, 'unknown keys dropped');
+  const body = buildAskForkyBody('q', [], { ...context, allergens: ['peanuts', 'milk', 'peanuts', 'bogus', 'tree-nuts'] });
+  assert.deepEqual(body.allergens, ['milk', 'tree-nuts', 'peanuts']);
+  assert.deepEqual(body.household, { size: 3 }, 'household block still carries no health details');
+  assert.equal(JSON.stringify(body.household).includes('milk'), false);
+});
+
+test('the client no longer promises that allergy details are never sent', () => {
+  const src = readFileSync(join(__dirname, '..', 'src', 'forky', 'request.ts'), 'utf8');
+  assert.doesNotMatch(src, /No diet, allergy or health details are ever sent/);
+});
+
 test('caps: 60 pantry items, 8 recipes', () => {
   const many: ForkyContext = {
     pantry: Array.from({ length: 70 }, (_, i) => ({ name: `item ${i}`, quantity: 1, unit: 'each', expiresOn: null })),
