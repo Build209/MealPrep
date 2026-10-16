@@ -1,0 +1,39 @@
+{
+  "project": "emulator-flip-folded-720x748-cover-sim",
+  "engine": "chromium",
+  "order": "11",
+  "screen": "recipes-saved",
+  "route": "/recipes/saved",
+  "purpose": "none",
+  "viewport": "240x146",
+  "screenshots": [
+    "emulator-flip-folded-720x748-cover-sim/11-recipes-saved.png",
+    "emulator-flip-folded-720x748-cover-sim/11-recipes-saved-bottom.png"
+  ],
+  "checks": {
+    "noSidewaysScroll": true,
+    "tapTargets": true,
+    "textFits": true,
+    "tomatoRule": true
+  },
+  "sidewaysScroll": {
+    "scrollWidth": 240,
+    "innerWidth": 240
+  },
+  "tapTargetIssues": [],
+  "tapTargetAllowed": [],
+  "clippedText": [],
+  "truncatedText": [
+    {
+      "text": "Phone zpwyplqboz egg fried rice",
+      "kind": "truncated",
+      "scroll": "68x120",
+      "client": "68x48"
+    }
+  ],
+  "offscreenControls": [],
+  "tomato": [],
+  "tomatoViolations": [],
+  "notes": [],
+  "reportOnly": {}
+}
