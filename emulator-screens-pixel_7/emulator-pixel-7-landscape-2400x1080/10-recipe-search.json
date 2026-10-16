@@ -1,0 +1,32 @@
+{
+  "project": "emulator-pixel-7-landscape-2400x1080",
+  "engine": "chromium",
+  "order": "10",
+  "screen": "recipe-search",
+  "route": "/recipes/search?q=zpcswcnoxq",
+  "purpose": "none",
+  "viewport": "863x304",
+  "screenshots": [
+    "emulator-pixel-7-landscape-2400x1080/10-recipe-search.png",
+    "emulator-pixel-7-landscape-2400x1080/10-recipe-search-bottom.png"
+  ],
+  "checks": {
+    "noSidewaysScroll": true,
+    "tapTargets": true,
+    "textFits": true,
+    "tomatoRule": true
+  },
+  "sidewaysScroll": {
+    "scrollWidth": 863,
+    "innerWidth": 863
+  },
+  "tapTargetIssues": [],
+  "tapTargetAllowed": [],
+  "clippedText": [],
+  "truncatedText": [],
+  "offscreenControls": [],
+  "tomato": [],
+  "tomatoViolations": [],
+  "notes": [],
+  "reportOnly": {}
+}
