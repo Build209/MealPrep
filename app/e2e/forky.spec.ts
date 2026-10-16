@@ -132,6 +132,33 @@ test('ask a question from the header: an answer with a recipe button that opens 
   expect(sent.body.pantry).toEqual([{ name: 'Eggs', amount: '6 each' }]);
   expect(sent.body.recipes).toContainEqual({ id: routeId, title: 'Forky test fried rice', have: 1, total: 2, missing: ['White rice'] });
 
+  // Report this answer: a control on the answer, a reason sheet, then a prefilled mailto (opening the
+  // mail app is stubbed out; the link is read from window.open / location is not navigated).
+  const report = page.getByRole('button', { name: 'Report this answer' }).filter({ visible: true });
+  await expect(report).toHaveCount(1);
+  expect((await report.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+  await page.evaluate(() => {
+    const w = window as unknown as { __opened: string[] };
+    w.__opened = [];
+    window.open = ((url?: string | URL) => {
+      w.__opened.push(String(url));
+      return null;
+    }) as typeof window.open;
+  });
+  await report.click();
+  await page.getByRole('radio', { name: 'Offensive' }).click();
+  await page.getByRole('textbox', { name: /Anything to add/ }).fill('Not nice');
+  await page.getByRole('button', { name: 'Send report', exact: true }).click();
+  await expect(page.getByText('Thanks, we got your report')).toBeVisible();
+  const opened = await page.evaluate(() => (window as unknown as { __opened: string[] }).__opened);
+  expect(opened).toHaveLength(1);
+  expect(opened[0]).toMatch(/^mailto:support@mealplanatic\.app\?subject=/);
+  const mailBody = new URLSearchParams(opened[0]!.slice(opened[0]!.indexOf('?') + 1)).get('body') ?? '';
+  expect(mailBody).toContain('Reason: Offensive');
+  expect(mailBody).toContain('Note: Not nice');
+  expect(mailBody).toContain('Your eggs are perfect for fried rice tonight.');
+  await page.getByRole('button', { name: 'Close', exact: true }).filter({ visible: true }).last().click();
+
   await page.getByRole('button', { name: 'Open recipe: Forky test fried rice' }).click();
   await expect(page).toHaveURL(new RegExp(`/recipe/${routeId}$`));
   if (recipePageExists) {
