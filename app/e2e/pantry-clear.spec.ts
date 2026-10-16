@@ -41,7 +41,7 @@ async function newSignedInUserWithPantry(page: Page, label: string): Promise<str
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   await expect(page.getByRole('link', { name: 'Account', exact: true })).toBeVisible();
   await page.goto('/pantry');
-  await expect(page.getByText(`${SEED.length} items`, { exact: true })).toBeVisible();
+  await expect(summary(page, SEED.length)).toBeVisible();
   return userId;
 }
 
@@ -57,6 +57,8 @@ async function serverRows(userId: string): Promise<Seeded[]> {
 }
 
 const names = (rows: Seeded[]) => rows.map((r) => r.name);
+/** The "N items" line on the page itself (the sheet's menu shows the same words while it closes). */
+const summary = (page: Page, count: number) => page.locator('#root').getByText(`${count} items`, { exact: true }).first();
 const clearButton = (page: Page) => page.getByRole('button', { name: /^Clear items/ });
 const option = (page: Page, label: string) => page.getByRole('button', { name: label, exact: true });
 
@@ -72,7 +74,7 @@ test('clear the Fridge: only fridge rows go, the Pantry and Spice rack stay', as
   await page.getByRole('button', { name: 'Remove 3 items', exact: true }).click();
 
   await expect(page.getByText('Removed 3 items from the Fridge.')).toBeVisible();
-  await expect(page.getByText('3 items', { exact: true })).toBeVisible();
+  await expect(summary(page, 3)).toBeVisible();
   await expect
     .poll(async () => names(await serverRows(userId)))
     .toEqual(['Clear beans', 'Clear cumin', 'Clear rice']);
@@ -101,12 +103,12 @@ test('clear all, then Undo after the list refetched: every row comes back exactl
   await page.getByRole('button', { name: 'Undo', exact: true }).click();
 
   await expect(page.getByText('6 items are back.')).toBeVisible();
-  await expect(page.getByText(`${SEED.length} items`, { exact: true })).toBeVisible();
+  await expect(summary(page, SEED.length)).toBeVisible();
   await expect.poll(async () => serverRows(userId)).toEqual(before);
 
   // After a reload the screen still agrees with the server.
   await page.reload();
-  await expect(page.getByText(`${SEED.length} items`, { exact: true })).toBeVisible();
+  await expect(summary(page, SEED.length)).toBeVisible();
 });
 
 test('Back and Cancel at the confirm delete nothing', async ({ page }) => {
@@ -124,7 +126,7 @@ test('Back and Cancel at the confirm delete nothing', async ({ page }) => {
 
   await page.waitForTimeout(1_500);
   expect(await serverRows(userId)).toEqual(before);
-  await expect(page.getByText(`${SEED.length} items`, { exact: true })).toBeVisible();
+  await expect(summary(page, SEED.length)).toBeVisible();
 });
 
 test('offline: Clear is blocked with the offline message and nothing is deleted, then or later', async ({ page, context }) => {
@@ -143,7 +145,7 @@ test('offline: Clear is blocked with the offline message and nothing is deleted,
 
   // The entry button is blocked too while offline.
   await expect(clearButton(page)).toBeDisabled();
-  await expect(page.getByText(`${SEED.length} items`, { exact: true })).toBeVisible();
+  await expect(summary(page, SEED.length)).toBeVisible();
 
   await context.setOffline(false);
   await expect(clearButton(page)).toBeEnabled();
