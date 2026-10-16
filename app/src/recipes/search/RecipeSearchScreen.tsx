@@ -1,6 +1,8 @@
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { ActivityIndicator, TextInput, View } from 'react-native';
+import { demoteFlaggedResults } from '../../allergens/rank';
+import { useAllergenPrefs } from '../../allergens/useAllergenPrefs';
 import { useAuth } from '../../auth/AuthProvider';
 import { CreatorVideoListRow } from '../../creators/CreatorVideoCard';
 import { useCreatorVideoSearch } from '../../data/creators';
@@ -71,6 +73,12 @@ export function RecipeSearchScreen() {
     [active, catalog.data, videos.data, settled],
   );
 
+  const prefs = useAllergenPrefs();
+  const ranked = useMemo(
+    () => demoteFlaggedResults(results, prefs.allergens, (item) => (item.kind === 'recipe' ? item.hit.recipe.ingredients : null)),
+    [results, prefs.allergens],
+  );
+
   if (ready && !session) return <Redirect href="/sign-in" />;
 
   const back = () => (router.canGoBack() ? router.back() : router.replace('/'));
@@ -122,9 +130,14 @@ export function RecipeSearchScreen() {
           <AppText variant="label" color="muted" accessibilityLiveRegion="polite">
             {results.length === 1 ? '1 result' : `${results.length} results`}
           </AppText>
-          {results.map((item) =>
+          {ranked.items.map((item) =>
             item.kind === 'recipe' ? (
-              <RecipeResultRow key={item.key} recipe={item.hit.recipe} note={recipeResultNote(item.hit.recipe, item.hit.match, words)} />
+              <RecipeResultRow
+                key={item.key}
+                recipe={item.hit.recipe}
+                note={recipeResultNote(item.hit.recipe, item.hit.match, words)}
+                allergens={ranked.allergensOf.get(item)}
+              />
             ) : (
               <CreatorVideoListRow key={item.key} video={item.video} />
             ),
