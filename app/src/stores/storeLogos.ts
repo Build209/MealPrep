@@ -25,12 +25,34 @@ import { normalizeChainKey } from './storeBadge';
  *
  * Chains without an entry keep the initials badge (StoreBadge, storeBadge.ts).
  *
- * Empty today: the sources are listed in docs/STORE_LOGOS.md, but the files could not be
- * downloaded and their licence pages could not be checked from the build machine, so no logo
- * ships yet.
+ * Shipped: the chains listed in docs/STORE_LOGOS.md with a file. The rest keep initials.
  */
 export const STORE_LOGOS: Readonly<Record<string, ImageSourcePropType>> = {
   // LOGO ENTRIES START (one per line; see the rules above)
+  'raley s': require('../../assets/stores/raleys.png'),
+  safeway: require('../../assets/stores/safeway.png'),
+  albertsons: require('../../assets/stores/albertsons.png'),
+  vons: require('../../assets/stores/vons.png'),
+  walmart: require('../../assets/stores/walmart.png'),
+  target: require('../../assets/stores/target.png'),
+  winco: require('../../assets/stores/winco.png'),
+  'food 4 less': require('../../assets/stores/food-4-less.png'),
+  kroger: require('../../assets/stores/kroger.png'),
+  'fred meyer': require('../../assets/stores/fred-meyer.png'),
+  'king soopers': require('../../assets/stores/king-soopers.png'),
+  ralphs: require('../../assets/stores/ralphs.png'),
+  publix: require('../../assets/stores/publix.png'),
+  'h e b': require('../../assets/stores/heb.png'),
+  meijer: require('../../assets/stores/meijer.png'),
+  wegmans: require('../../assets/stores/wegmans.png'),
+  'hy vee': require('../../assets/stores/hy-vee.png'),
+  'food lion': require('../../assets/stores/food-lion.png'),
+  'stop shop': require('../../assets/stores/stop-and-shop.png'),
+  'whole foods market': require('../../assets/stores/whole-foods.png'),
+  'stater bros': require('../../assets/stores/stater-bros.png'),
+  costco: require('../../assets/stores/costco.png'),
+  'trader joe s': require('../../assets/stores/trader-joes.png'),
+  'dollar general': require('../../assets/stores/dollar-general.png'),
   // LOGO ENTRIES END
 };
 
