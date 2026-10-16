@@ -2,7 +2,9 @@ import Feather from '@expo/vector-icons/Feather';
 import { useRouter } from 'expo-router';
 import { Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Avatar } from '../account/profile/Avatar';
 import { useAuth } from '../auth/AuthProvider';
+import { useProfile } from '../data/profile';
 import { ForkyPinned, ForkyTipCloud } from '../forky/ForkyHeader';
 import { channelLabel, parseChannel } from '../lib/channel';
 import { env } from '../lib/env';
@@ -14,6 +16,9 @@ const previewLabel = channelLabel(parseChannel(env.appChannel));
 /** The person icon at the right of the bar: opens Account. Ink on banana, never tomato; 44x44 tap area. */
 function AccountButton() {
   const router = useRouter();
+  // The same profile read the Account screen uses; its picture (if any) replaces the plain icon.
+  const profile = useProfile();
+  const avatarPath = profile.data?.avatarPath ?? null;
   return (
     <Pressable
       onPress={() => router.push('/account')}
@@ -30,14 +35,18 @@ function AccountButton() {
         opacity: pressed ? 0.7 : 1,
       })}
     >
-      <Feather
-        name="user"
-        size={24}
-        color={colors.onBanana}
-        aria-hidden
-        accessibilityElementsHidden
-        importantForAccessibility="no-hide-descendants"
-      />
+      {avatarPath ? (
+        <Avatar path={avatarPath} name={profile.data?.name} email={profile.data?.email} size={28} fallbackIcon testID="topbar-avatar" />
+      ) : (
+        <Feather
+          name="user"
+          size={24}
+          color={colors.onBanana}
+          aria-hidden
+          accessibilityElementsHidden
+          importantForAccessibility="no-hide-descendants"
+        />
+      )}
     </Pressable>
   );
 }
