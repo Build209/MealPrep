@@ -1,0 +1,62 @@
+{
+  "project": "emulator-flip-folded-720x748-cover-sim",
+  "engine": "chromium",
+  "order": "24",
+  "screen": "terms",
+  "route": "/terms.html",
+  "purpose": "none",
+  "viewport": "240x146",
+  "screenshots": [
+    "emulator-flip-folded-720x748-cover-sim/24-terms.png"
+  ],
+  "checks": {
+    "noSidewaysScroll": true,
+    "tapTargets": true,
+    "textFits": true,
+    "tomatoRule": true
+  },
+  "sidewaysScroll": {
+    "scrollWidth": 240,
+    "innerWidth": 240
+  },
+  "tapTargetIssues": [],
+  "tapTargetAllowed": [
+    {
+      "text": "Privacy Policy",
+      "role": "a",
+      "width": 97.7,
+      "height": 19,
+      "why": "inline-link"
+    },
+    {
+      "text": "YouTube Terms of Service",
+      "role": "a",
+      "width": 185.4,
+      "height": 19,
+      "why": "inline-link"
+    },
+    {
+      "text": "account deletion page",
+      "role": "a",
+      "width": 157.5,
+      "height": 19,
+      "why": "inline-link"
+    },
+    {
+      "text": "support@mealplanatic.app",
+      "role": "a",
+      "width": 192.2,
+      "height": 19,
+      "why": "inline-link"
+    }
+  ],
+  "clippedText": [],
+  "truncatedText": [],
+  "offscreenControls": [],
+  "tomato": [],
+  "tomatoViolations": [],
+  "notes": [
+    "Static legal page (public/terms.html), not an app screen."
+  ],
+  "reportOnly": {}
+}
