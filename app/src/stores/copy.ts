@@ -5,6 +5,14 @@
  */
 export const STORES_COPY = {
   title: 'Stores near you',
+  heroTitle: 'Find deals and order groceries near you',
+  heroSub: 'Open a weekly ad, shop a store online, or get directions.',
+  savedHeading: 'Your saved stores',
+  nearbyHeading: 'Nearby stores',
+  savedTag: 'Saved',
+  orderHeading: 'Order groceries',
+  noStoresTitle: 'No stores here yet',
+  noStoresHint: 'Try a wider area or a different ZIP code.',
   nearPrefix: 'Near',
   nearYourLocation: 'your location',
   changeLocation: 'Change',
