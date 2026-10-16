@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { ActivityIndicator, TextInput, View } from 'react-native';
-import { useIsOnline, useProfile } from '../data';
+import { ActivityIndicator, TextInput, View, type ScrollView } from 'react-native';
+import { DataError, OFFLINE_MESSAGE, useIsOnline, useProfile } from '../data';
 import {
   nextSortOrder,
   useFavoriteStores,
@@ -15,6 +15,7 @@ import { colors, fonts, radius, space, touch, type as typeScale } from '../theme
 import { AppText } from '../ui/AppText';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
+import { revealInScroll } from '../ui/revealInScroll';
 import { Screen } from '../ui/Screen';
 import { STORES_COPY } from './copy';
 import { favoriteStoreKey } from './kroger';
@@ -50,7 +51,16 @@ function originLabel(origin: SearchOrigin): string {
  * Save a store (server, optimistic); and the search location (device location or ZIP), saved on
  * the profile rounded. Kroger-family locations are merged in as the old tab does.
  */
-export function StoresScreen({ title = STORES_COPY.title, top }: { title?: string; top?: ReactNode } = {}) {
+export function StoresScreen({
+  title = STORES_COPY.title,
+  top,
+  focusStoreKey,
+}: {
+  title?: string;
+  top?: ReactNode;
+  /** A store tapped in the Grocery list's row (its favourite key): outlined and scrolled to, when listed. */
+  focusStoreKey?: string;
+} = {}) {
   const profile = useProfile();
   const online = useIsOnline();
   const origin = useMemo(() => searchOriginFromProfile(profile.data ?? null), [profile.data]);
@@ -68,6 +78,9 @@ export function StoresScreen({ title = STORES_COPY.title, top }: { title?: strin
   const [query, setQuery] = useState('');
   const [showLocal, setShowLocal] = useState(false);
   const autoLocated = useRef(false);
+  const scrollRef = useRef<ScrollView>(null);
+  const contentRef = useRef<View>(null);
+  const revealed = useRef<string | null>(null);
 
   useEffect(() => {
     let live = true;
@@ -144,11 +157,29 @@ export function StoresScreen({ title = STORES_COPY.title, top }: { title?: strin
     setNotice(null);
     toggle.mutate(
       { store, favorite, sortOrder: nextSortOrder(favorites.data ?? []) },
-      { onError: (error) => setNotice(STORES_COPY.favoriteFailed(messageOf(error))) },
+      {
+        // Offline: the shared check (src/lib/queryClient.ts) refuses the change; say so in the app's standard words.
+        onError: (error) =>
+          setNotice(error instanceof DataError && error.kind === 'offline' ? OFFLINE_MESSAGE : STORES_COPY.favoriteFailed(messageOf(error))),
+      },
     );
   }
 
   const visible = useMemo(() => filterStoresList(stores.list, query), [stores.list, query]);
+  const focusIsLocal = focusStoreKey != null && stores.list.local.some((s) => favoriteStoreKey(s) === focusStoreKey);
+
+  // A local market tapped in the row sits behind "More local markets": open it.
+  useEffect(() => {
+    if (focusIsLocal) setShowLocal(true);
+  }, [focusIsLocal]);
+
+  function onFocusedLayout(node: View) {
+    if (!focusStoreKey || revealed.current === focusStoreKey) return;
+    revealed.current = focusStoreKey;
+    // After this frame's layout, so the cards above it have their heights.
+    setTimeout(() => revealInScroll(node, scrollRef.current, contentRef.current), 50);
+  }
+
   const searching = query.trim().length > 0;
   const total = visible.chains.length + visible.local.length;
   const showPanel = panelOpen || shouldShowLocationPrompt(origin, permission);
@@ -159,7 +190,10 @@ export function StoresScreen({ title = STORES_COPY.title, top }: { title?: strin
       store={store}
       favorite={favoriteKeys.has(favoriteStoreKey(store))}
       onToggleFavorite={onToggleFavorite}
-      disabled={!online || !favorites.data}
+      // Not disabled offline: a tap gets the standard offline message (onToggleFavorite).
+      disabled={!favorites.data}
+      focused={focusStoreKey != null && favoriteStoreKey(store) === focusStoreKey}
+      onFocusedLayout={onFocusedLayout}
     />
   );
 
@@ -231,7 +265,7 @@ export function StoresScreen({ title = STORES_COPY.title, top }: { title?: strin
   }
 
   return (
-    <Screen title={title}>
+    <Screen title={title} scrollRef={scrollRef} contentRef={contentRef}>
       {top}
       <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 4 }}>
         <AppText color="muted" testID="stores-origin">
@@ -244,6 +278,10 @@ export function StoresScreen({ title = STORES_COPY.title, top }: { title?: strin
           onPress={() => setPanelOpen((open) => !open)}
         />
       </View>
+
+      <AppText variant="secondary" color="muted">
+        {STORES_COPY.rowNote}
+      </AppText>
 
       {showPanel ? (
         <LocationPanel

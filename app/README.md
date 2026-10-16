@@ -22,7 +22,11 @@ it is in git history only. Edge functions are in `../supabase/functions`, the da
   (session from `onAuthStateChange`). The tabs need a session; signed out goes to `/sign-in`.
   Rules and wording are in `logic.ts` and `copy.ts`, tested in `tests/auth-*.test.ts`.
 - `src/grocery/`: the Grocery tab (phase 2). The list by aisle, add, tick into the pantry with Undo,
-  Clear ticked. Ticking is one server call (`tick_grocery_item`, a new migration in `db/` that is not
+  Clear ticked. The list starts with a row of 3 store circles (`src/stores/StoresRow.tsx`, rules in `storeRow.ts`):
+  the 3 newest favourite stores, then the closest stores when a location is already saved, else "Find stores";
+  a circle opens Stores at that store (`/grocery?view=stores&store=<key>`), where a star adds or removes a favourite.
+  Circles show the chain's initials (`StoreBadge`); real logos go only in `src/stores/storeLogos.ts`, empty until
+  the owner and compliance clear them. Ticking is one server call (`tick_grocery_item`, a new migration in `db/` that is not
   on the live database until the owner approves it). Data hooks: `src/data/grocery.ts`, `groceryMutations.ts`.
 - `src/scan/`: shelf, fridge, spice rack and receipt photo scans through the live `pantry-vision` function
   (unchanged; same request as the old app), a review list before saving, and `ScanButton` with this month's
