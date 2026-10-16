@@ -1,5 +1,6 @@
 import type { FavoriteStore } from './favorites';
 import { favoriteStoreKey } from './kroger';
+import { resolveShopUrl } from './delivery';
 import { resolveWeeklyAdLink, type LinkStore } from './links';
 import { sortStoresByDistanceMiles, storeDisplayName, type SearchOrigin, type Store } from './logic';
 
@@ -33,6 +34,23 @@ export type DealsTarget =
 export function dealsTargetFor(store: RowStore): DealsTarget {
   const ad = resolveWeeklyAdLink(store.link);
   return ad ? { kind: 'weekly-ad', url: ad.url, thirdParty: ad.thirdParty === true } : { kind: 'stores', key: store.key };
+}
+
+/**
+ * What a circle on the Grocery list's row opens (owner, 2026-10-16): the store's weekly flyer; with
+ * no flyer, its shop/order page (the chain's online shop, else the store's website); with neither,
+ * the store in the Stores view.
+ */
+export type ShopTarget =
+  | { kind: 'weekly-ad'; url: string; thirdParty: boolean }
+  | { kind: 'shop'; url: string }
+  | { kind: 'stores'; key: string };
+
+export function shopTargetFor(store: RowStore): ShopTarget {
+  const ad = resolveWeeklyAdLink(store.link);
+  if (ad) return { kind: 'weekly-ad', url: ad.url, thirdParty: ad.thirdParty === true };
+  const shop = resolveShopUrl({ name: store.link.name, chain: store.link.chain, link: store.link.website });
+  return shop ? { kind: 'shop', url: shop } : { kind: 'stores', key: store.key };
 }
 
 /** A location the shopper chose (device location or their own ZIP), not the app's default ZIP. */

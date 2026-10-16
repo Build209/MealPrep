@@ -53,7 +53,7 @@ function pathnameOf(url: string): string {
   }
 }
 
-function isBlockedStoreWebsiteHost(hostname: string): boolean {
+export function isBlockedStoreWebsiteHost(hostname: string): boolean {
   const h = hostname.toLowerCase();
   return !h || BLOCKED_WEBSITE_HOST_RE.test(h);
 }

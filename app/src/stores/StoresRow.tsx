@@ -9,7 +9,7 @@ import { HOME_COPY } from '../home/copy';
 import { STORES_COPY } from './copy';
 import { searchOriginFromProfile } from './logic';
 import { BADGE_SIZE, StoreBadge } from './StoreBadge';
-import { dealsTargetFor, hasSavedLocation, pickRowStores, showFindStores, type RowStore } from './storeRow';
+import { dealsTargetFor, hasSavedLocation, pickRowStores, shopTargetFor, showFindStores, type RowStore } from './storeRow';
 
 /** Wide enough for a short chain name in two lines under the circle; well over the 44px tap target. */
 const ITEM_WIDTH = 80;
@@ -56,6 +56,12 @@ function dealsStoreA11y(store: RowStore): string {
   return target.kind === 'weekly-ad'
     ? HOME_COPY.dealsStoreA11y(store.name, target.thirdParty)
     : STORES_COPY.rowStoreA11y(store.name, store.kind === 'favorite');
+}
+
+/** The Grocery row's label: says what the tap opens (weekly ad, shop page, or the Stores view). */
+function groceryStoreA11y(store: RowStore): string {
+  const target = shopTargetFor(store);
+  return STORES_COPY.rowStoreA11y(store.name, store.kind === 'favorite', target.kind, target.kind === 'weekly-ad' && target.thirdParty);
 }
 
 /**
@@ -128,7 +134,7 @@ export function StoresRow({
           <Circle
             key={store.key}
             label={store.name}
-            a11y={deals ? dealsStoreA11y(store) : STORES_COPY.rowStoreA11y(store.name, store.kind === 'favorite')}
+            a11y={deals ? dealsStoreA11y(store) : groceryStoreA11y(store)}
             testID={`${deals ? 'home-deals-store' : 'store-row'}-${store.key}`}
             onPress={() => onOpenStore(store.key, store)}
           >
