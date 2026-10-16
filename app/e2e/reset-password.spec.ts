@@ -17,7 +17,7 @@ const passwordBox = (page: Page) => page.getByLabel('Password', { exact: true })
 
 async function expectHome(page: Page) {
   await expect(page).toHaveURL(/^http:\/\/[^/]+\/$/);
-  await expect(page.getByTestId('topbar-account')).toBeVisible();
+  await expect(page.getByTestId('topbar-account').first()).toBeVisible();
 }
 
 test('forgot password: email link, choose a new password, sign in with it', async ({ page }) => {
