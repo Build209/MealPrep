@@ -122,7 +122,7 @@ test('names and ids for grocery rows', () => {
 
 test('detail wording: ingredient rows and the add result', () => {
   const have = ingredientRowText({ status: 'have', ingredient: { ingredientId: 'r', name: 'Rice', quantity: 0.75, unit: 'cup' }, pantryItem: { id: 'p', ingredientId: 'r', name: 'Rice', quantity: 1, unit: 'cup' } });
-  assert.deepEqual(have, { name: 'Rice', amount: '¾ cup', status: 'You have it' });
+  assert.deepEqual(have, { name: 'Rice', amount: '¾ cup', status: 'In pantry' });
   const short = ingredientRowText({ status: 'missing', ingredient: { ingredientId: 'e', name: 'Eggs', quantity: 6, unit: 'each' }, need: 4, short: true });
   assert.equal(short.status, 'Need 4 each more');
   const missing = ingredientRowText({ status: 'missing', ingredient: { ingredientId: 'c', name: 'Chives', quantity: 0, unit: '' }, need: 0, short: false });
@@ -130,6 +130,6 @@ test('detail wording: ingredient rows and the add result', () => {
   assert.equal(DETAIL_COPY.addMissing(1), 'Add 1 missing to grocery list');
   assert.equal(DETAIL_COPY.addMissing(3), 'Add 3 missing to grocery list');
   assert.equal(addMissingMessage({ added: 2, merged: 1, unchanged: 0 }), 'Added 3 items to your grocery list.');
-  assert.equal(addMissingMessage({ added: 0, merged: 0, unchanged: 2 }), 'Already on your grocery list.');
+  assert.equal(addMissingMessage({ added: 0, merged: 0, unchanged: 2 }), 'Already in your cart. Nothing added.');
   assert.ok(DETAIL_COPY.checkLabels.includes('verify before you cook'), 'compliance rule 9 wording');
 });

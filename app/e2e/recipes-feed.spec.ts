@@ -141,7 +141,7 @@ test('feed statuses, detail have/missing, add missing to grocery once', async ({
   ]);
   expect(pantry.error).toBeNull();
 
-  // One lime already on the list (typed by hand): the add merges into it.
+  // One lime already on the list (typed by hand): it counts as in the cart, so only 1 more lime is added to it.
   const lime = await admin
     .from('grocery_list_items')
     .insert({ user_id: userId, ingredient_id: 'manual-lime-1', name: 'Lime', category: 'produce', quantity: 1, unit: 'each', origin: 'manual' })
@@ -159,22 +159,26 @@ test('feed statuses, detail have/missing, add missing to grocery once', async ({
   await expect(page).toHaveURL(new RegExp(`/recipe/r_${tacoId}$`));
   await expect(page.getByRole('heading', { name: tacoName })).toBeVisible();
   await expect(page.getByText('4 servings · 30 min', { exact: true }).filter({ visible: true })).toBeVisible(); // the Recipes tab stays mounted underneath
-  await expect(page.getByLabel('Tortillas, 8 each, You have it', { exact: true })).toBeVisible();
+  await expect(page.getByLabel('Tortillas, 8 each, In pantry', { exact: true })).toBeVisible();
   await expect(page.getByLabel('Ground beef, 1 lb, Need ½ lb more', { exact: true })).toBeVisible();
   await expect(page.getByLabel('Cilantro, 1 bunch, Missing', { exact: true })).toBeVisible();
-  await expect(page.getByLabel('Lime, 2 each, Missing', { exact: true })).toBeVisible();
+  await expect(page.getByLabel('Lime, 2 each, Need 1 each more (some in cart)', { exact: true })).toBeVisible();
   await expect(page.getByText('Brown the beef.', { exact: true }).filter({ visible: true })).toBeVisible();
   await expect(page.getByText(/verify before you cook/).filter({ visible: true })).toBeVisible();
 
-  // Add the missing items: two new rows, the lime row grows from 1 to 3.
+  await expect(page.getByText('3 items needed', { exact: true })).toBeVisible();
+
+  // Add the missing items: two new rows, the lime row grows from 1 to 2 (the cart already held 1).
   await page.getByRole('button', { name: 'Add 3 missing to grocery list', exact: true }).click();
   await expect(page.getByText('Added 3 items to your grocery list.')).toBeVisible();
   await expect(page.getByText('Missing items are on your grocery list')).toBeVisible();
+  await expect(page.getByText('0 items needed', { exact: true })).toBeVisible();
+  await expect(page.getByLabel('Cilantro, 1 bunch, In cart', { exact: true })).toBeVisible();
   const recipeId = `r_${tacoId}`;
   const expected = [
     ['Cilantro', 1, 'bunch', false, 'add_missing', [recipeId]],
     ['Ground beef', 0.5, 'lb', false, 'add_missing', [recipeId]],
-    ['Lime', 3, 'each', false, 'manual', [recipeId]],
+    ['Lime', 2, 'each', false, 'manual', [recipeId]],
   ];
   const shape = async () =>
     (await groceryRows(userId)).map((r) => [r.name, r.quantity, r.unit, r.checked, r.origin, r.source_recipe_ids]);
