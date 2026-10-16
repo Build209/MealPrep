@@ -44,7 +44,7 @@ begin
   if n <> 5 then raise exception 'expected 5 storage buckets, found %', n; end if;
 
   select count(*) into n from pg_policies where schemaname = 'storage' and tablename = 'objects'
-   and policyname in ('avatars_delete_own', 'avatars_insert_own', 'avatars_select_public', 'avatars_update_own',
+   and policyname in ('avatars_delete_own', 'avatars_insert_own', 'avatars_select_own', 'avatars_update_own',
      'library_recipe_images_select', 'recipe_import_uploads_delete_own', 'recipe_import_uploads_insert_own',
      'recipe_import_uploads_select_own', 'scan_photos_delete_own', 'scan_photos_insert_own',
      'scan_photos_select_own', 'scan_training_admin_select', 'scan_training_insert_own');
