@@ -208,7 +208,8 @@ test('Home: the weekly-deals row shows the same circles; a circle opens that sto
   await expect(deals.getByRole('button', { name: 'Weekly ad: Safeway' })).toBeVisible();
 
   const [popup] = await Promise.all([context.waitForEvent('page'), page.getByTestId('home-deals-store-e2e-row-safeway').click()]);
-  expect(popup.url()).toContain('safeway.com');
+  // A noopener tab starts at about:blank; wait for it to reach the ad page.
+  await popup.waitForURL(/safeway\.com\/weeklyad/);
   await popup.close();
   // Home stays where it was.
   await expect(page).toHaveURL(/\/$/);
