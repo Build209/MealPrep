@@ -28,7 +28,7 @@ async function newSignedInUser(page: Page, label: string): Promise<string> {
   await page.getByRole('textbox', { name: 'Email' }).fill(email);
   await page.getByLabel('Password', { exact: true }).fill(password);
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
-  await expect(page.getByRole('link', { name: 'Account', exact: true })).toBeVisible();
+  await expect(page.getByTestId('topbar-account')).toBeVisible();
   return created.data.user!.id;
 }
 

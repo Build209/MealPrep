@@ -31,13 +31,22 @@ export type FavoriteStore = {
   name: string;
   chain: string;
   sortOrder: number;
+  /** Only when the row has one (a Kroger-family store); the weekly-ad link needs it to pick the right chain page. */
+  krogerLocationId?: string;
 };
 
 export const FAVORITE_STORE_COLUMNS =
   'id, user_id, store_key, name, chain, address_line, city, state, zip, lat, lng, kroger_location_id, source, sort_order, created_at';
 
 export function favoriteFromRow(row: FavoriteStoreRow): FavoriteStore {
-  return { id: row.store_key, rowId: row.id, name: row.name, chain: row.chain ?? '', sortOrder: row.sort_order ?? 0 };
+  return {
+    id: row.store_key,
+    rowId: row.id,
+    name: row.name,
+    chain: row.chain ?? '',
+    sortOrder: row.sort_order ?? 0,
+    ...(row.kroger_location_id ? { krogerLocationId: row.kroger_location_id } : {}),
+  };
 }
 
 /** The columns the old app writes for a favourite (mobile/lib/smartShop/profileLocation.ts), new ones last. */

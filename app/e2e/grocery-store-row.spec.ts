@@ -101,7 +101,7 @@ async function signIn(page: Page, email: string) {
   await page.getByRole('textbox', { name: 'Email' }).fill(email);
   await page.getByLabel('Password', { exact: true }).fill(password);
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
-  await expect(page.getByRole('link', { name: 'Account', exact: true })).toBeVisible();
+  await expect(page.getByTestId('topbar-account')).toBeVisible();
 }
 
 const row = (page: Page) => page.getByTestId('grocery-store-row');
@@ -183,6 +183,36 @@ test('a saved location: the 3 closest chains; a circle opens Stores at that stor
   await expect(page).toHaveURL(/view=stores/);
   await expect(page).toHaveURL(/store=e2e-row-walmart/);
   await expect(page.getByTestId('store-e2e-row-walmart')).toBeInViewport();
+});
+
+test('Home: the weekly-deals row shows the same circles; a circle opens that store\'s weekly ad in a new tab', async ({ page, context }) => {
+  const user = await newUser('store-row-home-deals', HOME);
+  await stubFunctions(page);
+  // Nothing real is loaded: the weekly-ad page is answered here.
+  await context.route('https://www.safeway.com/**', (route) => route.fulfill({ status: 200, contentType: 'text/html', body: '<title>ad</title>' }));
+  await signIn(page, user.email);
+
+  await page.goto('/');
+  const deals = page.getByTestId('home-deals-row');
+  await expect(deals).toBeVisible();
+  await expect(deals.getByText("Check your stores for deals")).toBeVisible();
+  await expect(deals.getByText('Tap a store to open its weekly ad.')).toBeVisible();
+  await expect(page.getByTestId('grocery-store-row')).toHaveCount(0);
+  await expect
+    .poll(() =>
+      deals
+        .locator('[data-testid^="home-deals-store-"]')
+        .evaluateAll((els) => els.map((el) => el.getAttribute('data-testid')!.slice('home-deals-store-'.length))),
+    )
+    .toEqual(['e2e-row-safeway', 'e2e-row-walmart', 'e2e-row-tj']);
+  await expect(deals.getByRole('button', { name: 'Weekly ad: Safeway' })).toBeVisible();
+
+  const [popup] = await Promise.all([context.waitForEvent('page'), page.getByTestId('home-deals-store-e2e-row-safeway').click()]);
+  // A noopener tab starts at about:blank; wait for it to reach the ad page.
+  await popup.waitForURL(/safeway\.com\/weeklyad/);
+  await popup.close();
+  // Home stays where it was.
+  await expect(page).toHaveURL(/\/$/);
 });
 
 test('starring in Stores adds to the row (newest first, at most 3); offline starring saves nothing', async ({ page, context }) => {

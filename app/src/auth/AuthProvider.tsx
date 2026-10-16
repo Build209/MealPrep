@@ -38,7 +38,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data } = supabase.auth.onAuthStateChange((event, next) => {
       if (!active) return;
       if (event === 'PASSWORD_RECOVERY') setRecovery(true);
-      else if (event === 'SIGNED_OUT') setRecovery(false);
+      else if (event === 'SIGNED_OUT' || event === 'USER_UPDATED') setRecovery(false); // USER_UPDATED: the new password is saved
       const nextUserId = next?.user.id ?? null;
       // A different person (or nobody) now: drop every cached query so nothing of the last
       // account shows. Synchronous only: Supabase asks that this callback not await its calls.

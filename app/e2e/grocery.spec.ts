@@ -21,7 +21,7 @@ const tickBox = (page: Page, name: string) => page.getByRole('checkbox', { name:
 
 async function expectHome(page: Page) {
   await expect(page).toHaveURL(/^http:\/\/[^/]+\/$/);
-  await expect(page.getByRole('link', { name: 'Account', exact: true })).toBeVisible();
+  await expect(page.getByTestId('topbar-account')).toBeVisible();
 }
 
 async function signIn(page: Page) {

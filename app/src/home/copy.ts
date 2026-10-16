@@ -21,6 +21,15 @@ export const HOME_COPY = {
   sendA11y: 'Send to Forky',
   /** Home's question box, named for screen readers (the chat screen's box is "Your question for Forky"). */
   inputA11y: 'Ask Forky a question',
+  /**
+   * The weekly-deals row (owner, 2026-10-16). No savings claims, no company names beyond what a link
+   * opens. Alternatives for the owner: "Check your local stores for this week's deals" and
+   * "Peek at this week's ads from your stores".
+   */
+  dealsTitle: "Check your stores for deals",
+  dealsHelper: 'Tap a store to open its weekly ad.',
+  /** Screen readers: "Weekly ad: Safeway", or "Weekly ad (third-party): Safeway" when the ad is on another company's site. */
+  dealsStoreA11y: (name: string, thirdParty: boolean) => `${thirdParty ? 'Weekly ad (third-party)' : 'Weekly ad'}: ${name}`,
 } as const;
 
 /** Tab names the counters open (the tab labels in src/app/(tabs)/_layout.tsx). */

@@ -17,7 +17,8 @@ const CORS = {
   'access-control-allow-methods': 'POST, OPTIONS',
 };
 const PORTAL_URL = 'https://billing.stripe.com/p/session/test_e2e_account_stub';
-const accountLink = (page: Page) => page.getByRole('link', { name: 'Account', exact: true });
+/** The person icon in the top bar (on every tab). */
+const accountLink = (page: Page) => page.getByTestId('topbar-account');
 
 async function newSignedInUser(page: Page, label: string): Promise<{ email: string; userId: string; accessToken: string }> {
   const email = freshEmail(label);
@@ -135,10 +136,6 @@ test('account: the top bar Account button opens Account from every tab; Help and
     await expect(page).toHaveURL(/\/account$/);
     await expect(page.getByRole('heading', { name: 'Account', exact: true })).toBeVisible();
   }
-
-  // Home keeps its text link too.
-  await page.goto('/');
-  await expect(accountLink(page)).toBeVisible();
 
   await page.goto('/account');
   await page.getByRole('link', { name: 'Help and contact' }).click();

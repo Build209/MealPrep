@@ -22,12 +22,12 @@ async function expectSignInScreen(page: Page) {
 
 async function expectHome(page: Page) {
   await expect(page).toHaveURL(/^http:\/\/[^/]+\/$/);
-  await expect(page.getByRole('link', { name: 'Account', exact: true })).toBeVisible();
+  await expect(page.getByTestId('topbar-account')).toBeVisible();
 }
 
 /** Account shows who is signed in; Sign out lives there. */
 async function signOutFromAccount(page: Page) {
-  await page.getByRole('link', { name: 'Account', exact: true }).click();
+  await page.getByTestId('topbar-account').click();
   await expect(page).toHaveURL(/\/account$/);
   await expect(page.getByTestId('account-email')).toHaveText(email);
   await expect(page.getByText('Signed in as')).toBeVisible();
