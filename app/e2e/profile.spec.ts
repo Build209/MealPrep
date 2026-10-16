@@ -107,7 +107,7 @@ test('profile: the Family plan card is Coming soon and nothing in it works or se
   await expect(card.getByText('Link accounts so a household can share a plan.', { exact: true })).toBeVisible();
   await expect(card.getByRole('button', { name: 'Invite someone' })).toBeDisabled();
   await expect(card.getByRole('button', { name: 'Join with a code' })).toBeDisabled();
-  await expect(card.getByTestId('family-invite-email')).toBeDisabled();
-  await expect(card.getByTestId('family-join-code')).toBeDisabled();
+  await expect(card.getByTestId('family-invite-email')).toHaveAttribute('readonly', '');
+  await expect(card.getByTestId('family-join-code')).toHaveAttribute('readonly', '');
   expect(familyCalls).toHaveLength(0);
 });
