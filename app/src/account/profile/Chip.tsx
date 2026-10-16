@@ -10,6 +10,7 @@ export function Chip({ label, selected, onPress, testID }: { label: string; sele
       accessibilityRole="checkbox"
       accessibilityLabel={label}
       accessibilityState={{ checked: selected }}
+      aria-checked={selected}
       testID={testID}
       style={({ pressed }) => ({
         minHeight: touch.min,
