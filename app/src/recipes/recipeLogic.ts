@@ -3,7 +3,7 @@
  * Tested in tests/recipe-feed-logic.test.ts.
  */
 import { formatIngredientText, formatQuantityWithUnit } from '../kitchen/formatQuantity';
-import type { IngredientStatusLine } from '../kitchen/recipeMatch';
+import type { CartStatusLine } from '../kitchen/recipeCart';
 
 export const FEED_COPY = {
   title: 'Recipes',
@@ -40,15 +40,25 @@ export const DETAIL_COPY = {
   mealPlanaticRecipe: 'MealPlanatic recipe',
   by: (name: string) => `By ${name}`,
   viewOriginal: 'View original',
-  have: 'You have it',
+  /** One status per ingredient row. Pantry and cart are always worded apart. */
+  have: 'In pantry',
+  inCart: 'In cart',
   missing: 'Missing',
   short: (need: string) => `Need ${need} more`,
+  /** The pantry and the grocery list together still fall short. */
+  shortWithCart: (need: string) => `Need ${need} more (some in cart)`,
+  /** "0 items needed" counts only what neither the pantry nor the cart covers. */
+  itemsNeeded: (n: number) => (n === 1 ? '1 item needed' : `${n} items needed`),
+  breakdown: (pantry: number, cart: number) => `${pantry} in pantry · ${cart} in cart`,
   staple: 'Pantry staple',
   addMissing: (n: number) => (n === 1 ? 'Add 1 missing to grocery list' : `Add ${n} missing to grocery list`),
   adding: 'Adding...',
   onList: 'Missing items are on your grocery list',
+  cartHint: 'In cart means it is on your grocery list. It is not in your pantry until you tick it off.',
   added: (n: number) => (n === 1 ? 'Added 1 item to your grocery list.' : `Added ${n} items to your grocery list.`),
-  alreadyOnList: 'Already on your grocery list.',
+  alreadyOnList: 'Already in your cart. Nothing added.',
+  addedSomeInCart: (added: number, inCart: number) =>
+    `${added === 1 ? 'Added 1 item to your grocery list.' : `Added ${added} items to your grocery list.`} ${inCart === 1 ? '1 was already in your cart.' : `${inCart} were already in your cart.`}`,
   addFailed: (message: string) => `Not added. ${message}`,
   seeList: 'See grocery list',
   allHave: 'You have everything for this recipe.',
@@ -62,17 +72,22 @@ export function amountText(quantity: number, unit: string): string {
 }
 
 /** One ingredient row on the detail screen: name, amount and its status words. */
-export function ingredientRowText(line: IngredientStatusLine): { name: string; amount: string; status: string } {
+export function ingredientRowText(line: CartStatusLine): { name: string; amount: string; status: string } {
   const name = formatIngredientText(line.ingredient.name);
   const amount = amountText(line.ingredient.quantity, line.ingredient.unit);
   if (line.status === 'have') return { name, amount, status: DETAIL_COPY.have };
+  if (line.status === 'cart') return { name, amount, status: DETAIL_COPY.inCart };
   if (line.status === 'staple') return { name, amount, status: DETAIL_COPY.staple };
+  if (line.short && line.someInCart) {
+    return { name, amount, status: DETAIL_COPY.shortWithCart(amountText(line.need, line.ingredient.unit) || String(line.need)) };
+  }
   if (line.short) return { name, amount, status: DETAIL_COPY.short(amountText(line.need, line.ingredient.unit) || String(line.need)) };
   return { name, amount, status: DETAIL_COPY.missing };
 }
 
-/** What adding missing items did, in words. */
+/** What adding missing items did, in words: what was added, and what was already in the cart. */
 export function addMissingMessage(result: { added: number; merged: number; unchanged: number }): string {
   const changed = result.added + result.merged;
+  if (changed > 0 && result.unchanged > 0) return DETAIL_COPY.addedSomeInCart(changed, result.unchanged);
   return changed > 0 ? DETAIL_COPY.added(changed) : DETAIL_COPY.alreadyOnList;
 }

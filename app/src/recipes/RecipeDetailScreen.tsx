@@ -5,11 +5,10 @@ import { useAuth } from '../auth/AuthProvider';
 import { DataError, OFFLINE_MESSAGE, useIsOnline, usePantryItems } from '../data';
 import { useGroceryItems } from '../data/grocery';
 import { useAddMissingToGrocery } from '../data/recipeMutations';
-import { missingAlreadyOnList } from '../data/recipeRows';
 import { servingsAndTime, useRecipe, type AppRecipe } from '../data/recipes';
 import { saveableFromAppRecipe, saveTargetForRecipe } from '../data/savedRecipes';
-import { groceryLinesForMissing, matchRecipe, recipeStatus } from '../kitchen/recipeFeed';
-import type { IngredientStatusLine } from '../kitchen/recipeMatch';
+import { groceryLinesForMissing, recipeStatus } from '../kitchen/recipeFeed';
+import { scoreRecipeWithCart, type CartStatusLine } from '../kitchen/recipeCart';
 import { colors, radius, space, touch } from '../theme/tokens';
 import { AppText } from '../ui/AppText';
 import { Button } from '../ui/Button';
@@ -23,9 +22,10 @@ function messageOf(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-function IngredientRow({ line }: { line: IngredientStatusLine }) {
+function IngredientRow({ line }: { line: CartStatusLine }) {
   const text = ingredientRowText(line);
   const have = line.status !== 'missing';
+  const inCart = line.status === 'cart';
   return (
     <View
       accessible
@@ -38,9 +38,10 @@ function IngredientRow({ line }: { line: IngredientStatusLine }) {
           height: 12,
           marginTop: 6,
           borderRadius: radius.pill,
-          backgroundColor: have ? colors.success : colors.card,
+          backgroundColor: have && !inCart ? colors.success : colors.card,
           borderWidth: 2,
           borderColor: have ? colors.success : colors.ink,
+          borderStyle: inCart ? 'dashed' : 'solid',
         }}
       />
       <View style={{ flex: 1 }}>
@@ -48,7 +49,7 @@ function IngredientRow({ line }: { line: IngredientStatusLine }) {
           {text.name}
           {text.amount ? <AppText color="muted">{` · ${text.amount}`}</AppText> : null}
         </AppText>
-        <AppText variant="secondary" color={line.status === 'missing' ? 'ink' : 'muted'} bold={line.status === 'missing'}>
+        <AppText variant="secondary" color={line.status === 'missing' || inCart ? 'ink' : 'muted'} bold={line.status === 'missing' || inCart}>
           {text.status}
         </AppText>
       </View>
@@ -102,9 +103,20 @@ export function RecipeDetailScreen({ id }: { id: string }) {
   const addMissing = useAddMissingToGrocery();
   const [notice, setNotice] = useState<string | null>(null);
 
-  const match = useMemo(() => (recipe.data && pantry.data ? matchRecipe(recipe.data, pantry.data) : null), [recipe.data, pantry.data]);
-  const lines = useMemo(() => (match && pantry.data ? groceryLinesForMissing(match, pantry.data) : []), [match, pantry.data]);
-  const onList = recipe.data && grocery.data ? missingAlreadyOnList(recipe.data.id, lines, grocery.data) : false;
+  // Pantry first, then the open grocery rows ("cart") cover the rest. The grocery list is waited for,
+  // so a row never flashes "Missing" before the cart is known.
+  // If the grocery list can't load, the recipe still shows against the pantry alone.
+  const cartRows = grocery.data ?? (grocery.isError ? [] : null);
+  const cartMatch = useMemo(
+    () => (recipe.data && pantry.data && cartRows ? scoreRecipeWithCart(recipe.data, pantry.data, cartRows) : null),
+    [recipe.data, pantry.data, cartRows],
+  );
+  // The sticker stays pantry-only: you cannot cook with what is still in the cart.
+  const match = cartMatch?.pantry ?? null;
+  const lines = useMemo(
+    () => (cartMatch && pantry.data ? groceryLinesForMissing({ missing: cartMatch.stillMissing }, pantry.data) : []),
+    [cartMatch, pantry.data],
+  );
   // The heart: same saved row as the search heart (user_saved_recipes, old app's keys).
   const saveTarget = useMemo(() => {
     const saveable = recipe.data ? saveableFromAppRecipe(recipe.data) : null;
@@ -147,7 +159,8 @@ export function RecipeDetailScreen({ id }: { id: string }) {
   }
 
   const r = recipe.data;
-  const missingCount = match?.missingCount ?? 0;
+  const neededCount = cartMatch?.neededCount ?? 0;
+  const inCartCount = cartMatch?.inCartCount ?? 0;
 
   function onAddMissing() {
     if (!r) return;
@@ -181,26 +194,28 @@ export function RecipeDetailScreen({ id }: { id: string }) {
         {saveTarget ? <SaveButton target={saveTarget} /> : null}
       </View>
 
-      {match ? (
+      {cartMatch && match ? (
         <View style={{ gap: 8 }}>
-          {missingCount > 0 ? (
-            onList ? (
-              <>
-                <AppText bold>{DETAIL_COPY.onList}</AppText>
-                <Button label={DETAIL_COPY.seeList} kind="secondary" onPress={() => router.push('/grocery')} />
-              </>
-            ) : (
-              <Button
-                label={addMissing.isPending ? DETAIL_COPY.adding : DETAIL_COPY.addMissing(missingCount)}
-                main
-                disabled={addMissing.isPending || !online || lines.length === 0}
-                onPress={onAddMissing}
-              />
-            )
+          <AppText bold>{DETAIL_COPY.itemsNeeded(neededCount)}</AppText>
+          <AppText variant="secondary" color="muted">
+            {DETAIL_COPY.breakdown(cartMatch.inPantryCount, inCartCount)}
+          </AppText>
+          {neededCount > 0 ? (
+            <Button
+              label={addMissing.isPending ? DETAIL_COPY.adding : DETAIL_COPY.addMissing(neededCount)}
+              main
+              disabled={addMissing.isPending || !online || lines.length === 0}
+              onPress={onAddMissing}
+            />
+          ) : inCartCount > 0 ? (
+            <>
+              <AppText bold>{DETAIL_COPY.onList}</AppText>
+              <Button label={DETAIL_COPY.seeList} kind="secondary" onPress={() => router.push('/grocery')} />
+            </>
           ) : (
             <AppText bold>{DETAIL_COPY.allHave}</AppText>
           )}
-          {!online && missingCount > 0 && !onList ? (
+          {!online && neededCount > 0 ? (
             <AppText variant="secondary" color="muted">
               {OFFLINE_MESSAGE}
             </AppText>
@@ -223,11 +238,16 @@ export function RecipeDetailScreen({ id }: { id: string }) {
         </AppText>
         {r.ingredients.length === 0 ? (
           <AppText color="muted">{DETAIL_COPY.noIngredients}</AppText>
-        ) : match ? (
-          match.lines.map((line, index) => <IngredientRow key={`${index}-${line.ingredient.ingredientId}`} line={line} />)
+        ) : cartMatch ? (
+          cartMatch.lines.map((line, index) => <IngredientRow key={`${index}-${line.ingredient.ingredientId}`} line={line} />)
         ) : (
           <ActivityIndicator color={colors.ink} />
         )}
+        {inCartCount > 0 ? (
+          <AppText variant="label" color="muted">
+            {DETAIL_COPY.cartHint}
+          </AppText>
+        ) : null}
         <AppText variant="label" color="muted">
           {DETAIL_COPY.checkLabels}
         </AppText>
