@@ -87,7 +87,7 @@ test('an ingredient the pantry lacks is added from the recipe with one tap', asy
   await expect(check('lettuce')).toHaveCount(0);
   for (const id of ['radish', 'cilantro', 'olive-oil']) {
     await expect(check(id)).toBeVisible();
-    await expect(check(id)).toHaveAttribute('aria-checked', 'false');
+    await expect(check(id)).not.toBeChecked();
   }
   await expect(page.getByTestId('recipe-ingredient-actions')).toHaveCount(0);
   await expect(page.getByRole('checkbox', { name: 'Select Radish', exact: true })).toBeVisible();
@@ -95,7 +95,7 @@ test('an ingredient the pantry lacks is added from the recipe with one tap', asy
   // Tick radish and cilantro: the bar shows the count; both go to the pantry in one go.
   await check('radish').click();
   await check('cilantro').click();
-  await expect(check('radish')).toHaveAttribute('aria-checked', 'true');
+  await expect(check('radish')).toBeChecked();
   await page.getByRole('button', { name: 'Add 2 to pantry', exact: true }).click();
   await expect(page.getByText('Added 2 items to your pantry.')).toBeVisible();
   await expect(page.getByLabel('Radish, 4 each, In pantry', { exact: true })).toBeVisible();
@@ -189,8 +189,8 @@ test('select all missing, then add the ticked rows to the cart (the grocery list
 
   await page.goto(`/recipe/r_${recipes.data!.id}`);
   await page.getByTestId('recipe-ingredient-select-all').click();
-  await expect(page.getByTestId('recipe-ingredient-check-beet')).toHaveAttribute('aria-checked', 'true');
-  await expect(page.getByTestId('recipe-ingredient-check-leek')).toHaveAttribute('aria-checked', 'true');
+  await expect(page.getByTestId('recipe-ingredient-check-beet')).toBeChecked();
+  await expect(page.getByTestId('recipe-ingredient-check-leek')).toBeChecked();
   await page.getByRole('button', { name: 'Add 2 to cart', exact: true }).click();
   await expect(page.getByText('Added 2 items to your grocery list.')).toBeVisible();
   await expect(page.getByLabel('Beet, 2 each, In cart', { exact: true })).toBeVisible();
