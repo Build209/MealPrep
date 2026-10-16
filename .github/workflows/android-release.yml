@@ -1,0 +1,89 @@
+name: Android build (EAS)
+
+# Builds the Android app in app/ on Expo's servers (EAS Build). Started by hand only:
+# Actions > "Android build (EAS)" > Run workflow, then pick a profile (app/eas.json):
+#   preview    = an .apk to install on your own phone (internal, not for the Play Store)
+#   production = an .aab to upload to Google Play (versionCode goes up by one each build)
+# Needs the repository secret EXPO_TOKEN (an Expo access token). Steps: docs/GOOGLE_PLAY.md.
+# It does NOT upload to Google Play; that is done by hand in Play Console for now.
+# The build uses only public settings (Supabase URL and publishable key, in app/eas.json).
+on:
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: "Build profile (app/eas.json)"
+        required: true
+        default: preview
+        type: choice
+        options:
+          - preview
+          - production
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-release-${{ inputs.profile }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - name: Check EXPO_TOKEN
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        working-directory: .
+        run: |
+          if [ -z "$EXPO_TOKEN" ]; then
+            echo "::error title=EXPO_TOKEN missing::Add the repository secret EXPO_TOKEN (expo.dev > Account settings > Access tokens), then run this again. See docs/GOOGLE_PLAY.md, step 3."
+            exit 1
+          fi
+
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install
+        run: |
+          if [ -f package-lock.json ]; then npm ci; else npm install --no-audit --no-fund; fi
+
+      - name: Typecheck and unit tests
+        run: |
+          npm run typecheck
+          npm test
+
+      - name: Set up Expo and EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Link the Expo project (first run only)
+        # app.json has no EAS project id until the owner links one. On the first run this creates or
+        # links the project on the Expo account behind EXPO_TOKEN, for this build only. Commit the
+        # printed id to app.json (expo.extra.eas.projectId) in a pull request so later builds reuse it.
+        run: |
+          if node -e "const c=require('./app.json');process.exit(c.expo?.extra?.eas?.projectId?0:1)"; then
+            echo "EAS project id is set in app.json."
+          else
+            echo "::warning title=EAS project id::app.json has no expo.extra.eas.projectId yet. Linking now; commit the id below to app.json."
+            eas init --non-interactive --force
+            node -e "console.log('EAS project id: '+require('./app.json').expo.extra.eas.projectId)"
+          fi
+
+      - name: Build on EAS (${{ inputs.profile }})
+        env:
+          PROFILE: ${{ inputs.profile }}
+        run: |
+          case "$PROFILE" in preview|production) ;; *) echo "Unknown profile $PROFILE" >&2; exit 1 ;; esac
+          eas build --platform android --profile "$PROFILE" --non-interactive --wait
+          {
+            echo "### Android build ($PROFILE)"
+            echo "Download it from expo.dev > your project > Builds."
+          } >> "$GITHUB_STEP_SUMMARY"

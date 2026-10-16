@@ -127,6 +127,10 @@ every push to `rebuild/v1` and stores it on the `app-preview` branch, with a sma
 label (`EXPO_PUBLIC_APP_CHANNEL=preview`, logic in `src/lib/channel.ts`). How to open it on a phone:
 `PREVIEW.md`.
 
+Android (Google Play): `eas.json` (profiles `preview` = .apk, `production` = .aab) and the hand-started
+workflow `.github/workflows/android-release.yml` (needs the `EXPO_TOKEN` secret). Owner steps:
+`../docs/GOOGLE_PLAY.md`.
+
 End-to-end: `.github/workflows/app-e2e.yml` starts a local Supabase stack from `db/` (database, auth,
 REST; email confirmation off, local only), builds the web export against it, and runs the Playwright
 tests in `e2e/` in Chromium: signed-out goes to sign-in, create account with the 18+ box, sign out and
