@@ -1,0 +1,51 @@
+{
+  "project": "emulator-flip-unfolded-1080x2636",
+  "engine": "chromium",
+  "order": "17",
+  "screen": "plans",
+  "route": "/plans",
+  "purpose": "money",
+  "viewport": "360x775",
+  "screenshots": [
+    "emulator-flip-unfolded-1080x2636/17-plans.png",
+    "emulator-flip-unfolded-1080x2636/17-plans-bottom.png"
+  ],
+  "checks": {
+    "noSidewaysScroll": true,
+    "tapTargets": true,
+    "textFits": true,
+    "tomatoRule": true
+  },
+  "sidewaysScroll": {
+    "scrollWidth": 360,
+    "innerWidth": 360
+  },
+  "tapTargetIssues": [],
+  "tapTargetAllowed": [
+    {
+      "text": "See Terms.",
+      "role": "link",
+      "width": 82.7,
+      "height": 20.7,
+      "why": "inline-link"
+    }
+  ],
+  "clippedText": [],
+  "truncatedText": [],
+  "offscreenControls": [],
+  "tomato": [
+    {
+      "text": "Subscribe for $53.88 a year",
+      "tag": "button",
+      "props": [
+        "background"
+      ],
+      "context": "money"
+    }
+  ],
+  "tomatoViolations": [],
+  "notes": [
+    "No checkout is created: the live Stripe test purchase stays on the owner list."
+  ],
+  "reportOnly": {}
+}
