@@ -102,9 +102,9 @@ test('profile: the Family plan card is Coming soon and nothing in it works or se
   });
   await page.goto('/account');
   const card = page.getByTestId('family-plan-card');
-  await expect(card.getByText('Family plan')).toBeVisible();
-  await expect(card.getByText('Coming soon')).toBeVisible();
-  await expect(card.getByText('Link accounts so a household can share a plan.')).toBeVisible();
+  await expect(card.getByRole('heading', { name: 'Family plan' })).toBeVisible();
+  await expect(card.getByText('Coming soon', { exact: true })).toBeVisible();
+  await expect(card.getByText('Link accounts so a household can share a plan.', { exact: true })).toBeVisible();
   await expect(card.getByRole('button', { name: 'Invite someone' })).toBeDisabled();
   await expect(card.getByRole('button', { name: 'Join with a code' })).toBeDisabled();
   await expect(card.getByTestId('family-invite-email')).toBeDisabled();
