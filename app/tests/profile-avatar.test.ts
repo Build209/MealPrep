@@ -2,7 +2,10 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   PRESET_AVATARS,
-  avatarUrl,
+  AVATAR_SIGNED_URL_SECONDS,
+  AVATAR_URL_STALE_MS,
+  avatarObjectPath,
+  avatarUrlKey,
   findPreset,
   initialFor,
   isOwnStoragePath,
@@ -42,15 +45,20 @@ test('parseAvatarPath: empty is none, unknown preset is none (never a storage pa
   assert.equal(findPreset('nope'), null);
 });
 
-test('avatarUrl never builds a storage address for a preset, an unknown preset or nothing', () => {
-  assert.equal(avatarUrl('preset:taco', BASE), null);
-  assert.equal(avatarUrl('preset:nope', BASE), null);
-  assert.equal(avatarUrl(null, BASE), null);
-  assert.equal(avatarUrl(`${UID}/avatar-1.jpg`, ''), null);
+test('avatarObjectPath gives a storage path only for a real photo, never for a preset, an unknown preset or nothing', () => {
+  assert.equal(avatarObjectPath('preset:taco'), null);
+  assert.equal(avatarObjectPath('preset:nope'), null);
+  assert.equal(avatarObjectPath(null), null);
+  assert.equal(avatarObjectPath('  '), null);
+  assert.equal(avatarObjectPath(`${UID}/avatar-1.jpg`), `${UID}/avatar-1.jpg`);
 });
 
-test('avatarUrl points at the public avatars bucket', () => {
-  assert.equal(avatarUrl(`${UID}/avatar-1.jpg`, `${BASE}/`), `${BASE}/storage/v1/object/public/avatars/${UID}/avatar-1.jpg`);
+test('signed avatar URLs: one hour, cached 50 minutes, keyed by object path', () => {
+  assert.equal(AVATAR_SIGNED_URL_SECONDS, 3600);
+  assert.equal(AVATAR_URL_STALE_MS, 50 * 60 * 1000);
+  assert.ok(AVATAR_URL_STALE_MS < AVATAR_SIGNED_URL_SECONDS * 1000);
+  assert.deepEqual(avatarUrlKey(`${UID}/avatar-1.jpg`), ['avatar-url', `${UID}/avatar-1.jpg`]);
+  assert.notDeepEqual(avatarUrlKey(`${UID}/avatar-1.jpg`), avatarUrlKey(`${UID}/avatar-2.jpg`));
 });
 
 test('newAvatarPath is <uid>/avatar-<ts>.jpg and counts as the own path', () => {

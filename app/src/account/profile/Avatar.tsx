@@ -1,14 +1,16 @@
 import Feather from '@expo/vector-icons/Feather';
+import { useState } from 'react';
 import { Image, View } from 'react-native';
-import { env } from '../../lib/env';
+import { useAvatarUrl } from '../../data/avatarUrl';
 import { colors } from '../../theme/tokens';
 import { AppText } from '../../ui/AppText';
-import { avatarUrl, initialFor, parseAvatarPath } from './avatar';
+import { initialFor, parseAvatarPath } from './avatar';
 
 /**
  * The person's picture at any size: an uploaded photo, a preset tile (colour and emoji, drawn
  * here, no image files), or the first letter of their name. Decorative: the caller labels it.
- * A 'preset:' value never builds a storage address (avatarUrl returns null for it).
+ * A 'preset:' value never reaches storage (useAvatarUrl skips it). While the signed address loads, or if
+ * it fails, or the image itself fails to load, the letter tile shows instead of a broken image.
  */
 export function Avatar({
   path,
@@ -27,14 +29,15 @@ export function Avatar({
   testID?: string;
 }) {
   const value = parseAvatarPath(path);
-  const url = avatarUrl(path, env.supabaseUrl);
+  const [failedUrl, setFailedUrl] = useState<string | null>(null);
+  const url = useAvatarUrl(path);
   const box = { width: size, height: size, borderRadius: size / 2, overflow: 'hidden' as const, alignItems: 'center' as const, justifyContent: 'center' as const };
   const hidden = { accessibilityElementsHidden: true, importantForAccessibility: 'no-hide-descendants' as const };
 
-  if (value.kind === 'photo' && url) {
+  if (value.kind === 'photo' && url && url !== failedUrl) {
     return (
       <View testID={testID} style={[box, { backgroundColor: colors.sand }]} {...hidden}>
-        <Image source={{ uri: url }} style={{ width: size, height: size }} resizeMode="cover" accessibilityIgnoresInvertColors />
+        <Image source={{ uri: url }} style={{ width: size, height: size }} resizeMode="cover" accessibilityIgnoresInvertColors onError={() => setFailedUrl(url)} />
       </View>
     );
   }

@@ -2,7 +2,7 @@
  * Avatar values, pure (tests/profile-avatar.test.ts). profiles.avatar_path holds one of:
  *  - null: no avatar, show the first letter of the name
  *  - 'preset:<key>': one of the built-in tiles below (no storage, no network)
- *  - '<uid>/avatar-<ts>.jpg': an object in the public `avatars` bucket
+ *  - '<uid>/avatar-<ts>.jpg': an object in the private `avatars` bucket, shown through a short-lived signed URL (src/data/avatarUrl.ts)
  * Nothing here touches React or the network, so 'preset:' can never reach storage.
  */
 
@@ -61,12 +61,19 @@ export function isOwnStoragePath(path: string | null | undefined, userId: string
   return path.startsWith(`${userId}/`) && !path.includes('..');
 }
 
-/** Public address of an uploaded avatar, or null for none, a preset, or no server settings. */
-export function avatarUrl(path: string | null | undefined, supabaseUrl: string): string | null {
+/** Signed URLs last an hour; the app asks again a little before that (react-query staleTime). */
+export const AVATAR_SIGNED_URL_SECONDS = 3600;
+export const AVATAR_URL_STALE_MS = 50 * 60 * 1000;
+
+/** The storage object path to sign, or null for none, a preset or an unknown preset: those never touch storage. */
+export function avatarObjectPath(path: string | null | undefined): string | null {
   const parsed = parseAvatarPath(path);
-  if (parsed.kind !== 'photo' || !supabaseUrl) return null;
-  const encoded = parsed.path.split('/').map(encodeURIComponent).join('/');
-  return `${supabaseUrl.replace(/\/+$/, '')}/storage/v1/object/public/${AVATAR_BUCKET}/${encoded}`;
+  return parsed.kind === 'photo' ? parsed.path : null;
+}
+
+/** react-query key for a signed avatar URL, by object path (a new upload is a new path, so it is a new entry). */
+export function avatarUrlKey(objectPath: string | null) {
+  return ['avatar-url', objectPath] as const;
 }
 
 /** A fresh object path: <uid>/avatar-<ts>.jpg (the timestamp makes every upload a new address, so caches never show the old photo). */
