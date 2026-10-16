@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useRef, type ReactNode, type RefObject } from 'react';
 import { Animated, Easing, Platform, ScrollView, View } from 'react-native';
 import { colors, layout, space } from '../theme/tokens';
 import { AppText } from './AppText';
@@ -17,7 +17,18 @@ function webFadeIn(): boolean {
  * A screen: one page title, then content in a single centred column. On the web build it fades in
  * (the web stack has no transition of its own; phones get the stack's native fade, see app/_layout.tsx).
  */
-export function Screen({ title, children }: { title: string; children?: ReactNode }) {
+export function Screen({
+  title,
+  children,
+  scrollRef,
+  contentRef,
+}: {
+  title: string;
+  children?: ReactNode;
+  /** For screens that scroll to something (revealInScroll): the scroll view and its content column. */
+  scrollRef?: RefObject<ScrollView | null>;
+  contentRef?: RefObject<View | null>;
+}) {
   const fade = useRef(webFadeIn()).current;
   const opacity = useRef(new Animated.Value(fade ? 0 : 1)).current;
   useEffect(() => {
@@ -29,8 +40,8 @@ export function Screen({ title, children }: { title: string; children?: ReactNod
 
   return (
     <Animated.View style={{ flex: 1, opacity }}>
-      <ScrollView style={{ flex: 1, backgroundColor: colors.paper }} contentContainerStyle={{ alignItems: 'center' }}>
-        <View style={{ width: '100%', maxWidth: layout.maxWidth, padding: space.gutter, gap: space.gap }}>
+      <ScrollView ref={scrollRef} style={{ flex: 1, backgroundColor: colors.paper }} contentContainerStyle={{ alignItems: 'center' }}>
+        <View ref={contentRef} style={{ width: '100%', maxWidth: layout.maxWidth, padding: space.gutter, gap: space.gap }}>
           <AppText variant="pageTitle" display>
             {title}
           </AppText>

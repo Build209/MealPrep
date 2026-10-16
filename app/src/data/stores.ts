@@ -101,7 +101,7 @@ export async function fetchKrogerLocations(origin: { lat: number; lng: number },
 }
 
 /** Where to search from, as a point. A ZIP is looked up in the built-in tables (no live service). */
-function useOriginPoint(origin: SearchOrigin) {
+function useOriginPoint(origin: SearchOrigin, enabled: boolean = true) {
   const zip = origin.kind === 'zip' ? origin.zip : '';
   const geocode = useQuery({
     queryKey: storesKeys.zip(zip),
@@ -112,7 +112,7 @@ function useOriginPoint(origin: SearchOrigin) {
       }
       return result.point;
     },
-    enabled: origin.kind === 'zip',
+    enabled: enabled && origin.kind === 'zip',
     staleTime: Infinity,
     retry: retryUnlessPermanent,
   });
@@ -127,8 +127,10 @@ export const ZIP_LOOKUP_FAILED = 'Could not look up that ZIP. Try again.';
  * The Stores tab list: chains first, then local markets, each closest first. Kroger rows are
  * merged when they arrive and are kept in memory for 10 minutes at most (never stored).
  */
-export function useNearbyStoresList(origin: SearchOrigin, radiusMultiplier: 1 | 2) {
-  const { point, geocode } = useOriginPoint(origin);
+export function useNearbyStoresList(origin: SearchOrigin, radiusMultiplier: 1 | 2, enabled: boolean = true) {
+  const { point: found, geocode } = useOriginPoint(origin, enabled);
+  // `enabled: false` (the Grocery list's row with no saved location): nothing is looked up or fetched.
+  const point = enabled ? found : null;
   const radiusM = nearbyStoreSearchRadiusMeters({ isGpsOrigin: origin.kind === 'gps', radiusMultiplier });
   const rounded = point ? roundCoordsForPrivacy(point.lat, point.lng) : null;
   const rLat = rounded?.lat ?? null;
@@ -165,7 +167,7 @@ export function useNearbyStoresList(origin: SearchOrigin, radiusMultiplier: 1 | 
     point,
     list,
     geocodeError: geocode?.error ?? null,
-    isPending: (geocode?.isPending ?? false) || (rounded != null && nearby.isPending),
+    isPending: enabled && ((geocode?.isPending ?? false) || (rounded != null && nearby.isPending)),
     isError: nearby.isError,
     error: nearby.error,
     refetch: () => void nearby.refetch(),

@@ -191,28 +191,29 @@ test.describe('with the browser location allowed', () => {
     await signIn(page, user.email);
     await page.goto('/stores');
 
-    const safeway = page.getByRole('checkbox', { name: 'Favourite: Safeway' });
-    const ralphs = page.getByRole('checkbox', { name: 'Favourite: Ralphs' });
-    await expect(safeway).not.toBeChecked();
-    await safeway.click();
-    await expect(safeway).toBeChecked();
-    await ralphs.click();
-    await expect(ralphs).toBeChecked();
+    // The star: its name says what a tap does ("Add ... to favourites" / "Remove ... from favourites").
+    const add = (name: string) => page.getByRole('button', { name: `Add ${name} to favourites` });
+    const remove = (name: string) => page.getByRole('button', { name: `Remove ${name} from favourites` });
+    await expect(add('Safeway')).toBeVisible();
+    await add('Safeway').click();
+    await expect(remove('Safeway')).toBeVisible();
+    await add('Ralphs').click();
+    await expect(remove('Ralphs')).toBeVisible();
     await expect.poll(() => favoriteRows(user.userId)).toEqual([
       { store_key: 'e2e-gps-safeway', name: 'Safeway', source: 'osm', kroger_location_id: null },
       { store_key: 'e2e-k1', name: 'Ralphs', source: 'kroger', kroger_location_id: 'e2e-k1' },
     ]);
 
     await page.reload();
-    await expect(page.getByRole('checkbox', { name: 'Favourite: Safeway' })).toBeChecked();
-    await expect(page.getByRole('checkbox', { name: 'Favourite: Ralphs' })).toBeChecked();
+    await expect(remove('Safeway')).toBeVisible();
+    await expect(remove('Ralphs')).toBeVisible();
 
-    await page.getByRole('checkbox', { name: 'Favourite: Safeway' }).click();
-    await expect(page.getByRole('checkbox', { name: 'Favourite: Safeway' })).not.toBeChecked();
+    await remove('Safeway').click();
+    await expect(add('Safeway')).toBeVisible();
     await expect.poll(async () => (await favoriteRows(user.userId)).map((r) => r.store_key)).toEqual(['e2e-k1']);
     await page.reload();
-    await expect(page.getByRole('checkbox', { name: 'Favourite: Ralphs' })).toBeChecked();
-    await expect(page.getByRole('checkbox', { name: 'Favourite: Safeway' })).not.toBeChecked();
+    await expect(remove('Ralphs')).toBeVisible();
+    await expect(add('Safeway')).toBeVisible();
   });
 });
 
