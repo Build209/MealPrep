@@ -1,0 +1,41 @@
+{
+  "project": "emulator-flip-folded-720x748-cover-sim",
+  "engine": "chromium",
+  "order": "15",
+  "screen": "forky-answer",
+  "route": "/forky",
+  "purpose": "none",
+  "viewport": "240x146",
+  "screenshots": [
+    "emulator-flip-folded-720x748-cover-sim/15-forky-answer.png",
+    "emulator-flip-folded-720x748-cover-sim/15-forky-answer-bottom.png"
+  ],
+  "checks": {
+    "noSidewaysScroll": true,
+    "tapTargets": true,
+    "textFits": true,
+    "tomatoRule": true
+  },
+  "sidewaysScroll": {
+    "scrollWidth": 240,
+    "innerWidth": 240
+  },
+  "tapTargetIssues": [],
+  "tapTargetAllowed": [],
+  "clippedText": [],
+  "truncatedText": [
+    {
+      "text": "Phone zpswuqxcgh egg fried rice",
+      "kind": "truncated",
+      "scroll": "116x60",
+      "client": "116x40"
+    }
+  ],
+  "offscreenControls": [],
+  "tomato": [],
+  "tomatoViolations": [],
+  "notes": [
+    "The ask-forky function is stubbed: the answer text is the test's, not the AI's."
+  ],
+  "reportOnly": {}
+}

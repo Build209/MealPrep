@@ -1,0 +1,32 @@
+{
+  "project": "emulator-pixel-7-landscape-2400x1080",
+  "engine": "chromium",
+  "order": "12",
+  "screen": "recipe-page",
+  "route": "/recipe/r_49132620-9d12-4391-8246-962431ce77dd",
+  "purpose": "none",
+  "viewport": "863x304",
+  "screenshots": [
+    "emulator-pixel-7-landscape-2400x1080/12-recipe-page.png",
+    "emulator-pixel-7-landscape-2400x1080/12-recipe-page-bottom.png"
+  ],
+  "checks": {
+    "noSidewaysScroll": true,
+    "tapTargets": true,
+    "textFits": true,
+    "tomatoRule": true
+  },
+  "sidewaysScroll": {
+    "scrollWidth": 863,
+    "innerWidth": 863
+  },
+  "tapTargetIssues": [],
+  "tapTargetAllowed": [],
+  "clippedText": [],
+  "truncatedText": [],
+  "offscreenControls": [],
+  "tomato": [],
+  "tomatoViolations": [],
+  "notes": [],
+  "reportOnly": {}
+}

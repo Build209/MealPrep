@@ -1,0 +1,68 @@
+{
+  "project": "emulator-flip-unfolded-1080x2636",
+  "engine": "chromium",
+  "order": "16",
+  "screen": "stores-zip",
+  "route": "/grocery?view=stores",
+  "purpose": "none",
+  "viewport": "360x775",
+  "screenshots": [
+    "emulator-flip-unfolded-1080x2636/16-stores-zip.png",
+    "emulator-flip-unfolded-1080x2636/16-stores-zip-bottom.png"
+  ],
+  "checks": {
+    "noSidewaysScroll": true,
+    "tapTargets": true,
+    "textFits": true,
+    "tomatoRule": true
+  },
+  "sidewaysScroll": {
+    "scrollWidth": 360,
+    "innerWidth": 360
+  },
+  "tapTargetIssues": [],
+  "tapTargetAllowed": [],
+  "clippedText": [],
+  "truncatedText": [
+    {
+      "text": "Home",
+      "kind": "truncated",
+      "scroll": "38x18",
+      "client": "38x13"
+    },
+    {
+      "text": "Pantry",
+      "kind": "truncated",
+      "scroll": "42x18",
+      "client": "42x13"
+    },
+    {
+      "text": "Recipes",
+      "kind": "truncated",
+      "scroll": "52x18",
+      "client": "52x13"
+    },
+    {
+      "text": "Grocery",
+      "kind": "truncated",
+      "scroll": "51x18",
+      "client": "51x13"
+    }
+  ],
+  "offscreenControls": [],
+  "tomato": [
+    {
+      "text": "Plan",
+      "tag": "h1",
+      "props": [
+        "color"
+      ],
+      "context": "brand"
+    }
+  ],
+  "tomatoViolations": [],
+  "notes": [
+    "GPS (\"Use my location\") needs the native permission prompt: owner list."
+  ],
+  "reportOnly": {}
+}
