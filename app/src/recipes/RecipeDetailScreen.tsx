@@ -53,6 +53,7 @@ function IngredientRow({ line, heldStaple = false, check }: { line: CartStatusLi
           accessibilityRole="checkbox"
           accessibilityLabel={check.label}
           accessibilityState={{ checked: check.checked, disabled: check.disabled }}
+          aria-checked={check.checked}
           disabled={check.disabled}
           onPress={check.onToggle}
           style={{ width: touch.min, height: touch.min, alignItems: 'center', justifyContent: 'center', opacity: check.disabled ? 0.5 : 1 }}
