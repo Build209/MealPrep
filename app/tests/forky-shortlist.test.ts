@@ -59,3 +59,19 @@ test('recipe buttons: on the shortlist and openable, no repeats, at most 3', () 
   ]);
   assert.deepEqual(recipeButtons([], shortlist), []);
 });
+
+test('recipes with the person\'s allergens never reach the shortlist, and do not use up a slot', () => {
+  const recipes = [
+    { id: R1, title: 'Peanut noodles', ingredients: ['peanut butter', 'rice'] },
+    { id: L1, title: 'Fried rice', ingredients: ['rice', 'eggs', 'soy sauce'] },
+    { id: 'r_33333333-3333-4333-8333-333333333333', title: 'Plain rice', ingredients: ['white rice'] },
+  ];
+  const none = rankShortlist(recipes, pantry);
+  assert.equal(none.length, 3, 'no allergens: nothing is removed');
+  assert.deepEqual(rankShortlist(recipes, pantry, 8, []).map((r) => r.id), none.map((r) => r.id));
+  assert.deepEqual(rankShortlist(recipes, pantry, 8, ['peanuts']).map((r) => r.title).sort(), ['Fried rice', 'Plain rice']);
+  assert.deepEqual(rankShortlist(recipes, pantry, 8, ['eggs', 'peanuts']).map((r) => r.title), ['Plain rice']);
+  // Flagged recipes are removed before the cap.
+  assert.deepEqual(rankShortlist(recipes, pantry, 1, ['eggs']).length, 1);
+  assert.notEqual(rankShortlist(recipes, pantry, 2, ['peanuts', 'eggs'])[0]?.title, 'Fried rice');
+});

@@ -29,6 +29,7 @@ export const ASK_FORKY_COPY = {
   limitFree: "That's all the free questions for this month. They refill on the 1st, and a paid plan includes more.",
   limitPlus: "You've used this month's questions. They refill on the 1st.",
   seePlans: 'See plans',
+  settingsLoading: 'Still loading your allergen settings. Try again in a moment.',
   tooLong: 'Keep questions under 500 characters.',
   featureOff: 'Ask Forky is not available yet.',
   notConfigured: 'Ask Forky is not set up yet.',

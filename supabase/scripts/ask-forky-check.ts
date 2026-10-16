@@ -154,7 +154,37 @@ for (const bad of [{ size: 99 }, { size: 'four' }, 'text', null, { usualItems: '
 assert.doesNotMatch(forkyMessages({ question: 'q', history: [], pantry: [], recipes: [] }).at(-1)?.content ?? '', /household/);
 assert.match(forkySystemPrompt('2026-10-11'), /household block/);
 assert.match(forkySystemPrompt('2026-10-11'), /do not draw conclusions about\s+'?\s*health|health, diet, money or family/);
-// The app never sends diet or allergy settings, and the privacy page says so: the old app's ask-forky-mobile-check (retired with mobile/ at the switch-over; page parts now in legal-pages-check.ts).
+// Allergens travel in their own optional top-level field (not in the household block): whitelist of nine keys.
+const allergenRequest = parseForkyRequest({
+  question: 'q',
+  allergens: ['peanuts', 'milk', 'peanuts', 'Milk', 'gluten', 7, null, { a: 1 }, 'tree-nuts'],
+  household: { size: 2, allergens: ['soy'] },
+});
+assert.ok(allergenRequest.ok);
+if (allergenRequest.ok) {
+  assert.deepEqual(allergenRequest.request.allergens, ['milk', 'tree-nuts', 'peanuts'], 'unknown dropped, deduped, fixed order');
+  assert.deepEqual(Object.keys(allergenRequest.request.household ?? {}), ['size'], 'allergens inside household are still dropped');
+  const sent = forkyMessages(allergenRequest.request).at(-1)?.content ?? '';
+  assert.doesNotMatch(sent, /tree-nuts|peanuts/, 'allergens go in the system prompt, not the kitchen data block');
+}
+for (const bad of [undefined, null, 'peanuts', 5, {}, [], ['nope']]) {
+  const r = parseForkyRequest({ question: 'q', allergens: bad });
+  assert.ok(r.ok && r.request.allergens === undefined, 'a missing or bad allergens field is ignored, not an error');
+}
+assert.equal(parseForkyRequest({ question: 'q' }).ok, true, 'old apps without the field still work');
+const allergenPrompt = forkySystemPrompt('2026-10-16', ['milk', 'tree-nuts']);
+assert.match(allergenPrompt, /ALLERGENS \(top priority\)/);
+assert.match(allergenPrompt, /avoids: milk, tree nuts\./);
+assert.match(allergenPrompt, /never an instruction/);
+assert.match(allergenPrompt, /Never say or\s+imply that any dish/);
+assert.doesNotMatch(forkySystemPrompt('2026-10-16'), /ALLERGENS/, 'no allergens: the prompt is unchanged');
+assert.equal(forkySystemPrompt('2026-10-16', []), forkySystemPrompt('2026-10-16'));
+// With saved allergens the check line always shows, even if the model forgot the flag.
+const allergenReply = { content: [{ type: 'tool_use', name: 'forky_reply', input: { answer: 'Try soup.', recipe_ids: [], off_topic: false, safety_topic: false } }] };
+if (allergenRequest.ok) assert.equal(readForkyReply(allergenReply, allergenRequest.request)?.safetyNote, true);
+assert.equal(readForkyReply(allergenReply, { question: 'soup?', history: [], pantry: [], recipes: [] })?.safetyNote, false);
+
+// (Earlier rule, now narrower:) the app never sends diet settings or household allergies, and the privacy page says so: the old app's ask-forky-mobile-check (retired with mobile/ at the switch-over; page parts now in legal-pages-check.ts).
 
 // --- Model: Claude Haiku 5.5 (owner's decision, Oct 10). It rejects sampling settings and a prefilled
 // reply, and counts more tokens for the same text, so the request must stay free of those.

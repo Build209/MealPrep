@@ -14,7 +14,9 @@
 //
 // Request:  POST { question, history: [{role,text}], pantry: [{name,amount?,expiresOn?}],
 //                  recipes: [{id,title,have?,total?,missing?}],
-//                  household?: {size?, usualItems?: string[], cookedRecently?: string[]} }   (signed-in user)
+//                  household?: {size?, usualItems?: string[], cookedRecently?: string[]},
+//                  allergens?: string[] }   (signed-in user; allergens = the person's saved allergens,
+//                  at most the nine keys milk, eggs, fish, shellfish, tree-nuts, peanuts, wheat, soy, sesame)
 // Response: 200 { answer, recipeIds, offTopic, safetyNote, remaining, limit, isPlus, tier }
 //           401 UNAUTHENTICATED · 403 FEATURE_OFF · 429 LIMIT_REACHED · 400 BAD_REQUEST · 502 UPSTREAM_ERROR
 //
@@ -173,7 +175,7 @@ Deno.serve(async (req) => {
         body: JSON.stringify({
           model,
           max_tokens: ASK_FORKY_LIMITS.maxOutputTokens,
-          system: forkySystemPrompt(now.toISOString().slice(0, 10)),
+          system: forkySystemPrompt(now.toISOString().slice(0, 10), request.allergens),
           messages: forkyMessages(request),
           tools: [FORKY_REPLY_TOOL],
           tool_choice: { type: 'tool', name: FORKY_REPLY_TOOL.name },

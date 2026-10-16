@@ -6,6 +6,7 @@ import { useAuth } from '../auth/AuthProvider';
 import { OFFLINE_MESSAGE, isOnlineNow } from '../data/online';
 import { useForkyRecipes, useRefreshForkyUsage } from '../data/forkyChat';
 import { usePantryItems } from '../data/pantry';
+import { useAllergenPrefs } from '../allergens/useAllergenPrefs';
 import { env } from '../lib/env';
 import { logEvent } from '../lib/events';
 import { colors, fonts, layout, radius, space, touch, type as typeScale } from '../theme/tokens';
@@ -98,6 +99,7 @@ export function ForkyChatScreen() {
   const { chat, profile, period, tier, allowance, usedUp } = useForkyAllowance(userId);
   const pantry = usePantryItems();
   const recipes = useForkyRecipes();
+  const allergenPrefs = useAllergenPrefs();
   const refreshUsage = useRefreshForkyUsage();
   const { height } = useWindowDimensions();
   const pinnedComposer = height >= PINNED_COMPOSER_MIN_HEIGHT;
@@ -113,8 +115,8 @@ export function ForkyChatScreen() {
   const scrollRef = useRef<ScrollView>(null);
 
   const shortlist = useMemo(
-    () => rankShortlist(recipes.data ?? [], pantry.data ?? []),
-    [recipes.data, pantry.data],
+    () => rankShortlist(recipes.data ?? [], pantry.data ?? [], undefined, allergenPrefs.allergens),
+    [recipes.data, pantry.data, allergenPrefs.allergens],
   );
 
   useEffect(() => {
@@ -125,7 +127,7 @@ export function ForkyChatScreen() {
   // Home's question: shown in the box at once, then sent once the pantry and recipes Forky sees are
   // loaded (the same send as the Send button, so the allowance, offline and error rules are the
   // same). Used up: it stays in the box under the "used up" card and nothing is sent.
-  const contextReady = !!profile.data && !pantry.isPending && !recipes.isPending;
+  const contextReady = !!profile.data && !pantry.isPending && !recipes.isPending && !allergenPrefs.isLoading;
   useEffect(() => {
     if (!askKey) return;
     if (prefilledAsk.current !== askKey) {
@@ -156,6 +158,11 @@ export function ForkyChatScreen() {
       setError(ASK_FORKY_COPY.tooLong);
       return;
     }
+    // Saved allergens still loading: wait, so a question never goes out without them.
+    if (allergenPrefs.isLoading) {
+      setError(ASK_FORKY_COPY.settingsLoading);
+      return;
+    }
     // No connection: the question stays in the box and nothing is sent or counted.
     if (!isOnlineNow()) {
       setError(OFFLINE_MESSAGE);
@@ -175,6 +182,7 @@ export function ForkyChatScreen() {
           pantry: (pantry.data ?? []).map((item) => ({ name: item.name, quantity: item.quantity, unit: item.unit, expiresOn: item.expiresOn })),
           recipes: sentShortlist,
           householdSize: profile.data?.householdSize ?? null,
+          allergens: allergenPrefs.allergens,
         },
         accessToken: session?.access_token ?? null,
       });
