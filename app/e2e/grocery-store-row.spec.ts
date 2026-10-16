@@ -141,8 +141,8 @@ test('no saved location: favourites plus "Find stores", no store search; "Find s
   await expect(row(page)).toBeVisible();
   await expect.poll(() => rowKeys(page)).toEqual(['e2e-row-safeway', 'find']);
   await expect(row(page).getByRole('button', { name: 'Safeway, favourite. Open in Stores' })).toBeVisible();
-  // The badge is the chain's initials (no real logos until they are cleared).
-  await expect(page.getByTestId('store-row-e2e-row-safeway')).toContainText('S');
+  // Safeway has a logo in storeLogos.ts, so its circle shows the logo image instead of initials.
+  await expect(page.getByTestId('store-row-e2e-row-safeway').getByTestId('store-badge-logo')).toBeVisible();
   expect(searches.count).toBe(0);
 
   await row(page).getByRole('button', { name: 'Find stores near you' }).click();
@@ -159,7 +159,9 @@ test('a saved location: the 3 closest chains; a circle opens Stores at that stor
   await expect.poll(() => rowKeys(page)).toEqual(['e2e-row-safeway', 'e2e-row-walmart', 'e2e-row-tj']);
   await expect(row(page).getByRole('button', { name: 'Walmart, nearby. Open in Stores' })).toBeVisible();
   await expect(page.getByTestId('store-row-e2e-row-tj')).toContainText("Trader Joe's");
-  await expect(page.getByTestId('store-row-e2e-row-tj')).toContainText('TJ');
+  // Trader Joe's has a logo too, so no initials ("TJ") in its circle.
+  await expect(page.getByTestId('store-row-e2e-row-tj').getByTestId('store-badge-logo')).toBeVisible();
+  await expect(page.getByTestId('store-row-e2e-row-tj')).not.toContainText('TJ');
   expect(called.every((name) => name === 'kroger-deals')).toBe(true);
 
   // A flip phone's cover screen: the row stays on screen (it scrolls sideways itself), every circle a 44px+ target.

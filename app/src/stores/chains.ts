@@ -7,7 +7,8 @@
  *  - GROCERY_NAME_EXCLUDE_PATTERNS: names that are not grocery stores (same file).
  *  - KROGER_CHAINS: Kroger-family names (mobile/config/smartShop.ts).
  *
- * Compliance rule 5: these names are only used to say what a link does. No logos, no "partner".
+ * Compliance rule 5: these names are only used to say what a link does. No "partner". Store logos
+ * (owner decision 2026-10-16, compliance to confirm) live only in storeLogos.ts; see docs/STORE_LOGOS.md.
  * Delivery links and prefilled store locators from the old table are not ported (the old store
  * detail sheet is not part of this tab yet).
  */
