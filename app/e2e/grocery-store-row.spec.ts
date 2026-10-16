@@ -141,7 +141,7 @@ test('no saved location: favourites plus "Find stores", no store search; "Find s
   await expect(row(page)).toBeVisible();
   await expect.poll(() => rowKeys(page)).toEqual(['e2e-row-safeway', 'find']);
   await expect(row(page).getByRole('button', { name: 'Safeway, favourite. Open in Stores' })).toBeVisible();
-  // The badge is the chain's initials (no real logos until they are cleared).
+  // The badge is the chain's initials (Safeway has no logo in storeLogos.ts yet).
   await expect(page.getByTestId('store-row-e2e-row-safeway')).toContainText('S');
   expect(searches.count).toBe(0);
 

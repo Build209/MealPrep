@@ -39,7 +39,7 @@ The pantry is filled by camera, not by typing: a photo of a shelf or a grocery r
 - Store prices are not shown yet ("No prices yet"); the app has no permission to show live chain prices.
 - Subscription screens follow the compliance doc: price, renewal period and how to cancel sit directly above the buy button in normal-size text; the button states the price; nothing pre-ticked; no countdowns or pressure wording; "free" only when it is free; closing is always one tap.
 - No savings claim with a dollar figure or a percentage anywhere.
-- Other companies' names appear as plain text that says what a link does. No logos, no "partner".
+- Other companies' names appear as plain text that says what a link does. No "partner". Store logos (owner decision, 2026-10-16): real chain logos may appear in the store circles to identify the store only, from clearly licensed sources listed in docs/STORE_LOGOS.md; compliance to confirm.
 - AI answers about allergens, nutrition or food safety carry the "check before you cook" line.
 
 ## Brand Commitments

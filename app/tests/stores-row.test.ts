@@ -8,7 +8,6 @@ import { colors } from '../src/theme/tokens';
 import type { FavoriteStore } from '../src/stores/favorites';
 import type { Store } from '../src/stores/logic';
 import { BADGE_COLORS, badgeColorsFor, normalizeChainKey, storeInitials } from '../src/stores/storeBadge';
-import { STORE_LOGOS, storeLogoFor } from '../src/stores/storeLogos';
 import { favoritesForRow, hasSavedLocation, pickRowStores, showFindStores, STORE_ROW_SIZE } from '../src/stores/storeRow';
 
 function fav(id: string, chain: string, sortOrder: number, name = chain): FavoriteStore {
@@ -132,9 +131,4 @@ test('badge colours are theme colours with readable text, never tomato or danger
     const ratio = contrastRatio(colors[fg], colors[bg]);
     assert.ok(ratio >= 4.5, `${fg} on ${bg} is ${ratio.toFixed(2)}:1`);
   }
-});
-
-test('no real store logos are shipped until the owner and compliance clear them', () => {
-  assert.deepEqual(Object.keys(STORE_LOGOS), []);
-  assert.equal(storeLogoFor('Safeway'), undefined);
 });
