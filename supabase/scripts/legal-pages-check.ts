@@ -89,6 +89,8 @@ assert.ok(privacySqueezed.includes(`<strong>${SCAN_RETENTION_DAYS} days</strong>
 assert.match(privacy, /Ask Forky/);
 assert.match(privacy, /Anthropic/, 'privacy page names the AI provider (compliance rule 2)');
 assert.match(privacy, /household size, the names of items you buy regularly, and the titles of meals you recently marked as made/);
-assert.match(privacy, /do not send your name, email, photos, or your dietary and allergy settings/);
+assert.match(privacySqueezed, /If you have saved allergens, they are also sent to Anthropic with your question/);
+assert.match(privacySqueezed, /We do not send your name, email, photos, diets, or dietary notes/);
+assert.doesNotMatch(privacySqueezed, /or your dietary and allergy settings/, 'old no-allergens sentence must be gone');
 
 console.log('legal-pages-check: ok');
