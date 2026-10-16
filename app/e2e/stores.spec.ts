@@ -142,7 +142,7 @@ async function favoriteRows(userId: string) {
 }
 
 const cardIds = (page: Page) =>
-  page.locator('[data-testid^="store-"]').evaluateAll((els) => els.map((el) => el.getAttribute('data-testid')!.slice('store-'.length)));
+  page.locator('[data-testid^="store-"]:not([data-testid="store-badge-logo"])').evaluateAll((els) => els.map((el) => el.getAttribute('data-testid')!.slice('store-'.length)));
 
 test.describe('with the browser location allowed', () => {
   test.use({ geolocation: { latitude: 44.5012, longitude: -110.6013 }, permissions: ['geolocation'] });

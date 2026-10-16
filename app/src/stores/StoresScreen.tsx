@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { ActivityIndicator, TextInput, View, type ScrollView } from 'react-native';
+import Feather from '@expo/vector-icons/Feather';
+import { TextInput, View, type ScrollView } from 'react-native';
 import { DataError, OFFLINE_MESSAGE, useIsOnline, useProfile } from '../data';
 import {
   nextSortOrder,
@@ -14,9 +15,9 @@ import {
 import { colors, fonts, radius, space, touch, type as typeScale } from '../theme/tokens';
 import { AppText } from '../ui/AppText';
 import { Button } from '../ui/Button';
-import { Card } from '../ui/Card';
 import { revealInScroll } from '../ui/revealInScroll';
 import { Screen } from '../ui/Screen';
+import { partitionSaved } from './cardLogic';
 import { STORES_COPY } from './copy';
 import { favoriteStoreKey } from './kroger';
 import { LocationPanel } from './LocationPanel';
@@ -200,11 +201,13 @@ export function StoresScreen({
   let body: ReactNode;
   if (profile.isPending || stores.isPending) {
     body = (
-      <View style={{ alignItems: 'center', gap: 8, paddingVertical: space.groupGap }}>
-        <ActivityIndicator color={colors.ink} />
+      <View style={{ gap: space.gap }} accessibilityLiveRegion="polite">
         <AppText variant="secondary" color="muted">
           {STORES_COPY.loading}
         </AppText>
+        {[0, 1, 2].map((i) => (
+          <SkeletonCard key={i} />
+        ))}
       </View>
     );
   } else if (stores.geocodeError) {
@@ -215,31 +218,41 @@ export function StoresScreen({
     );
   } else if (stores.isError && total === 0) {
     body = (
-      <Card>
-        <AppText>{STORES_COPY.loadFailed}</AppText>
+      <EmptyState icon="wifi-off" title={STORES_COPY.loadFailed}>
         <Button label={STORES_COPY.retry} kind="secondary" onPress={stores.refetch} />
-      </Card>
+      </EmptyState>
     );
   } else if (total === 0) {
     body = searching ? (
-      <AppText color="muted">{STORES_COPY.emptySearch}</AppText>
+      <EmptyState icon="search" title={STORES_COPY.emptySearch} />
     ) : (
-      <Card>
-        <AppText color="muted">{STORES_COPY.noStores}</AppText>
+      <EmptyState icon="shopping-bag" title={STORES_COPY.noStoresTitle} hint={`${STORES_COPY.noStores} ${STORES_COPY.noStoresHint}`}>
         {radiusMultiplier === 1 ? <Button label={STORES_COPY.widenSearch} kind="secondary" onPress={() => setRadiusMultiplier(2)} /> : null}
-      </Card>
+      </EmptyState>
     );
   } else {
+    // Saved stores lead, wherever they sit in the list (even among the local markets).
+    const savedSplit = partitionSaved([...visible.chains, ...visible.local], (s) => favoriteKeys.has(favoriteStoreKey(s)));
+    const savedIds = new Set(savedSplit.saved.map((s) => s.id));
+    const chains = visible.chains.filter((s) => !savedIds.has(s.id));
+    const local = visible.local.filter((s) => !savedIds.has(s.id));
     // With no recognised store to lead with, hiding everything behind a button would look empty.
-    const localOnly = visible.chains.length === 0;
+    const localOnly = chains.length === 0;
     const localVisible = localOnly || searching || showLocal;
-    const showToggle = visible.local.length > 0 && !localOnly && !searching;
+    const showToggle = local.length > 0 && !localOnly && !searching;
     body = (
       <View style={{ gap: space.gap }}>
-        {visible.chains.map(card)}
+        {savedSplit.saved.length > 0 ? (
+          <>
+            <SectionHeading icon="star" label={STORES_COPY.savedHeading} />
+            {savedSplit.saved.map(card)}
+          </>
+        ) : null}
+        {chains.length > 0 || local.length > 0 ? <SectionHeading icon="shopping-cart" label={STORES_COPY.nearbyHeading} /> : null}
+        {chains.map(card)}
         {showToggle ? (
           <Button
-            label={showLocal ? STORES_COPY.hideLocalMarkets : `${STORES_COPY.moreLocalMarkets} (${visible.local.length})`}
+            label={showLocal ? STORES_COPY.hideLocalMarkets : `${STORES_COPY.moreLocalMarkets} (${local.length})`}
             kind="secondary"
             accessibilityState={{ expanded: showLocal }}
             aria-expanded={showLocal}
@@ -247,7 +260,7 @@ export function StoresScreen({
             style={{ alignSelf: 'flex-start' }}
           />
         ) : null}
-        {localVisible && visible.local.length > 0 ? (
+        {localVisible && local.length > 0 ? (
           <View style={{ gap: space.gap }}>
             {!localOnly && searching ? (
               <AppText variant="sectionTitle" bold>
@@ -257,7 +270,7 @@ export function StoresScreen({
             <AppText variant="secondary" color="muted">
               {STORES_COPY.localMarketsNote}
             </AppText>
-            {visible.local.map(card)}
+            {local.map(card)}
           </View>
         ) : null}
       </View>
@@ -267,21 +280,47 @@ export function StoresScreen({
   return (
     <Screen title={title} scrollRef={scrollRef} contentRef={contentRef}>
       {top}
-      <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 4 }}>
-        <AppText color="muted" testID="stores-origin">
-          {STORES_COPY.nearPrefix} {originLabel(origin)}
+      <View
+        style={{
+          backgroundColor: colors.banana,
+          borderRadius: radius.card,
+          padding: space.cardPadding + 4,
+          gap: 10,
+        }}
+      >
+        <AppText variant="sectionTitle" display color="onBanana">
+          {STORES_COPY.heroTitle}
         </AppText>
-        <Button
-          label={STORES_COPY.changeLocation}
-          kind="quiet"
-          accessibilityLabel={STORES_COPY.changeLocationA11y}
-          onPress={() => setPanelOpen((open) => !open)}
-        />
+        <AppText variant="secondary" color="onBanana">
+          {STORES_COPY.heroSub}
+        </AppText>
+        <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginTop: 4 }}>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 6,
+              backgroundColor: colors.card,
+              borderRadius: radius.pill,
+              paddingLeft: 12,
+              paddingRight: 14,
+              minHeight: 36,
+              flexShrink: 1,
+            }}
+          >
+            <Feather name="map-pin" size={16} color={colors.ink} accessibilityElementsHidden importantForAccessibility="no" />
+            <AppText variant="secondary" bold testID="stores-origin" style={{ flexShrink: 1 }}>
+              {STORES_COPY.nearPrefix} {originLabel(origin)}
+            </AppText>
+          </View>
+          <Button
+            label={STORES_COPY.changeLocation}
+            kind="secondary"
+            accessibilityLabel={STORES_COPY.changeLocationA11y}
+            onPress={() => setPanelOpen((open) => !open)}
+          />
+        </View>
       </View>
-
-      <AppText variant="secondary" color="muted">
-        {STORES_COPY.rowNote}
-      </AppText>
 
       {showPanel ? (
         <LocationPanel
@@ -296,6 +335,14 @@ export function StoresScreen({
         />
       ) : null}
 
+      <AppText variant="secondary" color="muted">
+        {STORES_COPY.rowNote}
+      </AppText>
+
+      <View style={{ justifyContent: 'center' }}>
+        <View style={{ position: 'absolute', left: 16, zIndex: 1 }} pointerEvents="none">
+          <Feather name="search" size={18} color={colors.muted} accessibilityElementsHidden importantForAccessibility="no" />
+        </View>
       <TextInput
         value={query}
         onChangeText={setQuery}
@@ -310,12 +357,14 @@ export function StoresScreen({
           borderColor: colors.border,
           borderRadius: radius.pill,
           backgroundColor: colors.card,
-          paddingHorizontal: 18,
+          paddingLeft: 42,
+          paddingRight: 18,
           color: colors.ink,
           fontFamily: fonts.body,
           fontSize: typeScale.body.fontSize,
         }}
       />
+      </View>
 
       {notice ? (
         <AppText variant="secondary" color="danger">
@@ -329,5 +378,67 @@ export function StoresScreen({
         {STORES_COPY.attribution}
       </AppText>
     </Screen>
+  );
+}
+
+function SectionHeading({ icon, label }: { icon: 'star' | 'shopping-cart'; label: string }) {
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 }}>
+      <Feather name={icon} size={18} color={colors.ink} accessibilityElementsHidden importantForAccessibility="no" />
+      <AppText variant="sectionTitle" bold>
+        {label}
+      </AppText>
+    </View>
+  );
+}
+
+/** A grey placeholder shaped like a store card, shown while stores load. */
+function SkeletonCard() {
+  const block = (w: number | `${number}%`, h: number, extra?: object) => (
+    <View style={{ width: w, height: h, borderRadius: radius.control, backgroundColor: colors.sand, ...extra }} />
+  );
+  return (
+    <View
+      aria-hidden
+      style={{ backgroundColor: colors.card, borderColor: colors.border, borderWidth: 1, borderRadius: radius.card, padding: space.cardPadding, gap: 12 }}
+    >
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+        {block(56, 56, { borderRadius: 28 })}
+        <View style={{ flex: 1, gap: 8 }}>
+          {block('60%', 18)}
+          {block('35%', 12)}
+        </View>
+      </View>
+      {block('100%', 54, { borderRadius: radius.pill })}
+    </View>
+  );
+}
+
+function EmptyState({ icon, title, hint, children }: { icon: 'wifi-off' | 'search' | 'shopping-bag'; title: string; hint?: string; children?: ReactNode }) {
+  return (
+    <View
+      style={{
+        alignItems: 'center',
+        gap: 10,
+        padding: space.groupGap,
+        backgroundColor: colors.card,
+        borderColor: colors.border,
+        borderWidth: 1,
+        borderRadius: radius.card,
+      }}
+    >
+      <View style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: colors.sand, alignItems: 'center', justifyContent: 'center' }}>
+        <Feather name={icon} size={26} color={colors.ink} accessibilityElementsHidden importantForAccessibility="no" />
+      </View>
+      <AppText variant="sectionTitle" bold style={{ textAlign: 'center' }}>
+        {title}
+      </AppText>
+      {hint ? (
+        <AppText variant="secondary" color="muted" style={{ textAlign: 'center' }}>
+          {hint}
+        </AppText>
+      ) : null}
+      {children}
+    </View>
   );
 }
