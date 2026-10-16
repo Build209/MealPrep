@@ -164,10 +164,13 @@ test('a saved location: the 3 closest chains; a circle opens Stores at that stor
 
   // A flip phone's cover screen: the row stays on screen (it scrolls sideways itself), every circle a 44px+ target.
   await page.setViewportSize({ width: 260, height: 520 });
-  const rowBox = await row(page).boundingBox();
-  expect(rowBox).not.toBeNull();
-  expect(rowBox!.x).toBeGreaterThanOrEqual(0);
-  expect(rowBox!.x + rowBox!.width).toBeLessThanOrEqual(261);
+  // Polled: the page lays out again after the resize.
+  await expect
+    .poll(async () => {
+      const box = await row(page).boundingBox();
+      return box != null && box.x >= 0 && box.x + box.width <= 261;
+    })
+    .toBe(true);
   for (const key of ['e2e-row-safeway', 'e2e-row-walmart']) {
     const box = await page.getByTestId(`store-row-${key}`).boundingBox();
     expect(box && box.width >= 44 && box.height >= 44).toBe(true);
