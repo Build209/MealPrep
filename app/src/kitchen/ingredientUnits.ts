@@ -3,6 +3,7 @@
  * sticks, onions to chopped cups, egg and carrot sizes). Copied from the old app
  * (mobile/lib/units/ingredientUnitBridge.ts); same numbers and rules. Pure.
  */
+import { filingWords, textHasPhrase } from './filingWords';
 import { normalizeIngredientName } from './ingredientNormalize';
 import { convertQuantity, normalizeUnit, unitKind, unitsAreConvertible } from './unitConversion';
 
@@ -19,6 +20,9 @@ const BUTTER_UNITS = new Set([
   'lb', 'lbs', 'pound', 'pounds', 'oz', 'ounce', 'ounces', 'tbsp', 'tablespoon', 'tablespoons', 'cup', 'cups', 'stick', 'sticks',
 ]);
 
+/** "... butter" names that are not butter (no stick / pound bridge). */
+const NOT_DAIRY_BUTTER = ['peanut', 'almond', 'cashew', 'sunflower', 'nut', 'apple', 'cookie', 'cocoa', 'shea', 'butter bean', 'butter lettuce'];
+
 const key = (name: string) => normalizeIngredientName(name);
 const isCup = (u: string) => u === 'cup' || u === 'cups';
 const isClove = (u: string) => u === 'clove' || u === 'cloves';
@@ -26,12 +30,14 @@ const isHead = (u: string) => u === 'head' || u === 'heads';
 
 function isEggIngredient(name: string): boolean {
   const k = key(name);
-  return k === 'egg' || k === 'eggs' || k.includes(' egg');
+  // The name ends in the word egg(s): "large eggs" yes, "roasted eggplant" and "egg noodles" no.
+  const words = filingWords(k);
+  return words[words.length - 1] === 'egg';
 }
 
 function isOnionIngredient(name: string): boolean {
   const k = key(name);
-  return k.includes('onion') && !k.includes('green onion') && !k.includes('scallion');
+  return filingWords(k).includes('onion') && !textHasPhrase(k, 'green onion') && !k.includes('scallion');
 }
 
 function isGarlicIngredient(name: string): boolean {
@@ -41,7 +47,9 @@ function isGarlicIngredient(name: string): boolean {
 
 function isButterIngredient(name: string): boolean {
   const k = key(name);
-  return k === 'butter' || (k.includes('butter') && !k.includes('peanut'));
+  // The word "butter", not "buttermilk" or "butternut squash", and not a nut or fruit butter.
+  if (!filingWords(k).includes('butter')) return false;
+  return !NOT_DAIRY_BUTTER.some((phrase) => textHasPhrase(k, phrase));
 }
 
 function isRiceIngredient(name: string): boolean {
