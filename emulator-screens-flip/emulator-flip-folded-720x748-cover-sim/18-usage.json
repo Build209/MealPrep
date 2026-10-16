@@ -1,0 +1,32 @@
+{
+  "project": "emulator-flip-folded-720x748-cover-sim",
+  "engine": "chromium",
+  "order": "18",
+  "screen": "usage",
+  "route": "/usage",
+  "purpose": "money",
+  "viewport": "240x146",
+  "screenshots": [
+    "emulator-flip-folded-720x748-cover-sim/18-usage.png",
+    "emulator-flip-folded-720x748-cover-sim/18-usage-bottom.png"
+  ],
+  "checks": {
+    "noSidewaysScroll": true,
+    "tapTargets": true,
+    "textFits": true,
+    "tomatoRule": true
+  },
+  "sidewaysScroll": {
+    "scrollWidth": 240,
+    "innerWidth": 240
+  },
+  "tapTargetIssues": [],
+  "tapTargetAllowed": [],
+  "clippedText": [],
+  "truncatedText": [],
+  "offscreenControls": [],
+  "tomato": [],
+  "tomatoViolations": [],
+  "notes": [],
+  "reportOnly": {}
+}

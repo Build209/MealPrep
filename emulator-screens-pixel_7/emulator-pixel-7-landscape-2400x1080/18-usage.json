@@ -1,0 +1,32 @@
+{
+  "project": "emulator-pixel-7-landscape-2400x1080",
+  "engine": "chromium",
+  "order": "18",
+  "screen": "usage",
+  "route": "/usage",
+  "purpose": "money",
+  "viewport": "915x308",
+  "screenshots": [
+    "emulator-pixel-7-landscape-2400x1080/18-usage.png",
+    "emulator-pixel-7-landscape-2400x1080/18-usage-bottom.png"
+  ],
+  "checks": {
+    "noSidewaysScroll": true,
+    "tapTargets": true,
+    "textFits": true,
+    "tomatoRule": true
+  },
+  "sidewaysScroll": {
+    "scrollWidth": 915,
+    "innerWidth": 915
+  },
+  "tapTargetIssues": [],
+  "tapTargetAllowed": [],
+  "clippedText": [],
+  "truncatedText": [],
+  "offscreenControls": [],
+  "tomato": [],
+  "tomatoViolations": [],
+  "notes": [],
+  "reportOnly": {}
+}

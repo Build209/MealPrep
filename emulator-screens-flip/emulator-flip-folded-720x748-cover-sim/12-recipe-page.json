@@ -1,0 +1,32 @@
+{
+  "project": "emulator-flip-folded-720x748-cover-sim",
+  "engine": "chromium",
+  "order": "12",
+  "screen": "recipe-page",
+  "route": "/recipe/r_8a879c2a-7937-4f0c-8be0-2a719d3dad10",
+  "purpose": "none",
+  "viewport": "240x146",
+  "screenshots": [
+    "emulator-flip-folded-720x748-cover-sim/12-recipe-page.png",
+    "emulator-flip-folded-720x748-cover-sim/12-recipe-page-bottom.png"
+  ],
+  "checks": {
+    "noSidewaysScroll": true,
+    "tapTargets": true,
+    "textFits": true,
+    "tomatoRule": true
+  },
+  "sidewaysScroll": {
+    "scrollWidth": 240,
+    "innerWidth": 240
+  },
+  "tapTargetIssues": [],
+  "tapTargetAllowed": [],
+  "clippedText": [],
+  "truncatedText": [],
+  "offscreenControls": [],
+  "tomato": [],
+  "tomatoViolations": [],
+  "notes": [],
+  "reportOnly": {}
+}

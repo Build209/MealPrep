@@ -1,0 +1,40 @@
+{
+  "project": "emulator-pixel-7-landscape-2400x1080",
+  "engine": "chromium",
+  "order": "20",
+  "screen": "delete-account",
+  "route": "/delete-account",
+  "purpose": "none",
+  "viewport": "915x308",
+  "screenshots": [
+    "emulator-pixel-7-landscape-2400x1080/20-delete-account.png",
+    "emulator-pixel-7-landscape-2400x1080/20-delete-account-bottom.png"
+  ],
+  "checks": {
+    "noSidewaysScroll": true,
+    "tapTargets": true,
+    "textFits": true,
+    "tomatoRule": true
+  },
+  "sidewaysScroll": {
+    "scrollWidth": 915,
+    "innerWidth": 915
+  },
+  "tapTargetIssues": [],
+  "tapTargetAllowed": [
+    {
+      "text": "support@mealplanatic.app",
+      "role": "link",
+      "width": 174.9,
+      "height": 18.3,
+      "why": "inline-link"
+    }
+  ],
+  "clippedText": [],
+  "truncatedText": [],
+  "offscreenControls": [],
+  "tomato": [],
+  "tomatoViolations": [],
+  "notes": [],
+  "reportOnly": {}
+}
