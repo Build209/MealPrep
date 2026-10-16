@@ -91,7 +91,6 @@ export function StoreCard({ store, favorite, onToggleFavorite, disabled, focused
             // react-native-web 0.21 reads the aria-* props (accessibilityState alone does not reach the DOM).
             aria-disabled={!!disabled}
             disabled={disabled}
-            testID={`store-star-${store.id}`}
             onPress={() => onToggleFavorite(store, !favorite)}
             style={({ pressed }) => ({
               width: touch.min,
