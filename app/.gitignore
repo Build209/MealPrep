@@ -8,3 +8,6 @@ test-results/
 phone-screens/
 playwright-report-phone/
 test-results-phone/
+play-screenshots/
+playwright-report-store/
+test-results-store/
