@@ -198,7 +198,6 @@ export function StoresScreen({
     />
   );
 
-  const savedCount = favoriteKeys.size;
   let body: ReactNode;
   if (profile.isPending || stores.isPending) {
     body = (
@@ -337,11 +336,9 @@ export function StoresScreen({
         />
       ) : null}
 
-      {savedCount > 0 ? (
-        <AppText variant="secondary" color="muted">
-          {STORES_COPY.rowNote}
-        </AppText>
-      ) : null}
+      <AppText variant="secondary" color="muted">
+        {STORES_COPY.rowNote}
+      </AppText>
 
       <View style={{ justifyContent: 'center' }}>
         <View style={{ position: 'absolute', left: 16, zIndex: 1 }} pointerEvents="none">
