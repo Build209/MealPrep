@@ -44,12 +44,13 @@ function originLabel(origin: SearchOrigin): string {
 }
 
 /**
- * The Stores tab (spec v1 feature 8): nearby stores from the app's own store list, recognised
+ * Stores (spec v1 feature 8), shown inside the Grocery tab ("List" | "Stores", owner 2026-10-15;
+ * it was its own tab until then; /stores now opens this view): nearby stores from the app's own store list, recognised
  * chains first then local markets, each closest first; a weekly-ad link where the chain has one;
  * Save a store (server, optimistic); and the search location (device location or ZIP), saved on
  * the profile rounded. Kroger-family locations are merged in as the old tab does.
  */
-export function StoresScreen() {
+export function StoresScreen({ title = STORES_COPY.title, top }: { title?: string; top?: ReactNode } = {}) {
   const profile = useProfile();
   const online = useIsOnline();
   const origin = useMemo(() => searchOriginFromProfile(profile.data ?? null), [profile.data]);
@@ -230,7 +231,8 @@ export function StoresScreen() {
   }
 
   return (
-    <Screen title={STORES_COPY.title}>
+    <Screen title={title}>
+      {top}
       <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 4 }}>
         <AppText color="muted" testID="stores-origin">
           {STORES_COPY.nearPrefix} {originLabel(origin)}

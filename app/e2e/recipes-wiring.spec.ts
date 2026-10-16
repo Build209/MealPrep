@@ -2,7 +2,7 @@ import { expect, test, type Page, type Route } from '@playwright/test';
 import { adminClient, freshEmail } from './local-supabase';
 
 /**
- * The recipe screens wired together, end to end against the local stack: from Home, import a
+ * The recipe screens wired together, end to end against the local stack: from the Recipes tab, import a
  * recipe from a link, land on its page, save it with the heart, find it in Saved, and find it in
  * search still marked as saved (the page and search build the same user_saved_recipes key).
  * The local stack runs no edge functions and the live recipe-import must never be called from a
@@ -76,11 +76,12 @@ async function stubRecipeImport(page: Page): Promise<number[]> {
   return calls;
 }
 
-test('Home → import → recipe page → save → in Saved → in search, still saved', async ({ page }) => {
+test('Recipes tab → import → recipe page → save → in Saved → in search, still saved', async ({ page }) => {
   const userId = await newSignedInUser(page, 'wiring');
   const calls = await stubRecipeImport(page);
 
-  // Home has the ways in.
+  // The Recipes tab has the ways in.
+  await page.goto('/recipes');
   await expect(page.getByRole('link', { name: 'Search recipes', exact: true })).toHaveAttribute('href', '/recipes/search');
   await expect(page.getByRole('link', { name: 'Saved', exact: true })).toHaveAttribute('href', '/recipes/saved');
   await page.getByRole('button', { name: 'Import a recipe', exact: true }).click();

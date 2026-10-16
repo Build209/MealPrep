@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { adminClient, freshEmail, userClient } from './local-supabase';
 
 /**
- * Home "Cook from your pantry" and the recipe detail, end to end against the local stack:
+ * The Recipes tab's "Cook from your pantry" (Home until 2026-10-15) and the recipe detail, end to end against the local stack:
  * two master recipes and a pantry are seeded with the local service key; the feed shows the right
  * status stickers; the detail marks each ingredient have / missing; "Add 3 missing to grocery
  * list" runs public.add_missing_to_grocery (db/supabase/migrations/20261014030000_add_missing_to_grocery.sql)
@@ -65,7 +65,7 @@ test.afterAll(async () => {
   if (seededRecipeIds.length > 0) await adminClient().from('recipes').delete().in('id', seededRecipeIds);
 });
 
-test('sign up; Home shows the feed links and asks for pantry food', async ({ page }) => {
+test('sign up; the Recipes tab shows the feed links and asks for pantry food', async ({ page }) => {
   await page.goto('/sign-in');
   await page.getByRole('tab', { name: 'Create account' }).click();
   await emailBox(page).fill(email);
@@ -74,6 +74,11 @@ test('sign up; Home shows the feed links and asks for pantry food', async ({ pag
   await page.getByRole('button', { name: 'Create account' }).click();
   await expectHome(page);
 
+  // The feed is on the Recipes tab now, not Home.
+  await expect(page.getByRole('heading', { name: 'Cook from your pantry' })).toHaveCount(0);
+  await page.getByRole('tab', { name: 'Recipes', exact: true }).or(page.getByRole('link', { name: 'Recipes', exact: true })).first().click();
+  await expect(page).toHaveURL(/\/recipes$/);
+  await expect(page.getByRole('heading', { name: 'Recipes', exact: true })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Cook from your pantry' })).toBeVisible();
   await expect(page.getByText('Your pantry is empty').filter({ visible: true })).toBeVisible();
   for (const [name, href] of [
@@ -144,8 +149,8 @@ test('feed statuses, detail have/missing, add missing to grocery once', async ({
     .single();
   expect(lime.error).toBeNull();
 
-  // Home: pasta is ready to cook; tacos show 3 missing (no tortillas needed, beef short, cilantro and lime).
-  await page.goto('/');
+  // Recipes tab: pasta is ready to cook; tacos show 3 missing (no tortillas needed, beef short, cilantro and lime).
+  await page.goto('/recipes');
   await expect(card(page, pastaName, 'Ready to cook')).toBeVisible();
   await expect(card(page, tacoName, '3 missing')).toBeVisible();
 
@@ -153,7 +158,7 @@ test('feed statuses, detail have/missing, add missing to grocery once', async ({
   await card(page, tacoName, '3 missing').click();
   await expect(page).toHaveURL(new RegExp(`/recipe/r_${tacoId}$`));
   await expect(page.getByRole('heading', { name: tacoName })).toBeVisible();
-  await expect(page.getByText('4 servings · 30 min', { exact: true }).filter({ visible: true })).toBeVisible(); // Home stays mounted underneath
+  await expect(page.getByText('4 servings · 30 min', { exact: true }).filter({ visible: true })).toBeVisible(); // the Recipes tab stays mounted underneath
   await expect(page.getByLabel('Tortillas, 8 each, You have it', { exact: true })).toBeVisible();
   await expect(page.getByLabel('Ground beef, 1 lb, Need ½ lb more', { exact: true })).toBeVisible();
   await expect(page.getByLabel('Cilantro, 1 bunch, Missing', { exact: true })).toBeVisible();

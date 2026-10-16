@@ -28,6 +28,8 @@ export function ChoicePills<T extends string>({ label, options, value, onChange,
             accessibilityRole="radio"
             accessibilityLabel={option.label}
             accessibilityState={{ checked: selected, disabled: !!disabled }}
+            // The web build does not turn accessibilityState.checked into aria-checked (as in PlanChoice).
+            aria-checked={selected}
             disabled={disabled}
             onPress={() => onChange(option.id)}
             style={({ pressed }) => ({

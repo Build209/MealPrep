@@ -44,7 +44,7 @@ test('/ opens the app (signed out: sign-in)', async ({ page }) => {
 });
 
 test.describe('deep links open through 404.html', () => {
-  for (const path of ['/pantry', '/grocery', '/stores', '/recipes/search', '/account', '/plans']) {
+  for (const path of ['/pantry', '/recipes', '/grocery', '/stores', '/recipes/search', '/account', '/plans']) {
     test(`${path} opens the app on that route (signed out: sign-in)`, async ({ page }) => {
       const seen = trackAddresses(page);
       const response = await page.goto(path);
@@ -110,10 +110,6 @@ test.describe('redirect stubs land on the new addresses', () => {
   // [old address, where the stub sends you]. App routes then open in the app (signed out, the
   // ones that need a session go on to sign-in, which is fine: the stub's target was loaded).
   const stubs = [
-    ['/recipes', '/recipes/search'],
-    ['/recipes/', '/recipes/search'],
-    ['/recipes.html', '/recipes/search'],
-    ['/recipes?q=egg', '/recipes/search?q=egg'],
     ['/discover-recipes', '/recipes/search'],
     ['/smart-shop', '/stores'],
     ['/pantry-staples', '/pantry'],
@@ -122,6 +118,7 @@ test.describe('redirect stubs land on the new addresses', () => {
     ['/app/', '/'],
     ['/app/pantry', '/pantry'],
     ['/app/smart-shop/', '/stores'],
+    ['/app/recipes/', '/recipes'],
   ] as const;
   for (const [from, to] of stubs) {
     test(`${from} -> ${to}`, async ({ page }) => {

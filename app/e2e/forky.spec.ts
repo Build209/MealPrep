@@ -114,14 +114,15 @@ test('ask a question from the header: an answer with a recipe button that opens 
   await page.goto('/');
   await page.getByRole('button', { name: 'Ask Forky', exact: true }).first().click(); // Forky in the top bar
   await expect(page).toHaveURL(/\/forky$/);
-  await expect(page.getByText(AI_NOTICE, { exact: true })).toBeVisible();
-  await expect(page.getByText('5 questions left this month', { exact: true })).toBeVisible();
+  // Home (with its own copy of these two lines, above its question box) stays mounted underneath.
+  await expect(page.getByText(AI_NOTICE, { exact: true }).filter({ visible: true })).toBeVisible();
+  await expect(page.getByText('5 questions left this month', { exact: true }).filter({ visible: true })).toBeVisible();
 
   await page.getByRole('textbox', { name: 'Your question for Forky' }).fill('What can I make with eggs?');
   await page.getByRole('button', { name: 'Send', exact: true }).click();
 
   await expect(page.getByText('Your eggs are perfect for fried rice tonight.')).toBeVisible();
-  await expect(page.getByText('4 questions left this month', { exact: true })).toBeVisible();
+  await expect(page.getByText('4 questions left this month', { exact: true }).filter({ visible: true })).toBeVisible();
   expect(captured).toHaveLength(1);
   const sent = captured[0]!;
   expect(sent.headers['authorization']).toBe(`Bearer ${accessToken}`);

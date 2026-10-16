@@ -34,11 +34,11 @@ function messageOf(error: unknown): string {
 }
 
 /**
- * The Grocery tab: the list by aisle, add an item, tick an item into the pantry (with Undo),
+ * The Grocery tab's list (`top` is the List | Stores switch, src/app/(tabs)/grocery.tsx): the list by aisle, add an item, tick an item into the pantry (with Undo),
  * untick, and Clear ticked (with Undo). Every change goes through the server; the screen holds
  * no copy of the list, only the last answer it needs for Undo.
  */
-export function GroceryScreen() {
+export function GroceryScreen({ top }: { top?: ReactNode } = {}) {
   const query = useGroceryItems();
   // Loaded so a tick can name the pantry row it means (the server checks it).
   const pantry = usePantryItems();
@@ -166,6 +166,7 @@ export function GroceryScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: colors.paper }}>
       <Screen title={GROCERY_COPY.title}>
+        {top}
         {!online ? (
           <Card>
             <AppText bold accessibilityRole="alert">

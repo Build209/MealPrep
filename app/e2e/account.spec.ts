@@ -125,7 +125,7 @@ test('account: the top bar Account button opens Account from every tab; Help and
   const opened = await stubStripePages(context);
   const accountButton = page.getByRole('button', { name: 'Account', exact: true });
 
-  for (const tab of ['/', '/pantry', '/grocery', '/stores']) {
+  for (const tab of ['/', '/pantry', '/recipes', '/grocery', '/grocery?view=stores']) {
     await page.goto(tab);
     await expect(accountButton).toBeVisible();
     // Big enough to tap (DESIGN.md: 44px).

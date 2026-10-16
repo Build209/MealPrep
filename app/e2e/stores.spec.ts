@@ -2,7 +2,8 @@ import { expect, test, type Page, type Route } from '@playwright/test';
 import { adminClient, freshEmail } from './local-supabase';
 
 /**
- * The Stores tab end to end, against the local stack. A few `stores` rows are seeded (service key,
+ * Stores (the Grocery tab's Stores view since 2026-10-15; the tests open /stores, which redirects
+ * there) end to end, against the local stack. A few `stores` rows are seeded (service key,
  * local only) far from any real data, around two fixed places:
  *  - GPS: the browser's location is granted (Playwright geolocation) near Yellowstone; the list must
  *    show recognised chains first, closest first, with the right weekly-ad links, and the profile
