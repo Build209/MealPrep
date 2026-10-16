@@ -31,7 +31,6 @@ test('profile: choose a preset avatar, remove it, and the top bar follows', asyn
   await expect(page.getByTestId('avatar-presets').getByRole('button')).toHaveCount(12);
   await page.getByRole('button', { name: 'Taco avatar' }).click();
   await expect(page.getByTestId('avatar-status')).toHaveText('Picture updated.');
-  await expect(page.getByTestId('topbar-avatar')).toBeVisible();
 
   const row = await adminClient().from('profiles').select('avatar_path').eq('id', userId).single();
   expect(row.data?.avatar_path).toBe('preset:taco');
@@ -42,9 +41,23 @@ test('profile: choose a preset avatar, remove it, and the top bar follows', asyn
 
   await page.getByRole('button', { name: 'Remove picture' }).click();
   await expect(page.getByTestId('avatar-status')).toHaveText('Picture removed.');
-  await expect(page.getByTestId('topbar-avatar')).toHaveCount(0);
   const after = await adminClient().from('profiles').select('avatar_path').eq('id', userId).single();
   expect(after.data?.avatar_path).toBeNull();
+});
+
+test('profile: the top-bar icon on the tabs shows the chosen avatar', async ({ page }) => {
+  await signedInUser(page, 'profile-topbar');
+  await page.goto('/account');
+  await page.getByRole('button', { name: 'Choose an avatar' }).click();
+  await page.getByRole('button', { name: 'Taco avatar' }).click();
+  await expect(page.getByTestId('avatar-status')).toHaveText('Picture updated.');
+  await page.goto('/');
+  await expect(page.getByTestId('topbar-avatar')).toBeVisible();
+  await page.getByTestId('topbar-account').click();
+  await page.getByRole('button', { name: 'Remove picture' }).click();
+  await expect(page.getByTestId('avatar-status')).toHaveText('Picture removed.');
+  await page.goto('/');
+  await expect(page.getByTestId('topbar-avatar')).toHaveCount(0);
 });
 
 test('profile: edit name, household size and notes, pick diets and allergens, save', async ({ page }) => {
