@@ -170,7 +170,7 @@ policy but are not in this app version (compliance to confirm). Expected result:
 way to report or flag offensive AI answers inside the app. Check before submitting (compliance to confirm);
 if needed this is a small feature to add before production.
 
-**Data safety form.** Drafted from `app/public/privacy.html` (last updated October 11, 2026). Every answer
+**Data safety form.** Drafted from `app/public/privacy.html` (last updated October 16, 2026). Every answer
 below is **draft, compliance to confirm**. Play counts service providers that process data on your behalf
 (Supabase, Google Gemini, Anthropic, Stripe) as **not** "sharing".
 
@@ -189,12 +189,12 @@ Data types collected (all: linked to the user's account, not used for ads, not s
 | Personal info: Name | Display name | Account management | Optional | Supabase |
 | Personal info: User IDs | Account id | Account management, app functionality | Required | Supabase |
 | Location: Approximate location | ZIP code or approximate device location for store search; no background tracking | App functionality | Optional | Supabase |
-| Photos and videos: Photos | Shelf, fridge, receipt and recipe photos you choose to scan; profile photo | App functionality | Optional | Supabase (stored about 30 days), Google Gemini (reads the scan) |
+| Photos and videos: Photos | Shelf, fridge, receipt and recipe photos you choose to scan; profile photo (private to the account) | App functionality | Optional | Supabase (stored about 30 days), Google Gemini (reads the scan) |
 | Photos and videos: Videos | Saved cooking video for recipe import, deleted after processing | App functionality | Optional | Supabase, Google Gemini |
 | App activity: App interactions | Usage log (action name, time, web or phone), kept 13 months | Analytics, app functionality | Required for signed-in accounts | Supabase |
 | App activity: Other user-generated content | Pantry items, grocery lists, saved and imported recipes, meal plans | App functionality | Required for the app to work | Supabase |
 | App activity: Other user-generated content | Ask Forky questions with pantry names and household facts (not stored; only counts) | App functionality | Optional | Anthropic |
-| Health and fitness: Health info | Dietary notes (if entered). Not sent to the AI. Draft: may count as health info | App functionality | Optional | Supabase |
+| Health and fitness: Health info | Allergens, diets and dietary notes (if entered). Saved allergens are sent with Ask Forky questions to the AI service provider so suggestions avoid them; diets and notes are not sent. Collected and shared with a service provider (Anthropic) for app functionality; encrypted in transit (HTTPS); deleted with the account or on request. DRAFT: the owner must confirm in Play Console; nothing has been filed | App functionality | Optional | Supabase (stored), Anthropic (allergens only, with Ask Forky questions) |
 | Financial info: Purchase history | Subscription record (plan, price, dates) for plans bought on the website | App functionality, account management | Only for paying users | Stripe, Supabase |
 | App info and performance: Crash logs / Diagnostics | Basic error and usage info | App functionality, security | Required | Supabase |
 
