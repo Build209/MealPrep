@@ -9,7 +9,11 @@ import { AppText } from '../ui/AppText';
 import { Button } from '../ui/Button';
 import { Screen } from '../ui/Screen';
 import { HELP_COPY } from '../help/copy';
-import { ACCOUNT_SCREEN_COPY as COPY } from './copy';
+import { Card } from '../ui/Card';
+import { ACCOUNT_SCREEN_COPY as COPY, PROFILE_COPY } from './copy';
+import { AvatarEditor } from './profile/AvatarEditor';
+import { FamilyPlanCard } from './profile/FamilyPlanCard';
+import { ProfileForm } from './profile/ProfileForm';
 
 /**
  * /account: who is signed in, the current plan with Manage subscription (the same card, plan read
@@ -45,13 +49,23 @@ export function AccountScreen() {
           {profile.error instanceof Error ? profile.error.message : PLANS_COPY.loadError}
         </AppText>
       ) : (
-        <CurrentPlan
+        <>
+          <Card>
+            <AppText variant="sectionTitle" display>
+              {PROFILE_COPY.sectionTitle}
+            </AppText>
+            <AvatarEditor avatarPath={profile.data.avatarPath} name={profile.data.name} email={profile.data.email} />
+            <ProfileForm profile={profile.data} />
+          </Card>
+          <CurrentPlan
           plan={profile.data.plan}
           planTier={profile.data.planTier}
           showManage={state.showManage}
           showComped={state.showComped}
           statusLine={statusLine}
-        />
+          />
+          <FamilyPlanCard />
+        </>
       )}
 
       <View style={{ alignItems: 'flex-start' }}>

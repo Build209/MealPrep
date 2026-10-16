@@ -1,6 +1,9 @@
 import { Redirect, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { ActivityIndicator, Image, Linking, Pressable, View } from 'react-native';
+import { containsLine } from '../allergens/copy';
+import { recipeAllergenStatus } from '../allergens/detect';
+import { useAllergenPrefs } from '../allergens/useAllergenPrefs';
 import { useAuth } from '../auth/AuthProvider';
 import { DataError, OFFLINE_MESSAGE, useIsOnline, usePantryItems } from '../data';
 import { useGroceryItems } from '../data/grocery';
@@ -153,6 +156,7 @@ export function RecipeDetailScreen({ id }: { id: string }) {
   const pantry = usePantryItems();
   const grocery = useGroceryItems();
   const online = useIsOnline();
+  const prefs = useAllergenPrefs();
   const addMissing = useAddMissingToGrocery();
   const addToPantry = useAddPantryItem();
   const [notice, setNotice] = useState<string | null>(null);
@@ -223,6 +227,7 @@ export function RecipeDetailScreen({ id }: { id: string }) {
   }
 
   const r = recipe.data;
+  const contains = r ? containsLine(recipeAllergenStatus(r, prefs.allergens)) : '';
   const neededCount = cartMatch?.neededCount ?? 0;
   const pantryRows = pantry.data ?? [];
   const inCartCount = cartMatch?.inCartCount ?? 0;
@@ -424,6 +429,11 @@ export function RecipeDetailScreen({ id }: { id: string }) {
         {inCartCount > 0 ? (
           <AppText variant="label" color="muted">
             {DETAIL_COPY.cartHint}
+          </AppText>
+        ) : null}
+        {contains ? (
+          <AppText variant="secondary" color="danger" bold testID="allergen-contains">
+            {contains}
           </AppText>
         ) : null}
         <AppText variant="label" color="muted">

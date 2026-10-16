@@ -77,3 +77,65 @@ export const ACCOUNT_SCREEN_COPY = {
   /** Leaves the screen; same word as the plans and delete screens' Close. */
   close: ACCOUNT_DELETE_COPY.close,
 } as const;
+
+/**
+ * Words for the profile part of the Account screen (avatar, about you, allergens). All NEW: not
+ * through compliance yet. Rules: never call anything "safe", "allergen-free" or "guaranteed"
+ * (tests/profile-copy.test.ts checks); allergens only move and mark recipes, the person still
+ * checks labels.
+ */
+export const PROFILE_COPY = {
+  sectionTitle: 'Your profile',
+  avatarLabel: 'Profile picture',
+  uploadPhoto: 'Upload a photo',
+  choosePreset: 'Choose an avatar',
+  changePreset: 'Choose a different avatar',
+  removePhoto: 'Remove photo',
+  removeAvatar: 'Remove picture',
+  presetTitle: 'Pick an avatar',
+  presetOption: (label: string) => `${label} avatar`,
+  closePresets: 'Done',
+  photoWorking: 'Updating your picture…',
+  photoSaved: 'Picture updated.',
+  avatarRemoved: 'Picture removed.',
+  photoOffline: "You're offline. Pictures need a connection.",
+  photoFailed: "Couldn't update your picture. Check your connection and try again.",
+  photoUnreadable: "Couldn't read that photo. Try a JPG or PNG.",
+  photoTooBig: 'That photo is still too big after shrinking. Try a different one.',
+
+  nameLabel: 'Display name',
+  namePlaceholder: 'Your name',
+  nameEmpty: 'Add a name.',
+  nameTooLong: 'Keep your name under 60 characters.',
+  householdLabel: 'People in your household',
+  householdMore: 'More people',
+  householdFewer: 'Fewer people',
+  householdValue: (n: number) => `${n} ${n === 1 ? 'person' : 'people'}`,
+  notesLabel: 'Dietary notes',
+  notesPlaceholder: 'Anything else we should know, like "no mushrooms"',
+  notesTooLong: 'Keep notes under 200 characters.',
+  dietsLabel: 'Diets',
+  allergensLabel: 'Allergens',
+  allergensHelp:
+    'We move recipes with these to the bottom and mark them. Always check labels and verify before you cook.',
+  loadingPrefs: 'Loading your food preferences…',
+  save: 'Save profile',
+  saving: 'Saving…',
+  saved: 'Profile saved.',
+  saveOffline: "You're offline. Changes need a connection.",
+  saveFailed: "Couldn't save your profile. Check your connection and try again.",
+} as const;
+
+/** The family plan setup card. It does not work yet: no control is live and nothing is sent anywhere. */
+export const FAMILY_PLAN_COPY = {
+  title: 'Family plan',
+  badge: 'Coming soon',
+  explain: 'Link accounts so a household can share a plan.',
+  unavailable: 'Not available yet. These controls will switch on when family plans are ready.',
+  inviteTitle: 'Invite someone',
+  inviteEmailLabel: 'Their email',
+  inviteButton: 'Invite someone',
+  joinTitle: 'Join with a code',
+  joinCodeLabel: 'Invite code',
+  joinButton: 'Join with a code',
+} as const;
