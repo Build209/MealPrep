@@ -6,6 +6,7 @@ import { AppText } from '../ui/AppText';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { STORES_COPY } from './copy';
+import { resolveDeliveryLink } from './delivery';
 import { mapsDirectionsUrl, resolveWeeklyAdLink } from './links';
 import { formatDistanceMiles, formatStoreAddress, storeDisplayName, type Store } from './logic';
 
@@ -28,13 +29,14 @@ type Props = {
   onFocusedLayout?: (node: View) => void;
 };
 
-/** One store: name, distance, address, Directions, Weekly ad (when the chain has one) and the favourite star. */
+/** One store: name, distance, address, Directions, Weekly ad and Delivery (when the chain has them) and the favourite star. */
 export function StoreCard({ store, favorite, onToggleFavorite, disabled, focused, onFocusedLayout }: Props) {
   const ref = useRef<View>(null);
   const name = storeDisplayName(store);
   const address = formatStoreAddress(store);
   const distance = store.distanceMiles != null ? formatDistanceMiles(store.distanceMiles) : '';
   const weeklyAd = resolveWeeklyAdLink(store);
+  const delivery = resolveDeliveryLink(store);
   const weeklyAdLabel = weeklyAd?.thirdParty ? STORES_COPY.weeklyAdThirdParty : STORES_COPY.weeklyAd;
 
   return (
@@ -82,6 +84,15 @@ export function StoreCard({ store, favorite, onToggleFavorite, disabled, focused
               accessibilityRole="link"
               accessibilityLabel={`${weeklyAdLabel}: ${name}`}
               onPress={() => openExternal(weeklyAd.url)}
+            />
+          ) : null}
+          {delivery ? (
+            <Button
+              label={STORES_COPY.delivery}
+              kind="secondary"
+              accessibilityRole="link"
+              accessibilityLabel={`${STORES_COPY.delivery}: ${name}`}
+              onPress={() => openExternal(delivery.url)}
             />
           ) : null}
           <Pressable

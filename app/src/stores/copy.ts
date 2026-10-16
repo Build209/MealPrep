@@ -35,6 +35,8 @@ export const STORES_COPY = {
   directions: 'Directions',
   weeklyAd: 'Weekly ad',
   weeklyAdThirdParty: 'Weekly ad (third-party)',
+  /** Compliance rule 5: names only say what the link does. No "partner", no "free delivery". */
+  delivery: 'Delivery (Instacart)',
   addFavoriteA11y: (name: string) => `Add ${name} to favourites`,
   removeFavoriteA11y: (name: string) => `Remove ${name} from favourites`,
   favoriteFailed: (message: string) => `Couldn't change your saved stores. ${message}`,

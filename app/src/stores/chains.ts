@@ -8,8 +8,8 @@
  *  - KROGER_CHAINS: Kroger-family names (mobile/config/smartShop.ts).
  *
  * Compliance rule 5: these names are only used to say what a link does. No logos, no "partner".
- * Delivery links and prefilled store locators from the old table are not ported (the old store
- * detail sheet is not part of this tab yet).
+ * Delivery (Instacart) links live in delivery.ts. Prefilled store locators and DoorDash links from the
+ * old table are not ported (the old store detail sheet is not part of this tab yet).
  */
 
 export type ChainStoreRef = {
