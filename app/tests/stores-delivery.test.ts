@@ -1,79 +1,59 @@
 // Store links for the Stores page and the row circles: src/stores/delivery.ts, storeRow.ts (shopTargetFor).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { GROCERY_CHAINS, STORE_CHAINS } from '../src/stores/chains';
+import { STORE_CHAINS } from '../src/stores/chains';
 import {
-  resolveDeliveryLink,
-  resolveDoorDashLink,
   resolveShopUrl,
   resolveStoreActions,
   STORE_ACTION_LABELS,
 } from '../src/stores/delivery';
+import { ORDER_ONLINE_SERVICES } from '../src/stores/orderOnline';
 import { pickRowStores, shopTargetFor } from '../src/stores/storeRow';
 import { STORES_COPY } from '../src/stores/copy';
 
-const ref = (name: string) => ({ name, chain: name });
 const ids = (name: string, link?: string | null) => resolveStoreActions({ name, link }).map((a) => a.id);
 
-test('Instacart: chains with a store page link to it', () => {
-  const cases: [string, string][] = [
-    ['Safeway', 'https://www.instacart.com/store/safeway'],
-    ['Save Mart', 'https://www.instacart.com/store/savemart'],
-    ["Raley's", 'https://www.instacart.com/store/raleys'],
-    ['Costco Wholesale', 'https://www.instacart.com/store/costco'],
-    ['Smart & Final Extra!', 'https://www.instacart.com/store/smart-and-final'],
-    ['Grocery Outlet Bargain Market', 'https://www.instacart.com/store/grocery-outlet'],
-  ];
-  for (const [name, url] of cases) assert.deepEqual(resolveDeliveryLink(ref(name)), { url, service: 'Instacart' }, name);
-});
-
-test('Instacart: other chains and unknown stores open a search for the name', () => {
-  assert.equal(resolveDeliveryLink(ref('Walmart Supercenter'))?.url, 'https://www.instacart.com/store/s?k=Walmart');
-  assert.equal(resolveDeliveryLink(ref('Cost Less Foods'))?.url, 'https://www.instacart.com/store/s?k=Cost%20Less%20Foods');
-  assert.equal(resolveDeliveryLink(ref('Joes Corner Market'))?.url, 'https://www.instacart.com/store/s?k=Joes%20Corner%20Market');
-});
-
-test('DoorDash: a search for the chain (or store) name, never a guessed store slug', () => {
-  assert.deepEqual(resolveDoorDashLink(ref('Safeway')), { url: 'https://www.doordash.com/search/store/Safeway/', service: 'DoorDash' });
-  assert.equal(resolveDoorDashLink(ref('Smart & Final Extra!'))?.url, 'https://www.doordash.com/search/store/Smart%20%26%20Final/');
-  assert.equal(resolveDoorDashLink(ref('Joes Corner Market'))?.url, 'https://www.doordash.com/search/store/Joes%20Corner%20Market/');
-  for (const chain of GROCERY_CHAINS) {
-    const url = resolveDoorDashLink(ref(chain.displayName))?.url;
-    if (url) assert.match(url, /^https:\/\/www\.doordash\.com\/search\/store\/[^/]+\/$/, chain.key);
-  }
-});
-
-test("Trader Joe's gets no delivery links; Dollar General Market gets DoorDash but not Instacart", () => {
-  assert.equal(resolveDeliveryLink(ref("Trader Joe's")), undefined);
-  assert.equal(resolveDoorDashLink(ref("Trader Joe's")), undefined);
-  assert.equal(resolveDeliveryLink(ref('Dollar General Market')), undefined);
-  assert.ok(resolveDoorDashLink(ref('Dollar General Market')));
-});
-
-test('resolveStoreActions: order is flyer, shop, Instacart, DoorDash, with the agreed labels', () => {
+test('resolveStoreActions: order is flyer, shop, with the agreed labels', () => {
   const actions = resolveStoreActions({ key: 'k1', name: 'Safeway' });
   assert.deepEqual(
     actions.map((a) => [a.id, a.label]),
     [
       ['flyer', 'Weekly ad'],
       ['shop', 'Shop online'],
-      ['instacart', 'Order with Instacart'],
-      ['doordash', 'Order with DoorDash'],
     ],
   );
   assert.equal(actions[0]!.url, 'https://www.safeway.com/weeklyad');
   assert.equal(actions[1]!.url, 'https://www.safeway.com/');
-  assert.deepEqual(STORE_ACTION_LABELS, { flyer: 'Weekly ad', shop: 'Shop online', instacart: 'Order with Instacart', doordash: 'Order with DoorDash' });
+  assert.deepEqual(STORE_ACTION_LABELS, { flyer: 'Weekly ad', shop: 'Shop online' });
 });
 
-test('resolveStoreActions: an unknown store has Instacart and DoorDash search links, plus Shop online from its own website', () => {
-  assert.deepEqual(ids('Joes Corner Market'), ['instacart', 'doordash']);
-  assert.deepEqual(ids('Joes Corner Market', 'https://joes.example/'), ['shop', 'instacart', 'doordash']);
-  assert.deepEqual(ids('Joes Corner Market', 'joes.example'), ['shop', 'instacart', 'doordash']);
+test('resolveStoreActions: an unknown store has Shop online only from its own website', () => {
+  assert.deepEqual(ids('Joes Corner Market'), []);
+  assert.deepEqual(ids('Joes Corner Market', 'https://joes.example/'), ['shop']);
+  assert.deepEqual(ids('Joes Corner Market', 'joes.example'), ['shop']);
   // Maps, social and junk addresses are not a shop page.
-  assert.deepEqual(ids('Joes Corner Market', 'https://www.facebook.com/joes'), ['instacart', 'doordash']);
-  assert.deepEqual(ids('Joes Corner Market', 'not a url'), ['instacart', 'doordash']);
-  assert.deepEqual(ids('Joes Corner Market', null), ['instacart', 'doordash']);
+  assert.deepEqual(ids('Joes Corner Market', 'https://www.facebook.com/joes'), []);
+  assert.deepEqual(ids('Joes Corner Market', 'not a url'), []);
+  assert.deepEqual(ids('Joes Corner Market', null), []);
+});
+
+test('Order online section: three services, plain https links, neutral wording', () => {
+  assert.deepEqual(
+    ORDER_ONLINE_SERVICES.map((s) => [s.testID, s.label, s.url]),
+    [
+      ['order-online-doordash', 'Order from DoorDash', 'https://www.doordash.com/'],
+      ['order-online-instacart', 'Order from Instacart', 'https://www.instacart.com/'],
+      ['order-online-walmart', 'Order from Walmart', 'https://www.walmart.com/cp/grocery/976759'],
+    ],
+  );
+  for (const s of ORDER_ONLINE_SERVICES) {
+    const u = new URL(s.url);
+    assert.equal(u.protocol, 'https:');
+    assert.equal(u.search, '', `${s.id}: no tags or tracking`);
+    assert.doesNotMatch(s.label, /partner|free|save|%|\$/i);
+  }
+  assert.equal(STORES_COPY.orderOnlineHeading, 'Order online');
+  assert.equal(STORES_COPY.orderOnlineButton, 'Order online');
 });
 
 test("resolveStoreActions: the store's own page picks its own weekly ad", () => {

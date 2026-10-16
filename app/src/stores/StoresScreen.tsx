@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import Feather from '@expo/vector-icons/Feather';
-import { TextInput, View, type ScrollView } from 'react-native';
+import { Pressable, TextInput, View, type ScrollView } from 'react-native';
 import { DataError, OFFLINE_MESSAGE, useIsOnline, useProfile } from '../data';
 import {
   nextSortOrder,
@@ -21,6 +21,8 @@ import { partitionSaved } from './cardLogic';
 import { STORES_COPY } from './copy';
 import { favoriteStoreKey } from './kroger';
 import { LocationPanel } from './LocationPanel';
+import { openExternal } from './StoreCard';
+import { ORDER_ONLINE_SERVICES } from './orderOnline';
 import { locateDevice, locationDeniedHelp, queryGeoPermission } from './location';
 import {
   filterStoresList,
@@ -82,6 +84,7 @@ export function StoresScreen({
   const scrollRef = useRef<ScrollView>(null);
   const contentRef = useRef<View>(null);
   const revealed = useRef<string | null>(null);
+  const orderRef = useRef<View>(null);
 
   useEffect(() => {
     let live = true;
@@ -181,8 +184,14 @@ export function StoresScreen({
     setTimeout(() => revealInScroll(node, scrollRef.current, contentRef.current), 50);
   }
 
+  function scrollToOrderOnline() {
+    if (orderRef.current) revealInScroll(orderRef.current, scrollRef.current, contentRef.current, 'start');
+  }
+
   const searching = query.trim().length > 0;
   const total = visible.chains.length + visible.local.length;
+  // A chosen location (GPS or a saved ZIP) is one compact row; the full hero shows until then.
+  const compactLocation = origin.kind === 'gps' || !origin.isDefault;
   const showPanel = panelOpen || shouldShowLocationPrompt(origin, permission);
 
   const card = (store: Store) => (
@@ -195,6 +204,7 @@ export function StoresScreen({
       disabled={!favorites.data}
       focused={focusStoreKey != null && favoriteStoreKey(store) === focusStoreKey}
       onFocusedLayout={onFocusedLayout}
+      onOrderOnline={scrollToOrderOnline}
     />
   );
 
@@ -280,47 +290,77 @@ export function StoresScreen({
   return (
     <Screen title={title} scrollRef={scrollRef} contentRef={contentRef}>
       {top}
-      <View
-        style={{
-          backgroundColor: colors.banana,
-          borderRadius: radius.card,
-          padding: space.cardPadding + 4,
-          gap: 10,
-        }}
-      >
-        <AppText variant="sectionTitle" display color="onBanana">
-          {STORES_COPY.heroTitle}
-        </AppText>
-        <AppText variant="secondary" color="onBanana">
-          {STORES_COPY.heroSub}
-        </AppText>
-        <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginTop: 4 }}>
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: 6,
-              backgroundColor: colors.card,
-              borderRadius: radius.pill,
-              paddingLeft: 12,
-              paddingRight: 14,
-              minHeight: 36,
-              flexShrink: 1,
-            }}
-          >
-            <Feather name="map-pin" size={16} color={colors.ink} accessibilityElementsHidden importantForAccessibility="no" />
-            <AppText variant="secondary" bold testID="stores-origin" style={{ flexShrink: 1 }}>
-              {STORES_COPY.nearPrefix} {originLabel(origin)}
-            </AppText>
+      {compactLocation ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={panelOpen ? STORES_COPY.hideLocationA11y : STORES_COPY.changeLocationA11y}
+          accessibilityState={{ expanded: panelOpen }}
+          aria-expanded={panelOpen}
+          testID="stores-location-row"
+          onPress={() => setPanelOpen((open) => !open)}
+          style={({ pressed }) => ({
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 8,
+            minHeight: touch.min,
+            paddingHorizontal: 14,
+            backgroundColor: colors.banana,
+            borderRadius: radius.pill,
+            opacity: pressed ? 0.85 : 1,
+          })}
+        >
+          <Feather name="map-pin" size={16} color={colors.ink} accessibilityElementsHidden importantForAccessibility="no" />
+          <AppText variant="secondary" bold color="onBanana" testID="stores-origin" numberOfLines={1} style={{ flex: 1, minWidth: 0 }}>
+            {STORES_COPY.nearPrefix} {originLabel(origin)}
+          </AppText>
+          <AppText variant="secondary" color="onBanana">
+            {STORES_COPY.changeLocation}
+          </AppText>
+          <Feather name={panelOpen ? 'chevron-up' : 'chevron-down'} size={18} color={colors.ink} accessibilityElementsHidden importantForAccessibility="no" />
+        </Pressable>
+      ) : (
+        <View
+          style={{
+            backgroundColor: colors.banana,
+            borderRadius: radius.card,
+            padding: space.cardPadding + 4,
+            gap: 10,
+          }}
+        >
+          <AppText variant="sectionTitle" display color="onBanana">
+            {STORES_COPY.heroTitle}
+          </AppText>
+          <AppText variant="secondary" color="onBanana">
+            {STORES_COPY.heroSub}
+          </AppText>
+          <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginTop: 4 }}>
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 6,
+                backgroundColor: colors.card,
+                borderRadius: radius.pill,
+                paddingLeft: 12,
+                paddingRight: 14,
+                minHeight: 36,
+                flexShrink: 1,
+              }}
+            >
+              <Feather name="map-pin" size={16} color={colors.ink} accessibilityElementsHidden importantForAccessibility="no" />
+              <AppText variant="secondary" bold testID="stores-origin" style={{ flexShrink: 1 }}>
+                {STORES_COPY.nearPrefix} {originLabel(origin)}
+              </AppText>
+            </View>
+            <Button
+              label={STORES_COPY.changeLocation}
+              kind="secondary"
+              accessibilityLabel={STORES_COPY.changeLocationA11y}
+              onPress={() => setPanelOpen((open) => !open)}
+            />
           </View>
-          <Button
-            label={STORES_COPY.changeLocation}
-            kind="secondary"
-            accessibilityLabel={STORES_COPY.changeLocationA11y}
-            onPress={() => setPanelOpen((open) => !open)}
-          />
         </View>
-      </View>
+      )}
 
       {showPanel ? (
         <LocationPanel
@@ -334,6 +374,46 @@ export function StoresScreen({
           onSaveZip={(zip) => void saveZip(zip)}
         />
       ) : null}
+
+      <View ref={orderRef} nativeID="order-online" testID="order-online" style={{ gap: 8 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <Feather name="truck" size={18} color={colors.ink} accessibilityElementsHidden importantForAccessibility="no" />
+          <AppText variant="sectionTitle" bold accessibilityRole="header">
+            {STORES_COPY.orderOnlineHeading}
+          </AppText>
+        </View>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+          {ORDER_ONLINE_SERVICES.map((service) => (
+            <Pressable
+              key={service.id}
+              testID={service.testID}
+              accessibilityRole="link"
+              accessibilityLabel={service.label}
+              onPress={() => openExternal(service.url)}
+              style={({ pressed }) => ({
+                flexGrow: 1,
+                flexBasis: 150,
+                minHeight: touch.main,
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 10,
+                paddingHorizontal: 14,
+                paddingVertical: 8,
+                backgroundColor: colors.card,
+                borderColor: colors.border,
+                borderWidth: 1,
+                borderRadius: radius.card,
+                opacity: pressed ? 0.85 : 1,
+              })}
+            >
+              <Feather name="truck" size={20} color={colors.ink} accessibilityElementsHidden importantForAccessibility="no" />
+              <AppText variant="button" style={{ flex: 1, minWidth: 0 }}>
+                {service.label}
+              </AppText>
+            </Pressable>
+          ))}
+        </View>
+      </View>
 
       <AppText variant="secondary" color="muted">
         {STORES_COPY.rowNote}

@@ -186,6 +186,66 @@ test.describe('with the browser location allowed', () => {
     await expect(page.getByText('Store data © OpenStreetMap contributors, Overture Maps Foundation')).toBeVisible();
   });
 
+  test('Order online: one section with three tiles; each store card has one button that scrolls back to it', async ({ page }) => {
+    await stubKroger(page, 200, { stores: [RALPHS], configured: true });
+    await recordOpenedLinks(page);
+    await signIn(page, user.email);
+    await page.goto('/stores');
+    await expect.poll(() => cardIds(page)).toEqual(['e2e-gps-safeway', 'kroger-e2e-k1', 'e2e-gps-tj']);
+
+    // The section sits right under the (collapsed, one-line) location row and above the stores.
+    const section = page.getByTestId('order-online');
+    await expect(section).toBeVisible();
+    await expect(section.getByText('Order online', { exact: true })).toBeVisible();
+    for (const id of ['doordash', 'instacart', 'walmart']) await expect(page.getByTestId(`order-online-${id}`)).toBeVisible();
+    await expect(page.getByTestId('order-online-doordash')).toContainText('Order from DoorDash');
+    await expect(page.getByTestId('order-online-instacart')).toContainText('Order from Instacart');
+    await expect(page.getByTestId('order-online-walmart')).toContainText('Order from Walmart');
+
+    // Each tile opens that service's ordering page in a new tab (window.open is recorded).
+    await page.getByTestId('order-online-doordash').click();
+    await page.getByTestId('order-online-instacart').click();
+    await page.getByTestId('order-online-walmart').click();
+    await expect.poll(() => opened(page)).toEqual([
+      'https://www.doordash.com/',
+      'https://www.instacart.com/',
+      'https://www.walmart.com/cp/grocery/976759',
+    ]);
+
+    // No per-store delivery buttons any more: one "Order online" button per card.
+    await expect(page.getByRole('link', { name: /^Order with / })).toHaveCount(0);
+    for (const id of ['e2e-gps-safeway', 'kroger-e2e-k1', 'e2e-gps-tj']) {
+      await expect(page.getByTestId(`store-${id}`).getByRole('button', { name: /^Order online: / })).toHaveCount(1);
+    }
+
+    // Tapping it scrolls back up to the section; it opens no link itself.
+    const button = page.getByTestId('store-e2e-gps-tj').getByRole('button', { name: "Order online: Trader Joe's" });
+    await button.scrollIntoViewIfNeeded();
+    await button.click();
+    await expect(section).toBeInViewport();
+    expect(await opened(page)).toHaveLength(3);
+  });
+
+  test('a set location is one compact row that opens the ZIP / Use my location panel in place', async ({ page }) => {
+    await stubKroger(page, 200, { stores: [RALPHS], configured: true });
+    await signIn(page, user.email);
+    await page.goto('/stores');
+    const row = page.getByTestId('stores-location-row');
+    await expect(row).toBeVisible();
+    await expect(page.getByTestId('stores-origin')).toHaveText('Near your location');
+    const box = (await row.boundingBox())!;
+    expect(box.height).toBeGreaterThanOrEqual(44); // one line, still a 44px target
+    expect(box.height).toBeLessThan(64);
+    await expect(page.getByText('Find stores near you')).toHaveCount(0);
+    await expect(page.getByRole('textbox', { name: 'ZIP code' })).toHaveCount(0);
+
+    await row.click();
+    await expect(page.getByRole('textbox', { name: 'ZIP code' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Use my location' })).toBeVisible();
+    await row.click();
+    await expect(page.getByRole('textbox', { name: 'ZIP code' })).toHaveCount(0);
+  });
+
   test('a saved store stays saved after a reload; unsaving removes the server row', async ({ page }) => {
     await stubKroger(page, 200, { stores: [RALPHS], configured: true });
     await signIn(page, user.email);
@@ -237,6 +297,9 @@ test.describe('without location: the ZIP fallback', () => {
     await page.getByRole('button', { name: 'Go', exact: true }).click();
     await table;
     await expect(page.getByTestId('stores-origin')).toHaveText(`Near ${ZIP.zip}`);
+    // Set: the full panel folds into the one-line row.
+    await expect(page.getByTestId('stores-location-row')).toBeVisible();
+    await expect(zipBox).toHaveCount(0);
     await expect.poll(() => profileLocation(user.userId)).toEqual({ home_zip: ZIP.zip, home_lat: null, home_lng: null });
 
     // Kroger not set up on the server (503): the list shows without it.
