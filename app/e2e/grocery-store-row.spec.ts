@@ -235,7 +235,7 @@ test('starring in Stores adds to the row (newest first, at most 3); offline star
 
   await page.getByRole('radio', { name: 'List', exact: true }).click();
   await expect.poll(() => rowKeys(page)).toEqual(['e2e-row-foodmaxx', 'e2e-row-safeway', 'e2e-row-walmart']);
-  await expect(row(page).getByRole('button', { name: 'FoodMaxx, favourite. Open in Stores' })).toBeVisible();
+  await expect(row(page).getByRole('button', { name: 'FoodMaxx, favourite. Weekly ad' })).toBeVisible();
 
   // Three more favourites: the row shows the 3 newest; FoodMaxx stays saved.
   await page.getByRole('radio', { name: 'Stores', exact: true }).click();
