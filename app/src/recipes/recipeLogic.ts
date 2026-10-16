@@ -61,6 +61,12 @@ export const DETAIL_COPY = {
     `${added === 1 ? 'Added 1 item to your grocery list.' : `Added ${added} items to your grocery list.`} ${inCart === 1 ? '1 was already in your cart.' : `${inCart} were already in your cart.`}`,
   addFailed: (message: string) => `Not added. ${message}`,
   seeList: 'See grocery list',
+  /** The per-row control that saves an ingredient straight to the pantry. */
+  addToPantry: 'Add to pantry',
+  addingToPantry: 'Adding...',
+  addToPantryLabel: (name: string) => `Add ${name} to pantry`,
+  addedToPantry: (name: string) => `Added ${name} to your pantry.`,
+  addToPantryFailed: (name: string, message: string) => `${name} was not added to your pantry. ${message}`,
   allHave: 'You have everything for this recipe.',
   /** Compliance rule 9 wording; the old detail sheet showed "Check labels — estimate only" with diet notes. */
   checkLabels: 'Check labels for allergens. Ingredient matches are an estimate: verify before you cook.',
@@ -72,9 +78,14 @@ export function amountText(quantity: number, unit: string): string {
 }
 
 /** One ingredient row on the detail screen: name, amount and its status words. */
-export function ingredientRowText(line: CartStatusLine): { name: string; amount: string; status: string } {
+export function ingredientRowText(
+  line: CartStatusLine,
+  /** A staple the pantry holds a row for reads In pantry (pantryAdd.stapleHeldInPantry). */
+  heldInPantry = false,
+): { name: string; amount: string; status: string } {
   const name = formatIngredientText(line.ingredient.name);
   const amount = amountText(line.ingredient.quantity, line.ingredient.unit);
+  if (line.status === 'staple' && heldInPantry) return { name, amount, status: DETAIL_COPY.have };
   if (line.status === 'have') return { name, amount, status: DETAIL_COPY.have };
   if (line.status === 'cart') return { name, amount, status: DETAIL_COPY.inCart };
   if (line.status === 'staple') return { name, amount, status: DETAIL_COPY.staple };
