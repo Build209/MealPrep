@@ -1,0 +1,98 @@
+{
+  "project": "android",
+  "engine": "chromium",
+  "order": "08",
+  "screen": "scan",
+  "route": "/scan",
+  "purpose": "camera",
+  "viewport": "412x839",
+  "screenshots": [
+    "android/08-scan.png"
+  ],
+  "checks": {
+    "noSidewaysScroll": true,
+    "tapTargets": true,
+    "textFits": true,
+    "tomatoRule": true
+  },
+  "sidewaysScroll": {
+    "scrollWidth": 412,
+    "innerWidth": 412
+  },
+  "tapTargetIssues": [],
+  "tapTargetAllowed": [],
+  "clippedText": [],
+  "truncatedText": [],
+  "offscreenControls": [],
+  "tomato": [
+    {
+      "text": "Take a photo",
+      "tag": "button",
+      "props": [
+        "border-top"
+      ],
+      "context": "camera"
+    },
+    {
+      "text": "",
+      "tag": "div",
+      "props": [
+        "background"
+      ],
+      "context": "camera"
+    },
+    {
+      "text": "",
+      "tag": "div",
+      "props": [
+        "border-top"
+      ],
+      "context": "camera"
+    },
+    {
+      "text": "",
+      "tag": "div",
+      "props": [
+        "border-top"
+      ],
+      "context": "camera"
+    },
+    {
+      "text": "Choose a photo",
+      "tag": "button",
+      "props": [
+        "border-top"
+      ],
+      "context": "camera"
+    },
+    {
+      "text": "",
+      "tag": "div",
+      "props": [
+        "background"
+      ],
+      "context": "camera"
+    },
+    {
+      "text": "",
+      "tag": "div",
+      "props": [
+        "border-top"
+      ],
+      "context": "camera"
+    },
+    {
+      "text": "",
+      "tag": "div",
+      "props": [
+        "border-top"
+      ],
+      "context": "camera"
+    }
+  ],
+  "tomatoViolations": [],
+  "notes": [
+    "No photo is taken: the real camera scan stays on the owner list."
+  ],
+  "reportOnly": {}
+}
