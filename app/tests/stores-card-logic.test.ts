@@ -31,5 +31,6 @@ test('resolveStoreActions: order, text-only labels, no claims', () => {
   assert.deepEqual(actions.map((x) => x.id), ['flyer', 'shop', 'instacart', 'doordash']);
   assert.deepEqual(actions.slice(2).map((x) => x.label), ['Order with Instacart', 'Order with DoorDash']);
   for (const x of actions) assert.doesNotMatch(x.label, /partner|free|save \$/i);
-  assert.deepEqual(resolveStoreActions({ name: 'Wild Prairie Farm' }), []);
+  // An unrecognised farm: no weekly ad, no shop link; only text-only delivery searches.
+  assert.deepEqual(resolveStoreActions({ name: 'Wild Prairie Farm' }).map((x) => x.id), ['instacart', 'doordash']);
 });
