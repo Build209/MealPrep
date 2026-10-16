@@ -5,8 +5,8 @@ import { adminClient, freshEmail } from './local-supabase';
  * The row of store circles at the top of the Grocery list, end to end against the local stack:
  *  - no saved location: the shopper's favourites plus "Find stores", and no store search at all
  *    (the row never asks for location and never searches from the default ZIP);
- *  - a saved location and no favourites: the 3 closest chains, closest first; a circle opens the
- *    Stores view at that store; the row fits a narrow (flip phone cover) screen;
+ *  - a saved location and no favourites: the 3 closest chains, closest first; a circle opens that store's weekly ad (else its shop page, else the
+ *    Stores view); the row fits a narrow (flip phone cover) screen;
  *  - starring in Stores adds to the row, newest first, at most 3 (a 4th stays saved);
  *    starring offline shows the standard offline message and saves nothing; the row still shows offline.
  * A few `stores` rows are seeded (service key, local only) around a point far from the other specs'
@@ -140,7 +140,7 @@ test('no saved location: favourites plus "Find stores", no store search; "Find s
   await page.goto('/grocery');
   await expect(row(page)).toBeVisible();
   await expect.poll(() => rowKeys(page)).toEqual(['e2e-row-safeway', 'find']);
-  await expect(row(page).getByRole('button', { name: 'Safeway, favourite. Open in Stores' })).toBeVisible();
+  await expect(row(page).getByRole('button', { name: 'Safeway, favourite. Weekly ad' })).toBeVisible();
   // Safeway has a logo in storeLogos.ts, so its circle shows the logo image instead of initials.
   await expect(page.getByTestId('store-row-e2e-row-safeway').getByTestId('store-badge-logo')).toBeVisible();
   expect(searches.count).toBe(0);
@@ -150,14 +150,14 @@ test('no saved location: favourites plus "Find stores", no store search; "Find s
   await expect(page.getByRole('heading', { name: 'Stores near you', exact: true })).toBeVisible();
 });
 
-test('a saved location: the 3 closest chains; a circle opens Stores at that store; fits a narrow screen', async ({ page }) => {
+test('a saved location: the 3 closest chains; a circle opens that store\'s weekly ad in a new tab; fits a narrow screen', async ({ page, context }) => {
   const user = await newUser('store-row-nearest', HOME);
   const called = await stubFunctions(page);
   await signIn(page, user.email);
 
   await page.goto('/grocery');
   await expect.poll(() => rowKeys(page)).toEqual(['e2e-row-safeway', 'e2e-row-walmart', 'e2e-row-tj']);
-  await expect(row(page).getByRole('button', { name: 'Walmart, nearby. Open in Stores' })).toBeVisible();
+  await expect(row(page).getByRole('button', { name: 'Walmart, nearby. Weekly ad' })).toBeVisible();
   await expect(page.getByTestId('store-row-e2e-row-tj')).toContainText("Trader Joe's");
   // Trader Joe's has a logo too, so no initials ("TJ") in its circle.
   await expect(page.getByTestId('store-row-e2e-row-tj').getByTestId('store-badge-logo')).toBeVisible();
@@ -179,10 +179,13 @@ test('a saved location: the 3 closest chains; a circle opens Stores at that stor
   }
   await page.setViewportSize({ width: 390, height: 844 });
 
-  await page.getByTestId('store-row-e2e-row-walmart').click();
-  await expect(page).toHaveURL(/view=stores/);
-  await expect(page).toHaveURL(/store=e2e-row-walmart/);
-  await expect(page.getByTestId('store-e2e-row-walmart')).toBeInViewport();
+  // Nothing real is loaded: Walmart's page is answered here.
+  await context.route('https://www.walmart.com/**', (route) => route.fulfill({ status: 200, contentType: 'text/html', body: '<title>ad</title>' }));
+  const [popup] = await Promise.all([context.waitForEvent('page'), page.getByTestId('store-row-e2e-row-walmart').click()]);
+  await popup.waitForURL(/walmart\.com/);
+  await popup.close();
+  // The Grocery list stays where it was (a store with a weekly ad does not open the Stores view).
+  await expect(page).not.toHaveURL(/view=stores/);
 });
 
 test('Home: the weekly-deals row shows the same circles; a circle opens that store\'s weekly ad in a new tab', async ({ page, context }) => {
@@ -232,7 +235,7 @@ test('starring in Stores adds to the row (newest first, at most 3); offline star
 
   await page.getByRole('radio', { name: 'List', exact: true }).click();
   await expect.poll(() => rowKeys(page)).toEqual(['e2e-row-foodmaxx', 'e2e-row-safeway', 'e2e-row-walmart']);
-  await expect(row(page).getByRole('button', { name: 'FoodMaxx, favourite. Open in Stores' })).toBeVisible();
+  await expect(row(page).getByRole('button', { name: 'FoodMaxx, favourite. Weekly ad' })).toBeVisible();
 
   // Three more favourites: the row shows the 3 newest; FoodMaxx stays saved.
   await page.getByRole('radio', { name: 'Stores', exact: true }).click();

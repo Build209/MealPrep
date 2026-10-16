@@ -3,6 +3,8 @@ import { GroceryScreen } from '../../grocery/GroceryScreen';
 import { GROCERY_COPY } from '../../grocery/groceryLogic';
 import { ChoicePills } from '../../pantry/parts/ChoicePills';
 import { STORES_COPY } from '../../stores/copy';
+import { openExternal } from '../../stores/StoreCard';
+import { shopTargetFor } from '../../stores/storeRow';
 import { StoresRow } from '../../stores/StoresRow';
 import { StoresScreen } from '../../stores/StoresScreen';
 import { AppText } from '../../ui/AppText';
@@ -18,7 +20,8 @@ const VIEWS = [
  * The Grocery tab: "List" (src/grocery/) first, and "Stores" (src/stores/: nearby stores, chains
  * first, weekly-ad links, favourites, ZIP or location), which was its own tab until 2026-10-15.
  * The view is in the address (/grocery?view=stores), so /stores and old links land on it.
- * The List view starts with a row of store circles (StoresRow); a circle opens the Stores view at
+ * The List view starts with a row of store circles (StoresRow); a circle opens that store's
+ * weekly ad (else its shop page, shopTargetFor); only a store with neither opens the Stores view at
  * that store (/grocery?view=stores&store=<favourite key>).
  */
 export default function GroceryRoute() {
@@ -52,7 +55,11 @@ export default function GroceryRoute() {
         <>
           {switcher}
           <StoresRow
-            onOpenStore={(key) => router.setParams({ view: 'stores', store: key })}
+            onOpenStore={(key, store) => {
+              const target = shopTargetFor(store);
+              if (target.kind === 'stores') router.setParams({ view: 'stores', store: key });
+              else openExternal(target.url);
+            }}
             onFindStores={() => router.setParams({ view: 'stores', store: undefined })}
           />
         </>

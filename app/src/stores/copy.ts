@@ -43,7 +43,11 @@ export const STORES_COPY = {
   // The row of store circles on the Grocery list (StoresRow.tsx).
   rowTitle: 'Your stores',
   rowA11y: 'Your stores',
-  rowStoreA11y: (name: string, favorite: boolean) => `${name}${favorite ? ', favourite' : ', nearby'}. Open in Stores`,
+  /** What the circle does: opens the weekly ad, the shop page, or (neither known) the Stores view. */
+  rowStoreA11y: (name: string, favorite: boolean, action: 'weekly-ad' | 'shop' | 'stores' = 'stores', thirdParty = false) =>
+    `${name}${favorite ? ', favourite' : ', nearby'}. ${
+      action === 'weekly-ad' ? (thirdParty ? 'Weekly ad (third-party)' : 'Weekly ad') : action === 'shop' ? 'Shop online' : 'Open in Stores'
+    }`,
   findStores: 'Find stores',
   findStoresA11y: 'Find stores near you',
   moreLocalMarkets: 'More local markets',

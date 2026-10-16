@@ -9,8 +9,8 @@
  *
  * Compliance rule 5: these names are only used to say what a link does. No "partner". Store logos
  * (owner decision 2026-10-16, compliance to confirm) live only in storeLogos.ts; see docs/STORE_LOGOS.md.
- * Delivery links and prefilled store locators from the old table are not ported (the old store
- * detail sheet is not part of this tab yet).
+ * Delivery links (Instacart, DoorDash) live in delivery.ts. Prefilled store locators from the old
+ * table are not ported (the old store detail sheet is not part of this tab yet).
  */
 
 export type ChainStoreRef = {
@@ -33,6 +33,8 @@ export interface StoreChainConfig {
   weeklyAdIsThirdParty?: boolean;
   /** The chain's page for one store shows that store's ad, so the weekly-ad link opens it when known. */
   weeklyAdOnStorePage?: boolean;
+  /** The chain's own online shop / order page (plain link, no tags). Used when the store circle has no weekly ad. */
+  shopUrl?: string;
   excludeStore?: (store: ChainStoreRef) => boolean;
 }
 
@@ -43,7 +45,7 @@ export const STORE_CHAINS: readonly StoreChainConfig[] = [
     matchPatterns: ['save mart', 'savemart'],
     storePagePathPattern: '^https://([a-z0-9-]+\\.)?savemart\\.com/stores/.+',
     allowedWebsiteHosts: ['savemart.com'],
-    weeklyAdUrl: 'https://savemart.com/flyers',
+    weeklyAdUrl: 'https://savemart.com/flyers', shopUrl: 'https://savemart.com/',
   },
   { key: 'foodmaxx', displayName: 'FoodMaxx', matchPatterns: ['foodmaxx', 'food maxx'], weeklyAdUrl: 'https://foodmaxx.com/flyers' },
   {
@@ -58,7 +60,7 @@ export const STORE_CHAINS: readonly StoreChainConfig[] = [
     matchPatterns: ['raley', "raley's", 'raleys', 'bel air', 'nob hill'],
     storePagePathPattern: '^https://([a-z0-9-]+\\.)?raleys\\.com/stores/.+',
     allowedWebsiteHosts: ['raleys.com'],
-    weeklyAdUrl: 'https://www.raleys.com/weekly-ad',
+    weeklyAdUrl: 'https://www.raleys.com/weekly-ad', shopUrl: 'https://www.raleys.com/',
   },
   {
     key: 'safeway',
@@ -66,7 +68,7 @@ export const STORE_CHAINS: readonly StoreChainConfig[] = [
     matchPatterns: ['safeway'],
     storePagePathPattern: '^https://((local\\.)?safeway\\.com/.+|([a-z0-9-]+\\.)?safeway\\.com/(?!store-locator)[^?#]+)',
     allowedWebsiteHosts: ['safeway.com'],
-    weeklyAdUrl: 'https://www.safeway.com/weeklyad',
+    weeklyAdUrl: 'https://www.safeway.com/weeklyad', shopUrl: 'https://www.safeway.com/',
     weeklyAdOnStorePage: true,
   },
   {
@@ -75,7 +77,7 @@ export const STORE_CHAINS: readonly StoreChainConfig[] = [
     matchPatterns: ['albertsons'],
     storePagePathPattern: '^https://([a-z0-9-]+\\.)?albertsons\\.com/.+',
     allowedWebsiteHosts: ['albertsons.com'],
-    weeklyAdUrl: 'https://www.albertsons.com/weeklyad',
+    weeklyAdUrl: 'https://www.albertsons.com/weeklyad', shopUrl: 'https://www.albertsons.com/',
   },
   {
     key: 'vons',
@@ -83,7 +85,7 @@ export const STORE_CHAINS: readonly StoreChainConfig[] = [
     matchPatterns: ['vons'],
     storePagePathPattern: '^https://([a-z0-9-]+\\.)?vons\\.com/.+',
     allowedWebsiteHosts: ['vons.com'],
-    weeklyAdUrl: 'https://www.vons.com/weeklyad',
+    weeklyAdUrl: 'https://www.vons.com/weeklyad', shopUrl: 'https://www.vons.com/',
   },
   {
     key: 'pavilions',
@@ -91,7 +93,7 @@ export const STORE_CHAINS: readonly StoreChainConfig[] = [
     matchPatterns: ['pavilions'],
     storePagePathPattern: '^https://([a-z0-9-]+\\.)?pavilions\\.com/.+',
     allowedWebsiteHosts: ['pavilions.com'],
-    weeklyAdUrl: 'https://www.pavilions.com/weeklyad',
+    weeklyAdUrl: 'https://www.pavilions.com/weeklyad', shopUrl: 'https://www.pavilions.com/',
   },
   {
     key: 'walmart',
@@ -100,10 +102,10 @@ export const STORE_CHAINS: readonly StoreChainConfig[] = [
     matchPatterns: ['walmart supercenter', 'walmart neighborhood', 'walmart'],
     storePagePathPattern: '^https://([a-z0-9-]+\\.)?walmart\\.com/store/.+',
     allowedWebsiteHosts: ['walmart.com'],
-    weeklyAdUrl: 'https://www.walmart.com/shop/deals',
+    weeklyAdUrl: 'https://www.walmart.com/shop/deals', shopUrl: 'https://www.walmart.com/',
     weeklyAdOnStorePage: true,
   },
-  { key: 'target', displayName: 'Target', matchPatterns: ['target'], weeklyAdUrl: 'https://www.target.com/weekly-ad' },
+  { key: 'target', displayName: 'Target', matchPatterns: ['target'], weeklyAdUrl: 'https://www.target.com/weekly-ad', shopUrl: 'https://www.target.com/' },
   { key: 'winco', displayName: 'WinCo', matchPatterns: ['winco', 'winco foods'], weeklyAdUrl: 'https://www.wincofoods.com/weekly-ad' },
   {
     key: 'grocery_outlet',
@@ -111,7 +113,7 @@ export const STORE_CHAINS: readonly StoreChainConfig[] = [
     matchPatterns: ['grocery outlet'],
     storePagePathPattern: '^https://([a-z0-9-]+\\.)?groceryoutlet\\.com/(circulars/storeid/\\d+|stores/.+)',
     allowedWebsiteHosts: ['groceryoutlet.com'],
-    weeklyAdUrl: 'https://www.groceryoutlet.com/circulars',
+    weeklyAdUrl: 'https://www.groceryoutlet.com/circulars', shopUrl: 'https://www.groceryoutlet.com/',
   },
   {
     key: 'food_4_less',
@@ -129,7 +131,7 @@ export const STORE_CHAINS: readonly StoreChainConfig[] = [
     matchPatterns: ['kroger'],
     storePagePathPattern: '^https://([a-z0-9-]+\\.)?kroger\\.com/stores/.+',
     allowedWebsiteHosts: ['kroger.com'],
-    weeklyAdUrl: 'https://www.kroger.com/weeklyad',
+    weeklyAdUrl: 'https://www.kroger.com/weeklyad', shopUrl: 'https://www.kroger.com/',
   },
   {
     key: 'fred_meyer',
@@ -137,7 +139,7 @@ export const STORE_CHAINS: readonly StoreChainConfig[] = [
     matchPatterns: ['fred meyer', 'fredmeyer'],
     storePagePathPattern: '^https://([a-z0-9-]+\\.)?(fredmeyer|kroger)\\.com/stores/.+',
     allowedWebsiteHosts: ['fredmeyer.com', 'kroger.com'],
-    weeklyAdUrl: 'https://www.fredmeyer.com/weeklyad',
+    weeklyAdUrl: 'https://www.fredmeyer.com/weeklyad', shopUrl: 'https://www.fredmeyer.com/',
   },
   {
     key: 'king_soopers',
@@ -153,7 +155,7 @@ export const STORE_CHAINS: readonly StoreChainConfig[] = [
     matchPatterns: ['ralphs'],
     storePagePathPattern: '^https://([a-z0-9-]+\\.)?ralphs\\.com/stores/.+',
     allowedWebsiteHosts: ['ralphs.com', 'kroger.com'],
-    weeklyAdUrl: 'https://www.ralphs.com/weeklyad',
+    weeklyAdUrl: 'https://www.ralphs.com/weeklyad', shopUrl: 'https://www.ralphs.com/',
   },
   {
     key: 'publix',
@@ -161,7 +163,7 @@ export const STORE_CHAINS: readonly StoreChainConfig[] = [
     matchPatterns: ['publix'],
     storePagePathPattern: '^https://([a-z0-9-]+\\.)?publix\\.com/locations/.+',
     allowedWebsiteHosts: ['publix.com'],
-    weeklyAdUrl: 'https://www.publix.com/savings/weekly-ad',
+    weeklyAdUrl: 'https://www.publix.com/savings/weekly-ad', shopUrl: 'https://www.publix.com/',
   },
   {
     key: 'heb',
@@ -169,7 +171,7 @@ export const STORE_CHAINS: readonly StoreChainConfig[] = [
     matchPatterns: ['h-e-b', 'heb'],
     storePagePathPattern: '^https://([a-z0-9-]+\\.)?heb\\.com/.+',
     allowedWebsiteHosts: ['heb.com'],
-    weeklyAdUrl: 'https://www.heb.com/h-e-b-ads',
+    weeklyAdUrl: 'https://www.heb.com/h-e-b-ads', shopUrl: 'https://www.heb.com/',
   },
   {
     key: 'meijer',
@@ -177,13 +179,13 @@ export const STORE_CHAINS: readonly StoreChainConfig[] = [
     matchPatterns: ['meijer'],
     storePagePathPattern: '^https://([a-z0-9-]+\\.)?meijer\\.com/.+',
     allowedWebsiteHosts: ['meijer.com'],
-    weeklyAdUrl: 'https://www.meijer.com/shopping/weekly-ads.html',
+    weeklyAdUrl: 'https://www.meijer.com/shopping/weekly-ads.html', shopUrl: 'https://www.meijer.com/',
   },
   {
     key: 'wegmans',
     displayName: 'Wegmans',
     matchPatterns: ['wegmans'],
-    weeklyAdUrl: 'https://www.wegmans.com/shop/categories/weekly-specials',
+    weeklyAdUrl: 'https://www.wegmans.com/shop/categories/weekly-specials', shopUrl: 'https://www.wegmans.com/',
   },
   { key: 'hy_vee', displayName: 'Hy-Vee', matchPatterns: ['hy-vee', 'hy vee', 'hyvee'], weeklyAdUrl: 'https://www.hy-vee.com/deals/weekly-ads' },
   {
@@ -206,7 +208,7 @@ export const STORE_CHAINS: readonly StoreChainConfig[] = [
     matchPatterns: ['whole foods'],
     storePagePathPattern: '^https://([a-z0-9-]+\\.)?wholefoodsmarket\\.com/stores/.+',
     allowedWebsiteHosts: ['wholefoodsmarket.com'],
-    weeklyAdUrl: 'https://www.wholefoodsmarket.com/sales-flyer',
+    weeklyAdUrl: 'https://www.wholefoodsmarket.com/sales-flyer', shopUrl: 'https://www.wholefoodsmarket.com/',
   },
   {
     key: 'stater_bros',
@@ -222,9 +224,9 @@ export const STORE_CHAINS: readonly StoreChainConfig[] = [
     matchPatterns: ['smart & final', 'smart and final', 'smart final'],
     storePagePathPattern: '^https://([a-z0-9-]+\\.)?smartandfinal\\.com/sm/planning/rsid/\\d+',
     allowedWebsiteHosts: ['smartandfinal.com'],
-    weeklyAdUrl: 'https://www.smartandfinal.com/circular',
+    weeklyAdUrl: 'https://www.smartandfinal.com/circular', shopUrl: 'https://www.smartandfinal.com/',
   },
-  { key: 'costco', displayName: 'Costco', matchPatterns: ['costco'], weeklyAdUrl: 'https://www.costco.com/warehouse-savings.html' },
+  { key: 'costco', displayName: 'Costco', matchPatterns: ['costco'], weeklyAdUrl: 'https://www.costco.com/warehouse-savings.html', shopUrl: 'https://www.costco.com/' },
   {
     key: 'trader_joes',
     displayName: "Trader Joe's",
@@ -237,9 +239,9 @@ export const STORE_CHAINS: readonly StoreChainConfig[] = [
     matchPatterns: ['sprouts'],
     storePagePathPattern: '^https://([a-z0-9-]+\\.)?sprouts\\.com/stores/.+',
     allowedWebsiteHosts: ['sprouts.com'],
-    weeklyAdUrl: 'https://www.sprouts.com/weekly-ad',
+    weeklyAdUrl: 'https://www.sprouts.com/weekly-ad', shopUrl: 'https://www.sprouts.com/',
   },
-  { key: 'aldi', displayName: 'Aldi', matchPatterns: ['aldi'], weeklyAdUrl: 'https://www.aldi.us/weekly-specials' },
+  { key: 'aldi', displayName: 'Aldi', matchPatterns: ['aldi'], weeklyAdUrl: 'https://www.aldi.us/weekly-specials', shopUrl: 'https://www.aldi.us/' },
   {
     key: 'dollar_general',
     displayName: 'Dollar General',
