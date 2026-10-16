@@ -98,7 +98,7 @@ Main store listing > fill in. Assets needed:
 | Asset | Size | Have it? |
 | --- | --- | --- |
 | App icon | 512 x 512 PNG | Yes: `app/assets/store/play-icon-512.png` |
-| Feature graphic | 1024 x 500 PNG/JPG | **Missing.** Needed before production. |
+| Feature graphic | 1024 x 500 PNG/JPG | Yes: `app/assets/store/feature-graphic.png` (banana ground, app icon, wordmark, "Cook from what you already have."; recommended). Option: `app/assets/store/feature-graphic-alt.png` (dark ink ground with Forky). Regenerate with `python3 app/scripts/make-feature-graphic.py`. Owner picks one and uploads it. |
 | Phone screenshots | 2 to 8, e.g. 1080 x 1920 | **Missing.** Take them on the preview .apk (sign-in, Pantry, a scan review, Home recipes, Grocery, Stores). The browser phone-tour screenshots are not the real app. |
 | Tablet screenshots | optional | Not needed (phone app). |
 
