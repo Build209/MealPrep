@@ -17,6 +17,7 @@ import {
   writeTipMemory,
   type HeaderTip,
 } from './headerTips';
+import { logEvent } from '../lib/events';
 import { deviceTipStore, readForkyBackoff, readForkyTipFrequency, recordForkyTipOutcome, recordForkyTipShown } from './tipBackoff';
 
 /**
@@ -66,6 +67,7 @@ function useTipScheduler() {
       writeTipMemory(store, rememberShown(memory, tip, now));
       // Counts toward "less often", and notes whether the last one was left untouched.
       recordForkyTipShown(tip.kind, now, store);
+      logEvent('forky_prompt_shown', { kind: tip.kind });
       setTipState({ tip, open: true, sessionTipShown: true });
     }, TIP_AUTO_SHOW_DELAY_MS);
     return () => clearTimeout(timer);

@@ -132,6 +132,12 @@ export function ForkyChatScreen() {
     [recipes.data, pantry.data, allergenPrefs.allergens],
   );
 
+  // One record per visit to the chat (not per question); no props.
+  useEffect(() => {
+    if (userId) logEvent('ask_forky_opened');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [!!userId]);
+
   useEffect(() => {
     const timer = setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 50);
     return () => clearTimeout(timer);
