@@ -198,9 +198,9 @@ test.describe('with the browser location allowed', () => {
     await expect(section).toBeVisible();
     await expect(section.getByText('Order online', { exact: true })).toBeVisible();
     for (const id of ['doordash', 'instacart', 'walmart']) await expect(page.getByTestId(`order-online-${id}`)).toBeVisible();
-    await expect(page.getByTestId('order-online-doordash')).toContainText('Order from DoorDash');
-    await expect(page.getByTestId('order-online-instacart')).toContainText('Order from Instacart');
-    await expect(page.getByTestId('order-online-walmart')).toContainText('Order from Walmart');
+    await expect(page.getByTestId('order-online-doordash')).toContainText('Open DoorDash');
+    await expect(page.getByTestId('order-online-instacart')).toContainText('Open Instacart');
+    await expect(page.getByTestId('order-online-walmart')).toContainText('Open Walmart grocery');
 
     // Each tile opens that service's ordering page in a new tab (window.open is recorded).
     await page.getByTestId('order-online-doordash').click();

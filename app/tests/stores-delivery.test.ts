@@ -41,9 +41,9 @@ test('Order online section: three services, plain https links, neutral wording',
   assert.deepEqual(
     ORDER_ONLINE_SERVICES.map((s) => [s.testID, s.label, s.url]),
     [
-      ['order-online-doordash', 'Order from DoorDash', 'https://www.doordash.com/'],
-      ['order-online-instacart', 'Order from Instacart', 'https://www.instacart.com/'],
-      ['order-online-walmart', 'Order from Walmart', 'https://www.walmart.com/cp/grocery/976759'],
+      ['order-online-doordash', 'Open DoorDash', 'https://www.doordash.com/'],
+      ['order-online-instacart', 'Open Instacart', 'https://www.instacart.com/'],
+      ['order-online-walmart', 'Open Walmart grocery', 'https://www.walmart.com/cp/grocery/976759'],
     ],
   );
   for (const s of ORDER_ONLINE_SERVICES) {

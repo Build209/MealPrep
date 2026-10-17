@@ -37,6 +37,7 @@ test('copy: the exact lines, and no health, diet or savings words', () => {
   assert.equal(NUTRITION_COPY.title, 'Nutrition per serving');
   assert.equal(NUTRITION_COPY.estimate(5, 8), 'Estimate based on 5 of 8 ingredients');
   assert.equal(NUTRITION_COPY.source, 'Source: USDA FoodData Central');
+  assert.equal(NUTRITION_COPY.checkLabel, 'Estimate only. Check the label and verify before you cook.');
   assert.equal(NUTRITION_COPY.notEnoughData, 'Not enough data for this recipe');
   const all = JSON.stringify([
     ...Object.values(NUTRITION_COPY).filter((v) => typeof v === 'string'),

@@ -17,7 +17,8 @@ const CORS = {
   'access-control-allow-headers': 'authorization, x-client-info, apikey, content-type',
   'access-control-allow-methods': 'POST, OPTIONS',
 };
-const AI_NOTICE = 'Forky is an AI helper and can be wrong. Always check allergens and food safety yourself before you cook.';
+const AI_NOTICE =
+  'Forky is an AI helper and can be wrong. Always check allergens and food safety yourself before you cook. If you have saved allergens, they are sent with your question so Forky can avoid them.';
 const OFFLINE = "You're offline. Changes need a connection.";
 
 function word(prefix: string): string {

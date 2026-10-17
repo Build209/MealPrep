@@ -26,7 +26,7 @@ test('support address is the live one, and Contact us mails it', () => {
 test('Ask Forky answer carries the approved AI line word for word', () => {
   assert.equal(
     ASK_FORKY_COPY.aiNotice,
-    'Forky is an AI helper and can be wrong. Always check allergens and food safety yourself before you cook.',
+    'Forky is an AI helper and can be wrong. Always check allergens and food safety yourself before you cook. If you have saved allergens, they are sent with your question so Forky can avoid them.',
   );
   assert.ok(answer('forky').includes(ASK_FORKY_COPY.aiNotice));
 });
