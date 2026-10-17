@@ -10,7 +10,7 @@ import { isPaidTier, priceLookupKey, TIER_NAMES, type PaidTier } from './planTie
 export const DISCLOSURE_VERSION = '2026-10-11.1';
 
 /** Version of the Terms of Use the customer accepts at checkout (the date printed on the page). */
-export const TERMS_VERSION = '2026-10-11';
+export const TERMS_VERSION = '2026-10-16';
 
 export type BillingInterval = 'month' | 'year';
 

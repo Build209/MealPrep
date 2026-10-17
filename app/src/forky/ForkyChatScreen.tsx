@@ -18,6 +18,8 @@ import { FORKY_IDEA } from './art';
 import { forkyChat, type ChatMessage } from './chatStore';
 import { ASK_FORKY_COPY, ASK_FORKY_LIMITS, questionsLeftText } from './copy';
 import { askForkyUrl, ForkyError, needsSafetyNote, type ForkyTurn } from './request';
+import { REPORT_COPY } from './report';
+import { ReportSheet } from './ReportSheet';
 import { rankShortlist, recipeButtons } from './shortlist';
 import { useForkyAllowance } from './useForkyAllowance';
 
@@ -30,7 +32,7 @@ const PINNED_COMPOSER_MIN_HEIGHT = 480;
 
 const askForky = createForkyAsker({ url: askForkyUrl(env.supabaseUrl) });
 
-function Bubble({ message, onOpen }: { message: ChatMessage; onOpen: (href: string) => void }) {
+function Bubble({ message, onOpen, onReport }: { message: ChatMessage; onOpen: (href: string) => void; onReport: (answer: string) => void }) {
   if (message.role === 'user') {
     return (
       <View style={{ alignSelf: 'flex-end', maxWidth: '88%', backgroundColor: colors.primary, borderRadius: radius.card, paddingHorizontal: 16, paddingVertical: 12 }}>
@@ -80,6 +82,16 @@ function Bubble({ message, onOpen }: { message: ChatMessage; onOpen: (href: stri
           </AppText>
         </Pressable>
       ))}
+      <Pressable
+        onPress={() => onReport(message.text)}
+        accessibilityRole="button"
+        accessibilityLabel={REPORT_COPY.control}
+        style={{ minHeight: touch.min, minWidth: touch.min, alignSelf: 'flex-start', justifyContent: 'center' }}
+      >
+        <AppText variant="secondary" color="muted" style={{ textDecorationLine: 'underline' }}>
+          {REPORT_COPY.control}
+        </AppText>
+      </Pressable>
     </View>
   );
 }
@@ -112,6 +124,7 @@ export function ForkyChatScreen() {
   const [draft, setDraft] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [reporting, setReporting] = useState<string | null>(null);
   const scrollRef = useRef<ScrollView>(null);
 
   const shortlist = useMemo(
@@ -284,7 +297,7 @@ export function ForkyChatScreen() {
           </View>
 
           {chat.messages.map((message) => (
-            <Bubble key={message.key} message={message} onOpen={(href) => router.push(href)} />
+            <Bubble key={message.key} message={message} onOpen={(href) => router.push(href)} onReport={setReporting} />
           ))}
 
           {busy ? (
@@ -335,6 +348,7 @@ export function ForkyChatScreen() {
           <View style={column}>{composer}</View>
         </View>
       ) : null}
+      <ReportSheet answer={reporting} onClose={() => setReporting(null)} />
     </KeyboardAvoidingView>
   );
 }
