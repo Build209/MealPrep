@@ -17,7 +17,8 @@ export const ASK_FORKY_COPY = {
    * Always on screen, word for word from the old app: says it is an AI (California chatbot
    * disclosure, compliance register item 17) and carries the terms' verify line (rule 9).
    */
-  aiNotice: 'Forky is an AI helper and can be wrong. Always check allergens and food safety yourself before you cook.',
+  aiNotice:
+    'Forky is an AI helper and can be wrong. Always check allergens and food safety yourself before you cook. If you have saved allergens, they are sent with your question so Forky can avoid them.',
   /** Under any answer about allergens, nutrition or food safety (compliance rule 9). */
   safetyNote: 'Check labels and a trusted source for allergies, nutrition and food safety.',
   placeholder: 'Ask about dinner, your pantry or a swap',

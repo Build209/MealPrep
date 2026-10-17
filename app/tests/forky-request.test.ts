@@ -210,7 +210,9 @@ test('the AI notice is the old app\'s, word for word (chatbot disclosure and rul
   const old = readFileSync(oldCopyPath, 'utf8');
   const quoted = /aiNotice:\s*'([^']+)'/.exec(old)?.[1];
   assert.ok(quoted, 'aiNotice found in the old-app snapshot of config/askForky.ts');
-  assert.equal(ASK_FORKY_COPY.aiNotice, quoted);
+  // The old app's line is kept word for word; the allergen-sharing sentence is appended (compliance review 2026-10-16).
+  assert.ok(ASK_FORKY_COPY.aiNotice.startsWith(quoted));
+  assert.ok(ASK_FORKY_COPY.aiNotice.endsWith('If you have saved allergens, they are sent with your question so Forky can avoid them.'));
   for (const key of ['safetyNote', 'limitFree', 'limitPlus', 'intro', 'featureOff', 'notConfigured', 'genericError'] as const) {
     assert.ok(old.includes(JSON.stringify(ASK_FORKY_COPY[key]).slice(1, -1)) || old.includes(ASK_FORKY_COPY[key]), key);
   }

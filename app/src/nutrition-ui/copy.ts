@@ -15,6 +15,7 @@ export const NUTRITION_COPY = {
   caloriesUnit: 'kcal',
   estimate: (used: number, total: number) => `Estimate based on ${used} of ${total} ingredients`,
   source: 'Source: USDA FoodData Central',
+  checkLabel: 'Estimate only. Check the label and verify before you cook.',
   loading: 'Working out the estimate',
   offline: "You're offline. Nutrition shows up when you're back online.",
   error: "Couldn't get the estimate right now. Please try again later.",

@@ -84,6 +84,9 @@ export function NutritionCard({ isPlus, data, isLoading, isError, isOffline }: N
         <AppText variant="label" color="muted">
           {C.source}
         </AppText>
+        <AppText variant="secondary" color="muted" testID="nutrition-check-label">
+          {C.checkLabel}
+        </AppText>
       </View>
     );
   } else if (data?.status === 'not-enough-data') {
