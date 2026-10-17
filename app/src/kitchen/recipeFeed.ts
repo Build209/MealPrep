@@ -26,6 +26,8 @@ export type FeedEntry<R extends MatchRecipe, P extends StockRow = StockRow> = {
 export type RecipeFeed<R extends MatchRecipe, P extends StockRow = StockRow> = {
   /** Recipes the pantry covers best ("Cook from your pantry"). */
   cookable: FeedEntry<R, P>[];
+  /** How many more matches were left out of `cookable` by the cap. */
+  cookableHidden: number;
   /** True when nothing reached two pantry ingredients and these are partial overlaps. */
   usedPartialFallback: boolean;
   /** The rest, fewest missing first (capped at `moreLimit`). */
@@ -35,6 +37,9 @@ export type RecipeFeed<R extends MatchRecipe, P extends StockRow = StockRow> = {
 };
 
 export const FEED_MORE_LIMIT = 24;
+
+/** With a big library and a full pantry, hundreds of recipes can match; show the best few. */
+export const FEED_COOKABLE_LIMIT = 30;
 
 /**
  * The Recipes tab hides library recipes (ids l_...) with fewer ingredient lines than this from
@@ -49,7 +54,7 @@ export const hideThinLibraryRecipe = (recipe: { id: string; ingredients: readonl
 export function rankRecipeFeed<R extends MatchRecipe, P extends StockRow>(
   recipes: readonly R[],
   pantry: readonly P[],
-  options?: { moreLimit?: number; hideFromMore?: (recipe: R) => boolean },
+  options?: { moreLimit?: number; cookableLimit?: number; hideFromMore?: (recipe: R) => boolean },
 ): RecipeFeed<R, P> {
   const byId = new Map(recipes.map((recipe) => [recipe.id, recipe]));
   const index = buildPantryMatchIndex(recipes, pantry);
@@ -61,8 +66,10 @@ export function rankRecipeFeed<R extends MatchRecipe, P extends StockRow>(
     const recipe = byId.get(match.recipeId);
     return recipe ? { recipe, match } : null;
   };
-  const cookable = matches.map(entry).filter((e): e is FeedEntry<R, P> => e !== null);
-  const shown = new Set(cookable.map((e) => e.recipe.id));
+  const allCookable = matches.map(entry).filter((e): e is FeedEntry<R, P> => e !== null);
+  const cookableLimit = options?.cookableLimit ?? FEED_COOKABLE_LIMIT;
+  const cookable = allCookable.slice(0, cookableLimit);
+  const shown = new Set(allCookable.map((e) => e.recipe.id));
   const rest = [...index.byRecipeId.values()]
     .filter((m) => !shown.has(m.recipeId))
     .filter((m) => {
@@ -73,7 +80,7 @@ export function rankRecipeFeed<R extends MatchRecipe, P extends StockRow>(
     .map(entry)
     .filter((e): e is FeedEntry<R, P> => e !== null);
   const limit = options?.moreLimit ?? FEED_MORE_LIMIT;
-  return { cookable, usedPartialFallback, more: rest.slice(0, limit), moreHidden: Math.max(0, rest.length - limit) };
+  return { cookable, cookableHidden: Math.max(0, allCookable.length - cookableLimit), usedPartialFallback, more: rest.slice(0, limit), moreHidden: Math.max(0, rest.length - limit) };
 }
 
 /**
