@@ -132,10 +132,13 @@ export function readyToCookCount(
   recipes: readonly MatchRecipe[],
   pantry: readonly StockRow[],
   scoredById?: ReadonlyMap<string, RecipePantryMatch>,
+  /** Recipes the list never shows (hideThinLibraryRecipe) must not be counted either. */
+  exclude?: (recipe: MatchRecipe) => boolean,
 ): number {
   if (pantry.length === 0) return 0;
   let ready = 0;
   for (const recipe of recipes) {
+    if (exclude?.(recipe)) continue;
     const match = scoredById?.get(recipe.id) ?? scoreRecipeAgainstPantry(recipe, pantry);
     if (match.missingCount === 0 && match.matchedCount >= 1) ready += 1;
   }

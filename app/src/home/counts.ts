@@ -3,7 +3,7 @@
  * `null` means "not loaded yet" (or the read failed): the tile then shows no number. Pure
  * (tests/home-counts.test.ts).
  */
-import { readyToCookCount } from '../kitchen/recipeFeed';
+import { hideThinLibraryRecipe, readyToCookCount } from '../kitchen/recipeFeed';
 import type { MatchRecipe, RecipePantryMatch, StockRow } from '../kitchen/recipeMatch';
 
 export type HomeCounts = {
@@ -24,7 +24,7 @@ export function homeCounts(input: {
 }): HomeCounts {
   const { recipes, pantry, grocery, scoredById } = input;
   return {
-    ready: recipes && pantry && scoredById !== null ? readyToCookCount(recipes, pantry, scoredById) : null,
+    ready: recipes && pantry && scoredById !== null ? readyToCookCount(recipes, pantry, scoredById, hideThinLibraryRecipe) : null,
     pantry: pantry ? pantry.length : null,
     grocery: grocery ? grocery.filter((item) => !item.checked).length : null,
   };
