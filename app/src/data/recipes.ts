@@ -1,7 +1,9 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { DataError, retryUnlessPermanent, run } from './errors';
 import { SIGNED_OUT } from './keys';
+import { readAllPages } from './libraryPaging';
 import {
+  LIBRARY_LIST_COLUMNS,
   LIBRARY_RECIPE_COLUMNS,
   libraryRecipeFromRow,
   parseRecipeRouteId,
@@ -29,9 +31,6 @@ export const recipeKeys = {
   detail: (userId: string | null | undefined, id: string) => ['recipes', userId ? userId : SIGNED_OUT, 'detail', id] as const,
 } as const;
 
-/** Library rows read at most (the feed shows the best matches; the rest stay on the server). */
-export const LIBRARY_READ_LIMIT = 500;
-
 export const RECIPE_NOT_FOUND = "That recipe wasn't found. It may have been removed.";
 
 /** Master recipes, the person's own recipes, then the published library. */
@@ -48,14 +47,11 @@ export async function fetchRecipes(userId: string | null | undefined): Promise<A
         .order('created_at', { ascending: true })
         .order('id', { ascending: true }),
     ),
-    run<LibraryRecipeRow[]>(
-      client
-        .from('library_recipes')
-        .select(LIBRARY_RECIPE_COLUMNS)
-        .eq('status', 'published')
-        .order('created_at', { ascending: false })
-        .order('id', { ascending: true })
-        .limit(LIBRARY_READ_LIMIT),
+    // The whole library, in pages, without the steps (lists never show them; the recipe page reads its own row).
+    readAllPages<LibraryRecipeRow>((from, to) =>
+      run<LibraryRecipeRow[]>(
+        client.from('library_recipes').select(LIBRARY_LIST_COLUMNS).eq('status', 'published').order('id', { ascending: true }).range(from, to),
+      ),
     ),
   ]);
   return [...own.map(recipeFromRow), ...library.map(libraryRecipeFromRow)];

@@ -1,3 +1,4 @@
+import { hideThinLibraryRecipe } from '../kitchen/recipeFeed';
 import { useRouter } from 'expo-router';
 import { useMemo } from 'react';
 import { ActivityIndicator, View } from 'react-native';
@@ -33,7 +34,7 @@ export function RecipesFeed() {
   const userAllergens = prefs.allergens;
 
   const feed = useMemo(
-    () => (recipes.data && pantry.data ? rankFeedWithAllergens(recipes.data, pantry.data, userAllergens) : null),
+    () => (recipes.data && pantry.data ? rankFeedWithAllergens(recipes.data, pantry.data, userAllergens, { hideFromMore: hideThinLibraryRecipe }) : null),
     [recipes.data, pantry.data, userAllergens],
   );
 

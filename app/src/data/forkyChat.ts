@@ -4,6 +4,7 @@ import { currentUsagePeriod } from '../scan/allowance';
 import { ingredientNames, type ShortlistRecipe } from '../forky/shortlist';
 import { retryUnlessPermanent, run, toDataError } from './errors';
 import { SIGNED_OUT } from './keys';
+import { readAllPages } from './libraryPaging';
 import { requireClient, requireUserId, useSessionUserId } from './session';
 
 /**
@@ -50,9 +51,6 @@ export function useRefreshForkyUsage() {
   }, [queryClient]);
 }
 
-/** Library rows read for the shortlist (newest first); the rest stay on the server. */
-export const FORKY_LIBRARY_LIMIT = 200;
-
 /**
  * Recipes Forky may suggest: master recipes, the person's own, and published library recipes,
  * with route ids r_<uuid> / l_<uuid> and ingredient names only.
@@ -64,13 +62,10 @@ export async function fetchForkyRecipes(userId: string | null | undefined): Prom
     run<{ id: string; name: string; ingredients: unknown }[]>(
       client.from('recipes').select('id, name, ingredients').or(`is_master.eq.true,created_by.eq.${id}`).order('created_at', { ascending: true }),
     ),
-    run<{ id: string; title: string; ingredients: unknown }[]>(
-      client
-        .from('library_recipes')
-        .select('id, title, ingredients')
-        .eq('status', 'published')
-        .order('created_at', { ascending: false })
-        .limit(FORKY_LIBRARY_LIMIT),
+    readAllPages<{ id: string; title: string; ingredients: unknown }>((from, to) =>
+      run<{ id: string; title: string; ingredients: unknown }[]>(
+        client.from('library_recipes').select('id, title, ingredients').eq('status', 'published').order('id', { ascending: true }).range(from, to),
+      ),
     ),
   ]);
   return [

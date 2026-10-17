@@ -1,5 +1,5 @@
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, TextInput, View } from 'react-native';
 import { demoteFlaggedResults } from '../../allergens/rank';
 import { useAllergenPrefs } from '../../allergens/useAllergenPrefs';
@@ -56,12 +56,17 @@ function SearchField({ value, onChange }: { value: string; onChange: (text: stri
  * /recipes/search: master and own recipes and published library recipes by title or ingredient,
  * plus creator videos. Recipes open their page; videos open outside the app.
  */
+/** Results drawn at first; "Show more" adds another page. */
+const RESULTS_PAGE = 50;
+
 export function RecipeSearchScreen() {
   const { ready, session } = useAuth();
   const router = useRouter();
   const params = useLocalSearchParams<{ q?: string }>();
   const [query, setQuery] = useState(typeof params.q === 'string' ? params.q : '');
+  const [shownCount, setShownCount] = useState(RESULTS_PAGE);
   const settled = useDebounced(query, 300);
+  useEffect(() => setShownCount(RESULTS_PAGE), [settled]);
   const words = useMemo(() => searchWords(settled), [settled]);
   const active = words.length > 0;
 
@@ -130,7 +135,7 @@ export function RecipeSearchScreen() {
           <AppText variant="label" color="muted" accessibilityLiveRegion="polite">
             {results.length === 1 ? '1 result' : `${results.length} results`}
           </AppText>
-          {ranked.items.map((item) =>
+          {ranked.items.slice(0, shownCount).map((item) =>
             item.kind === 'recipe' ? (
               <RecipeResultRow
                 key={item.key}
@@ -142,6 +147,9 @@ export function RecipeSearchScreen() {
               <CreatorVideoListRow key={item.key} video={item.video} />
             ),
           )}
+          {ranked.items.length > shownCount ? (
+            <Button label={`Show more (${ranked.items.length - shownCount} left)`} kind="secondary" onPress={() => setShownCount((n) => n + RESULTS_PAGE)} />
+          ) : null}
         </View>
       ) : null}
     </Screen>
