@@ -26,6 +26,10 @@ export const FEED_COPY = {
   importLink: 'Import a recipe',
   creatorsTitle: 'From recipe creators',
   creatorsSeeAll: 'See all creator videos',
+  // The Ask Forky bar at the top of the tab (RecipesForkyBar). New wording, owner to confirm.
+  forkyPlaceholder: 'Ask Forky to find a recipe',
+  forkyInputA11y: 'Ask Forky about a recipe',
+  forkySendA11y: 'Send recipe question to Forky',
 } as const;
 
 export const DETAIL_COPY = {

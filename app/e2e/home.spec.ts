@@ -170,6 +170,45 @@ test('Home: offline, the Ask Forky box keeps the question, says so, and opens no
   expect(captured).toHaveLength(0);
 });
 
+test('Recipes: the Ask Forky bar at the top sends the question into the chat and shares the allowance', async ({ page }) => {
+  await newSignedInUser(page, 'recipes-forky');
+  const captured = await stubFunction(page, 'ask-forky', 200, {
+    answer: 'Try a quick stir fry.',
+    recipeIds: [],
+    offTopic: false,
+    safetyNote: false,
+    remaining: 4,
+    limit: 5,
+    isPlus: false,
+    tier: 'free',
+  });
+
+  await tabLink(page, 'Recipes').click();
+  await expect(page).toHaveURL(/\/recipes$/);
+  const box = page.getByRole('textbox', { name: 'Ask Forky about a recipe' });
+  const send = page.getByRole('button', { name: 'Send recipe question to Forky', exact: true });
+  await expect(box).toBeVisible();
+  await expect(send).toBeDisabled();
+  // The AI notice is always on screen, and the allowance line follows it.
+  const note = page.getByTestId('recipes-forky-note').filter({ visible: true });
+  await expect(note).toContainText(AI_NOTICE);
+  await expect(note).toContainText('5 questions left this month');
+
+  await box.fill('Find me a quick dinner');
+  await send.click();
+  await expectAt(page, '/forky');
+  await expect(page.getByText('Try a quick stir fry.')).toBeVisible();
+  await expect(page.getByText('Find me a quick dinner', { exact: true }).filter({ visible: true })).toBeVisible();
+  expect(captured).toHaveLength(1);
+  expect(captured[0]!.body.question).toBe('Find me a quick dinner');
+
+  // Back on Recipes: an empty box, the allowance went down, and still one call.
+  await page.getByRole('button', { name: 'Close', exact: true }).click();
+  await expect(page.getByRole('textbox', { name: 'Ask Forky about a recipe' })).toHaveValue('');
+  await expect(page.getByTestId('recipes-forky-note').filter({ visible: true })).toContainText('4 questions left this month');
+  expect(captured).toHaveLength(1);
+});
+
 test('Recipes tab shows the feed with Search, Saved and Import; Grocery has List and Stores; /stores opens Stores', async ({ page }) => {
   await newSignedInUser(page, 'home-tabs');
   await stubFunction(page, 'kroger-deals', 503, { error: 'Live Kroger prices are not set up yet.', configured: false });
