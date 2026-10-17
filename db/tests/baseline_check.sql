@@ -16,14 +16,18 @@ declare
 begin
   select count(*) into n from pg_class c where c.relnamespace = 'public'::regnamespace and c.relkind = 'r'
     -- Added by a later migration in this folder (checked in daily_caps_check.sql), not live yet.
-    and c.relname not in ('daily_usage', 'ai_rate_limits', 'scan_correction_daily_counts');
+    and c.relname not in ('daily_usage', 'ai_rate_limits', 'scan_correction_daily_counts',
+                          'purchase_history', 'usual_item_settings');
   if n <> 29 then raise exception 'expected 29 public tables, found %', n; end if;
 
   select count(*) into n from pg_class c where c.relnamespace = 'public'::regnamespace and c.relkind = 'r' and not c.relrowsecurity;
   if n <> 0 then raise exception '% public tables have row level security off', n; end if;
 
   select count(*) into n from pg_policies where schemaname = 'public'
-    and policyname not in ('daily_usage_select_own');
+    and policyname not in ('daily_usage_select_own',
+                           'purchase_history_select_own', 'purchase_history_delete_own',
+                           'usual_item_settings_select_own', 'usual_item_settings_insert_own',
+                           'usual_item_settings_update_own', 'usual_item_settings_delete_own');
   if n <> 46 then raise exception 'expected 46 public policies, found %', n; end if;
 
   select count(*) into n from pg_proc p where p.pronamespace = 'public'::regnamespace
@@ -32,7 +36,8 @@ begin
     -- 2026-10-13 baseline.
     and p.proname not in ('tick_grocery_item', 'untick_grocery_item', 'add_missing_to_grocery',
                           'daily_cap_for', 'take_daily_use', 'give_back_daily_use',
-                          'list_expired_scan_photos', 'take_rate_limit', 'scan_corrections_daily_cap');
+                          'list_expired_scan_photos', 'take_rate_limit', 'scan_corrections_daily_cap',
+                          'usual_key', 'record_grocery_purchase', 'usual_settings_cap');
   if n <> 28 then raise exception 'expected 28 public functions, found %', n; end if;
 
   if not exists (select 1 from pg_trigger where tgname = 'on_auth_user_created' and tgrelid = 'auth.users'::regclass) then

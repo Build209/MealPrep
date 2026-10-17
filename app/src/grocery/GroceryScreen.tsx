@@ -11,7 +11,7 @@ import {
   useTickGroceryItem,
   useUntickGroceryItem,
 } from '../data/groceryMutations';
-import type { ManualGroceryFields } from '../kitchen/groceryAisles';
+import { manualGroceryFields, type ManualGroceryFields } from '../kitchen/groceryAisles';
 import { findPantryRowForGrocery, pantryPlaceForGrocery } from '../kitchen/groceryRestock';
 import { UndoBar } from '../pantry/parts/UndoBar';
 import { colors, space } from '../theme/tokens';
@@ -19,6 +19,7 @@ import { AppText } from '../ui/AppText';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { Screen } from '../ui/Screen';
+import { UsualsCard } from '../usuals/UsualsCard';
 import { AddGrocerySheet } from './AddGrocerySheet';
 import { GroceryList } from './GroceryList';
 import { GROCERY_COPY, groceryView } from './groceryLogic';
@@ -54,6 +55,7 @@ export function GroceryScreen({ top }: { top?: ReactNode } = {}) {
 
   const view = useMemo(() => groceryView(query.data ?? []), [query.data]);
   const total = query.data?.length ?? 0;
+  const openNames = useMemo(() => (query.data ?? []).filter((i) => !i.checked).map((i) => i.name), [query.data]);
 
   useEffect(() => {
     if (!notice) return;
@@ -64,6 +66,13 @@ export function GroceryScreen({ top }: { top?: ReactNode } = {}) {
   function onSave(fields: ManualGroceryFields) {
     setAdding(false);
     add.mutate(newGroceryItemVars(fields), {
+      onError: (error) => setNotice({ text: GROCERY_COPY.saveFailed(messageOf(error)) }),
+    });
+  }
+
+  /** "Your usuals" > Add: one of the item on the list, aisle guessed from the name. */
+  function onAddUsual(name: string) {
+    add.mutate(newGroceryItemVars(manualGroceryFields({ name, quantity: 1, unit: 'each' })), {
       onError: (error) => setNotice({ text: GROCERY_COPY.saveFailed(messageOf(error)) }),
     });
   }
@@ -173,6 +182,14 @@ export function GroceryScreen({ top }: { top?: ReactNode } = {}) {
               {OFFLINE_MESSAGE}
             </AppText>
           </Card>
+        ) : null}
+        {!query.isPending ? (
+          <UsualsCard
+            openListNames={openNames}
+            online={online}
+            onAdd={onAddUsual}
+            onError={(text) => setNotice({ text })}
+          />
         ) : null}
         {body}
         {/* Room so the undo bar never covers the last row. */}
