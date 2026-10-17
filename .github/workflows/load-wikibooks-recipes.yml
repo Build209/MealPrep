@@ -1,0 +1,58 @@
+name: Load Wikibooks recipes
+
+# Manual only: Actions tab -> "Load Wikibooks recipes" -> Run workflow.
+# Run it once with "apply" OFF (a dry run: counts and one sample row, no database call), then again with it ON.
+# Loads db/data/wikibooks-recipes.json (from the branch you pick, normally main) into public.library_recipes
+# as DRAFTS only. It never publishes, never deletes, and never touches a published row or a row from any
+# other source. Publishing is a separate, later step. See db/scripts/wikibooks/README.md.
+#
+# Uses the SUPABASE_ACCESS_TOKEN repository secret, the same one as "Deploy Supabase function".
+# Never paste the token anywhere else.
+on:
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: Apply for real (leave off for a dry run that makes no database call)
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: load-wikibooks-recipes
+  cancel-in-progress: false
+
+jobs:
+  load:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_PROJECT_REF: okkwapgyadpaifpmkcex
+      APPLY: ${{ inputs.apply }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Check the access token is configured
+        if: ${{ inputs.apply }}
+        run: |
+          if [ -z "$SUPABASE_ACCESS_TOKEN" ]; then
+            echo "::error title=Missing secret::Add the SUPABASE_ACCESS_TOKEN repository secret, then run this again."
+            exit 1
+          fi
+      - name: Loader tests
+        run: node --test db/scripts/wikibooks/load.test.mjs
+      - name: Load (dry run unless "apply" is on)
+        run: |
+          set -euo pipefail
+          if [ "$APPLY" = "true" ]; then
+            node db/scripts/wikibooks/load.mjs --apply
+          else
+            # No token is needed or used in a dry run.
+            env -u SUPABASE_ACCESS_TOKEN node db/scripts/wikibooks/load.mjs --dry-run
+          fi

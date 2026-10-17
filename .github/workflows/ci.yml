@@ -29,3 +29,18 @@ jobs:
         run: |
           node lab.test.js
           node shopping.test.js
+
+  # Wikibooks recipe loader (db/scripts/wikibooks): parser and SQL-builder tests. No network, no database.
+  wikibooks-loader:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Parser tests
+        run: python3 -m unittest discover -s db/scripts/wikibooks -p 'test_*.py'
+      - name: Loader tests
+        run: node --test db/scripts/wikibooks/load.test.mjs
+      - name: Loader dry run
+        run: node db/scripts/wikibooks/load.mjs --dry-run > /dev/null
