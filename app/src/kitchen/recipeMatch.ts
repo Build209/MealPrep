@@ -275,8 +275,13 @@ export type PantryMatchIndex<P extends StockRow = StockRow> = {
   ranked: RecipePantryMatch<P>[];
 };
 
-export function buildPantryMatchIndex<P extends StockRow>(recipes: readonly MatchRecipe[], pantry: readonly P[]): PantryMatchIndex<P> {
-  const all = recipes.map((recipe) => scoreRecipeAgainstPantry(recipe, pantry));
+/** `scoredById`: matches already worked out (src/kitchen/scoreAll.ts); anything missing from it is scored here. */
+export function buildPantryMatchIndex<P extends StockRow>(
+  recipes: readonly MatchRecipe[],
+  pantry: readonly P[],
+  scoredById?: ReadonlyMap<string, RecipePantryMatch<P>>,
+): PantryMatchIndex<P> {
+  const all = recipes.map((recipe) => scoredById?.get(recipe.id) ?? scoreRecipeAgainstPantry(recipe, pantry));
   const byRecipeId = new Map(all.map((m) => [m.recipeId, m]));
   if (pantry.length === 0) return { byRecipeId, ranked: [] };
   return { byRecipeId, ranked: [...all].sort(compareRecipePantryMatches) };

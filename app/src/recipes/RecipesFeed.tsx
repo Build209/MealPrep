@@ -1,6 +1,7 @@
 import { hideThinLibraryRecipe } from '../kitchen/recipeFeed';
 import { useRouter } from 'expo-router';
 import { useMemo } from 'react';
+import { useScoredRecipes } from '../kitchen/useScoredRecipes';
 import { ActivityIndicator, View } from 'react-native';
 import { usePantryItems } from '../data';
 import { useRecipes } from '../data/recipes';
@@ -33,12 +34,17 @@ export function RecipesFeed() {
   const prefs = useAllergenPrefs();
   const userAllergens = prefs.allergens;
 
+  const scored = useScoredRecipes(recipes.data, pantry.data);
   const feed = useMemo(
-    () => (recipes.data && pantry.data ? rankFeedWithAllergens(recipes.data, pantry.data, userAllergens, { hideFromMore: hideThinLibraryRecipe }) : null),
-    [recipes.data, pantry.data, userAllergens],
+    () =>
+      recipes.data && pantry.data && scored
+        ? rankFeedWithAllergens(recipes.data, pantry.data, userAllergens, { hideFromMore: hideThinLibraryRecipe, scoredById: scored })
+        : null,
+    [recipes.data, pantry.data, userAllergens, scored],
   );
+  const scoring = Boolean(recipes.data && pantry.data && !scored);
 
-  if (recipes.isPending || pantry.isPending || prefs.isLoading) {
+  if (recipes.isPending || pantry.isPending || prefs.isLoading || scoring) {
     return (
       <View style={{ paddingVertical: space.groupGap, alignItems: 'center' }}>
         <ActivityIndicator color={colors.ink} accessibilityLabel={FEED_COPY.loading} />

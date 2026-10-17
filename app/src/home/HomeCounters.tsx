@@ -4,6 +4,7 @@ import { Pressable, Text, View } from 'react-native';
 import { usePantryItems } from '../data';
 import { useGroceryItems } from '../data/grocery';
 import { useRecipes } from '../data/recipes';
+import { useScoredRecipes } from '../kitchen/useScoredRecipes';
 import { colors, fonts, radius, space, touch, type as typeScale } from '../theme/tokens';
 import { AppText } from '../ui/AppText';
 import { HOME_COPY, TAB_TITLES } from './copy';
@@ -62,12 +63,13 @@ export function HomeCounters() {
   const recipes = useRecipes();
   const pantry = usePantryItems();
   const grocery = useGroceryItems();
+  const scored = useScoredRecipes(recipes.data, pantry.data);
   const counts = useMemo(
-    () => homeCounts({ recipes: recipes.data, pantry: pantry.data, grocery: grocery.data }),
-    [recipes.data, pantry.data, grocery.data],
+    () => homeCounts({ recipes: recipes.data, pantry: pantry.data, grocery: grocery.data, scoredById: scored }),
+    [recipes.data, pantry.data, grocery.data, scored],
   );
   const readyQuery = {
-    isPending: recipes.isPending || pantry.isPending,
+    isPending: recipes.isPending || pantry.isPending || Boolean(recipes.data && pantry.data && !scored),
     isError: recipes.isError || pantry.isError,
   };
   return (
