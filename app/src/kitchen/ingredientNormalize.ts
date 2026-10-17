@@ -20,11 +20,11 @@ import {
   tokenizeIngredientNameCore,
 } from './normalizeCore';
 
-const NORMALIZE_CACHE = new LruCache<string, string>(4096);
-const TOKENIZE_CACHE = new LruCache<string, string[]>(4096);
-const PHRASE_CACHE = new LruCache<string, string>(4096);
-const INGREDIENT_MATCH_CACHE = new LruCache<string, number>(8192);
-const FUZZY_SCORE_CACHE = new LruCache<string, number>(8192);
+const NORMALIZE_CACHE = new LruCache<string, string>(30_000);
+const TOKENIZE_CACHE = new LruCache<string, string[]>(30_000);
+const PHRASE_CACHE = new LruCache<string, string>(30_000);
+const INGREDIENT_MATCH_CACHE = new LruCache<string, number>(60_000);
+const FUZZY_SCORE_CACHE = new LruCache<string, number>(60_000);
 
 export function normalizeIngredientName(value: string): string {
   const cached = NORMALIZE_CACHE.get(value);

@@ -100,16 +100,28 @@ export function isPantryStaple(name: string, ingredientId: string): boolean {
   return result;
 }
 
+type StapleForm = { normalized: string; singleToken: string | null };
+let STAPLE_FORMS: StapleForm[] | null = null;
+
+/** The staples' normalised forms, worked out once (they were re-normalised for every ingredient line). */
+function stapleForms(): StapleForm[] {
+  if (!STAPLE_FORMS) {
+    STAPLE_FORMS = PANTRY_STAPLES.map((staple) => {
+      const tokens = tokenizeIngredientName(staple);
+      return { normalized: normalizeIngredientName(staple), singleToken: tokens.length === 1 ? tokens[0]! : null };
+    });
+  }
+  return STAPLE_FORMS;
+}
+
 function isPantryStapleCore(name: string, ingredientId: string): boolean {
   if (isWaterIngredient(name, ingredientId)) return true;
   const normalized = normalizeIngredientName(name);
   const idNorm = normalizeIngredientName(idAsName(ingredientId));
   const nameTokens = tokenizeIngredientName(name);
-  for (const staple of PANTRY_STAPLES) {
-    const sNorm = normalizeIngredientName(staple);
-    if (normalized === sNorm || idNorm === sNorm) return true;
-    const stapleTokens = tokenizeIngredientName(staple);
-    if (stapleTokens.length === 1 && nameTokens.length > 1 && nameTokens[nameTokens.length - 1] === stapleTokens[0]) {
+  for (const staple of stapleForms()) {
+    if (normalized === staple.normalized || idNorm === staple.normalized) return true;
+    if (staple.singleToken !== null && nameTokens.length > 1 && nameTokens[nameTokens.length - 1] === staple.singleToken) {
       if (nameTokens.slice(0, -1).every((t) => STRIP.has(t))) return true;
     }
   }
@@ -159,8 +171,29 @@ function pantryKeyIndex(pantry: readonly StockRow[]): Map<string, number[]> {
   return index;
 }
 
+/**
+ * Candidate rows per ingredient name, per pantry array. The same words recur across thousands of
+ * recipes (11,700 distinct names in 33,500 library lines), so each is worked out once. Library ids
+ * ("lib-...") match no pantry row by id, so for them the name alone decides; other ids are part of the key.
+ */
+const CANDIDATE_CACHE = new WeakMap<readonly StockRow[], Map<string, readonly StockRow[]>>();
+
 /** The pantry rows that could match this ingredient, in pantry order. */
-function candidateRows<P extends StockRow>(ingredient: RecipeIngredientLine, pantry: readonly P[]): P[] {
+function candidateRows<P extends StockRow>(ingredient: RecipeIngredientLine, pantry: readonly P[]): readonly P[] {
+  let byName = CANDIDATE_CACHE.get(pantry);
+  if (!byName) {
+    byName = new Map();
+    CANDIDATE_CACHE.set(pantry, byName);
+  }
+  const key = ingredient.ingredientId.startsWith('lib-') ? ingredient.name : `${ingredient.name}\u0000${ingredient.ingredientId}`;
+  const hit = byName.get(key);
+  if (hit) return hit as readonly P[];
+  const rows = candidateRowsUncached(ingredient, pantry);
+  byName.set(key, rows);
+  return rows;
+}
+
+function candidateRowsUncached<P extends StockRow>(ingredient: RecipeIngredientLine, pantry: readonly P[]): P[] {
   if (pantry.length < 8 || isEggComponentIngredient(ingredient.name)) return [...pantry];
   const index = pantryKeyIndex(pantry);
   const wanted = new Set<number>();
