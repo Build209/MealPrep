@@ -9,7 +9,15 @@
  *  - ranked by matched count, then percent, then fewest missing, then name.
  * Pure (tests/kitchen-recipe-match.test.ts).
  */
-import { fuzzyNameScore, FUZZY_MATCH_THRESHOLD, ingredientMatchScore, normalizeIngredientName, tokenizeIngredientName } from './ingredientNormalize';
+import {
+  fuzzyNameScore,
+  FUZZY_MATCH_THRESHOLD,
+  ingredientCandidateKeys,
+  ingredientMatchScore,
+  normalizeIngredientName,
+  tokenizeIngredientName,
+} from './ingredientNormalize';
+import { LruCache } from './lruCache';
 import { INGREDIENT_STRIP_TOKENS, PANTRY_STAPLES } from './matchingConfig';
 import {
   findPantryItemsForIngredient,
@@ -79,8 +87,20 @@ function isWaterIngredient(name: string, ingredientId: string): boolean {
   return tokens.filter((t) => t !== 'water' && !STRIP.has(t) && !WATER_MODIFIERS.has(t)).length === 0;
 }
 
+const STAPLE_CACHE = new LruCache<string, boolean>(20_000);
+
 /** Salt, pepper, water, oil and the like: assumed in every kitchen, never counted. */
 export function isPantryStaple(name: string, ingredientId: string): boolean {
+  // Library ids ("lib-<slug>-3") name nothing, so those answers depend on the name alone.
+  const key = ingredientId.startsWith('lib-') ? name : `${name}\u0000${ingredientId}`;
+  const cached = STAPLE_CACHE.get(key);
+  if (cached !== undefined) return cached;
+  const result = isPantryStapleCore(name, ingredientId);
+  STAPLE_CACHE.set(key, result);
+  return result;
+}
+
+function isPantryStapleCore(name: string, ingredientId: string): boolean {
   if (isWaterIngredient(name, ingredientId)) return true;
   const normalized = normalizeIngredientName(name);
   const idNorm = normalizeIngredientName(idAsName(ingredientId));
@@ -111,9 +131,52 @@ function fuzzyAgainstRow(label: string, item: StockRow): number {
   );
 }
 
+/**
+ * Pantry rows by the words, synonym groups and families they could match on, built once per pantry
+ * array. With thousands of recipes, comparing every ingredient with every pantry row took over a
+ * minute; this narrows each ingredient to the few rows that share something with it. Rows left out
+ * could not have matched (see ingredientCandidateKeys), so the answer is the same.
+ */
+const PANTRY_KEY_INDEX = new WeakMap<readonly StockRow[], Map<string, number[]>>();
+
+function pantryKeyIndex(pantry: readonly StockRow[]): Map<string, number[]> {
+  const cached = PANTRY_KEY_INDEX.get(pantry);
+  if (cached) return cached;
+  const index = new Map<string, number[]>();
+  pantry.forEach((item, i) => {
+    const keys = new Set<string>([
+      ...ingredientCandidateKeys(item.name, 'pantry'),
+      ...ingredientCandidateKeys(idAsName(item.ingredientId), 'pantry'),
+      `i:${item.ingredientId}`,
+    ]);
+    for (const key of keys) {
+      const list = index.get(key);
+      if (list) list.push(i);
+      else index.set(key, [i]);
+    }
+  });
+  PANTRY_KEY_INDEX.set(pantry, index);
+  return index;
+}
+
+/** The pantry rows that could match this ingredient, in pantry order. */
+function candidateRows<P extends StockRow>(ingredient: RecipeIngredientLine, pantry: readonly P[]): P[] {
+  if (pantry.length < 8 || isEggComponentIngredient(ingredient.name)) return [...pantry];
+  const index = pantryKeyIndex(pantry);
+  const wanted = new Set<number>();
+  const keys = [
+    ...ingredientCandidateKeys(ingredient.name, 'recipe'),
+    ...ingredientCandidateKeys(ingredient.name.replace(/-/g, ' '), 'recipe'),
+    `i:${ingredient.ingredientId}`,
+  ];
+  for (const key of keys) for (const i of index.get(key) ?? []) wanted.add(i);
+  return [...wanted].sort((a, b) => a - b).map((i) => pantry[i]!);
+}
+
 function findPantryMatch<P extends StockRow>(
   ingredient: RecipeIngredientLine,
   pantry: readonly P[],
+  candidates: readonly P[],
   used: ReadonlySet<string>,
 ): { item: P; reason: MatchedIngredient['matchReason']; score: number } | null {
   if (pantry.length === 0) return null;
@@ -124,7 +187,7 @@ function findPantryMatch<P extends StockRow>(
     if (eggs) return { item: eggs, reason: 'ingredient_id', score: 1 };
   }
 
-  for (const item of pantry) {
+  for (const item of candidates) {
     if (used.has(item.id)) continue;
     if (item.ingredientId === ingredient.ingredientId) return { item, reason: 'ingredient_id', score: 1 };
     if (keysOverlap(ingredient, item)) {
@@ -139,7 +202,7 @@ function findPantryMatch<P extends StockRow>(
 
   let best: P | null = null;
   let bestScore = 0;
-  for (const item of pantry) {
+  for (const item of candidates) {
     if (used.has(item.id)) continue;
     const score = fuzzyAgainstRow(ingredient.name, item);
     if (score > bestScore) {
@@ -166,13 +229,14 @@ export function scoreRecipeAgainstPantry<P extends StockRow>(recipe: MatchRecipe
       continue;
     }
     scorable += 1;
-    const result = findPantryMatch(ingredient, pantry, used);
+    const candidates = candidateRows(ingredient, pantry);
+    const result = findPantryMatch(ingredient, pantry, candidates, used);
     if (!result) {
       missing.push(ingredient);
       lines.push({ status: 'missing', ingredient, need: ingredient.quantity, short: false });
       continue;
     }
-    const have = totalPantryQuantityInUnit(findPantryItemsForIngredient(ingredient, pantry), ingredient.unit);
+    const have = totalPantryQuantityInUnit(findPantryItemsForIngredient(ingredient, candidates), ingredient.unit);
     if (have !== null && have < ingredient.quantity) {
       const need = roundQty(ingredient.quantity - have);
       missing.push({ ...ingredient, quantity: need });

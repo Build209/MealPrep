@@ -131,6 +131,10 @@ export type LibraryRecipeRow = {
 export const LIBRARY_RECIPE_COLUMNS =
   'id, slug, title, dish_name, servings, prep_minutes, cook_minutes, ingredients, steps, image_url, tags, created_at, source_name, source_url, license';
 
+/** The list reads (feed, counts) leave out the steps: 3,800 recipes of steps is megabytes nobody sees. */
+export const LIBRARY_LIST_COLUMNS =
+  'id, slug, title, dish_name, servings, prep_minutes, cook_minutes, ingredients, image_url, created_at, source_name, source_url, license';
+
 /** Credit for a library recipe from an outside source: "Source: Wikibooks Cookbook, CC BY-SA 4.0" linking the original page. */
 export function creditFromLibraryRow(row: Pick<LibraryRecipeRow, 'source_name' | 'source_url' | 'license'>): RecipeCredit | null {
   const name = text(row.source_name);

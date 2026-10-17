@@ -207,6 +207,30 @@ export function ingredientMatchScore(recipeLabel: string, pantryLabel: string): 
   return result;
 }
 
+/**
+ * Keys that let a matcher skip pairs that cannot match. Every way two labels can score at or above
+ * FUZZY_MATCH_THRESHOLD needs a shared word, the same synonym group, or (for a one-word recipe
+ * label that names a family such as "cheese") a pantry label that belongs to that family; this
+ * returns those keys. Two labels with no key in common can never match. `role` says which side
+ * the label is: only a recipe label asks for a family, only a pantry label belongs to one.
+ */
+export function ingredientCandidateKeys(label: string, role: 'recipe' | 'pantry'): string[] {
+  const tokens = tokenizeIngredientName(label);
+  const keys = new Set<string>(tokens);
+  if (tokens.length === 0) return [];
+  const group = PHRASE_TO_SYNONYM_GROUP.get(tokens.join(' '));
+  if (group) keys.add(`g:${group}`);
+  if (role === 'recipe') {
+    const family = categoryHeadForRecipeTokens(tokens);
+    if (family) keys.add(`f:${family}`);
+  } else {
+    for (const family of Object.keys(INGREDIENT_CATEGORY_GROUPS)) {
+      if (pantryMatchesCategoryHead(tokens, family)) keys.add(`f:${family}`);
+    }
+  }
+  return [...keys];
+}
+
 /** Expand keys for exact/synonym identity only (no generic parent collapse). */
 /** Pantry scan dedupe: exact normalized phrase or explicit INGREDIENT_SYNONYMS group only. */
 export function areSameIngredientForPantryDedupe(a: string, b: string): boolean {

@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { DataError, retryUnlessPermanent, run } from './errors';
+import { readAllPages } from './libraryPaging';
 import { SIGNED_OUT } from './keys';
 import {
   SEARCH_LIBRARY_COLUMNS,
@@ -29,7 +30,7 @@ export const recipeSearchKeys = {
   catalog: (userId: string | null | undefined) => ['recipe-search', userId ? userId : SIGNED_OUT, 'catalog'] as const,
 } as const;
 
-/** Upper bound per table, so a very large library can't stall a phone. */
+/** Upper bound for the master + own recipes read (the library is read in pages, see libraryPaging.ts). */
 export const CATALOG_LIMIT = 2000;
 
 export async function fetchSearchCatalog(userId: string | null | undefined): Promise<SearchableRecipe[]> {
@@ -47,13 +48,15 @@ export async function fetchSearchCatalog(userId: string | null | undefined): Pro
         .order('name', { ascending: true })
         .limit(CATALOG_LIMIT),
     ),
-    run<SearchLibraryRow[]>(
-      client
-        .from('library_recipes')
-        .select(SEARCH_LIBRARY_COLUMNS)
-        .eq('status', 'published')
-        .order('title', { ascending: true })
-        .limit(CATALOG_LIMIT),
+    readAllPages<SearchLibraryRow>((from, to) =>
+      run<SearchLibraryRow[]>(
+        client
+          .from('library_recipes')
+          .select(SEARCH_LIBRARY_COLUMNS)
+          .eq('status', 'published')
+          .order('id', { ascending: true })
+          .range(from, to),
+      ),
     ),
   ]);
   const out: SearchableRecipe[] = [];

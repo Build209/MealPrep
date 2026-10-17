@@ -36,10 +36,13 @@ export type RecipeFeed<R extends MatchRecipe, P extends StockRow = StockRow> = {
 
 export const FEED_MORE_LIMIT = 24;
 
+/** The Recipes tab passes this as `minIngredientLines`: a parsed-down recipe of one or two lines always reads "1 missing" and would top "More recipes". */
+export const FEED_MIN_INGREDIENT_LINES = 3;
+
 export function rankRecipeFeed<R extends MatchRecipe, P extends StockRow>(
   recipes: readonly R[],
   pantry: readonly P[],
-  options?: { moreLimit?: number },
+  options?: { moreLimit?: number; minIngredientLines?: number },
 ): RecipeFeed<R, P> {
   const byId = new Map(recipes.map((recipe) => [recipe.id, recipe]));
   const index = buildPantryMatchIndex(recipes, pantry);
@@ -55,6 +58,7 @@ export function rankRecipeFeed<R extends MatchRecipe, P extends StockRow>(
   const shown = new Set(cookable.map((e) => e.recipe.id));
   const rest = [...index.byRecipeId.values()]
     .filter((m) => !shown.has(m.recipeId))
+    .filter((m) => (byId.get(m.recipeId)?.ingredients.length ?? 0) >= (options?.minIngredientLines ?? 0))
     .sort((a, b) => a.missingCount - b.missingCount || b.matchedCount - a.matchedCount || a.recipeName.localeCompare(b.recipeName))
     .map(entry)
     .filter((e): e is FeedEntry<R, P> => e !== null);
