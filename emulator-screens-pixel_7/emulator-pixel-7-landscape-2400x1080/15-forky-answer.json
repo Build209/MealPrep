@@ -1,0 +1,34 @@
+{
+  "project": "emulator-pixel-7-landscape-2400x1080",
+  "engine": "chromium",
+  "order": "15",
+  "screen": "forky-answer",
+  "route": "/forky",
+  "purpose": "none",
+  "viewport": "863x304",
+  "screenshots": [
+    "emulator-pixel-7-landscape-2400x1080/15-forky-answer.png",
+    "emulator-pixel-7-landscape-2400x1080/15-forky-answer-bottom.png"
+  ],
+  "checks": {
+    "noSidewaysScroll": true,
+    "tapTargets": true,
+    "textFits": true,
+    "tomatoRule": true
+  },
+  "sidewaysScroll": {
+    "scrollWidth": 863,
+    "innerWidth": 863
+  },
+  "tapTargetIssues": [],
+  "tapTargetAllowed": [],
+  "clippedText": [],
+  "truncatedText": [],
+  "offscreenControls": [],
+  "tomato": [],
+  "tomatoViolations": [],
+  "notes": [
+    "The ask-forky function is stubbed: the answer text is the test's, not the AI's."
+  ],
+  "reportOnly": {}
+}
