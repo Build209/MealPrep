@@ -1,0 +1,68 @@
+{
+  "project": "android",
+  "engine": "chromium",
+  "order": "30",
+  "screen": "grocery-stores-switch",
+  "route": "/grocery?view=stores",
+  "purpose": "none",
+  "viewport": "412x839",
+  "screenshots": [
+    "android/30-grocery-stores-switch.png",
+    "android/30-grocery-stores-switch-bottom.png"
+  ],
+  "checks": {
+    "noSidewaysScroll": true,
+    "tapTargets": true,
+    "textFits": true,
+    "tomatoRule": true
+  },
+  "sidewaysScroll": {
+    "scrollWidth": 412,
+    "innerWidth": 412
+  },
+  "tapTargetIssues": [],
+  "tapTargetAllowed": [],
+  "clippedText": [],
+  "truncatedText": [
+    {
+      "text": "Home",
+      "kind": "truncated",
+      "scroll": "38x18",
+      "client": "38x13"
+    },
+    {
+      "text": "Pantry",
+      "kind": "truncated",
+      "scroll": "42x18",
+      "client": "42x13"
+    },
+    {
+      "text": "Recipes",
+      "kind": "truncated",
+      "scroll": "51x18",
+      "client": "51x13"
+    },
+    {
+      "text": "Grocery",
+      "kind": "truncated",
+      "scroll": "50x18",
+      "client": "50x13"
+    }
+  ],
+  "offscreenControls": [],
+  "tomato": [
+    {
+      "text": "Plan",
+      "tag": "h1",
+      "props": [
+        "color"
+      ],
+      "context": "brand"
+    }
+  ],
+  "tomatoViolations": [],
+  "notes": [
+    "Reached through /stores, which redirects to /grocery?view=stores."
+  ],
+  "reportOnly": {}
+}

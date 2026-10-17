@@ -1,0 +1,43 @@
+{
+  "project": "iphone",
+  "engine": "webkit",
+  "order": "17",
+  "screen": "plans",
+  "route": "/plans",
+  "purpose": "money",
+  "viewport": "393x659",
+  "screenshots": [
+    "iphone/17-plans.png",
+    "iphone/17-plans-bottom.png"
+  ],
+  "checks": {
+    "noSidewaysScroll": true,
+    "tapTargets": true,
+    "textFits": true,
+    "tomatoRule": true
+  },
+  "sidewaysScroll": {
+    "scrollWidth": 393,
+    "innerWidth": 393
+  },
+  "tapTargetIssues": [],
+  "tapTargetAllowed": [],
+  "clippedText": [],
+  "truncatedText": [],
+  "offscreenControls": [],
+  "tomato": [
+    {
+      "text": "Subscribe for $53.88 a year",
+      "tag": "button",
+      "props": [
+        "background"
+      ],
+      "context": "money"
+    }
+  ],
+  "tomatoViolations": [],
+  "notes": [
+    "No checkout is created: the live Stripe test purchase stays on the owner list."
+  ],
+  "reportOnly": {}
+}
