@@ -115,9 +115,22 @@ function IngredientRow({ line, heldStaple = false, check }: { line: CartStatusLi
 
 function Credit({ recipe }: { recipe: AppRecipe }) {
   if (recipe.credit) {
-    const { creatorName, creatorUrl, originalUrl } = recipe.credit;
+    const { creatorName, creatorUrl, originalUrl, sourceLine } = recipe.credit;
     return (
       <View style={{ gap: 2 }}>
+        {sourceLine ? (
+          originalUrl ? (
+            <Pressable accessibilityRole="link" onPress={() => void Linking.openURL(originalUrl)} style={{ minHeight: touch.min, justifyContent: 'center' }}>
+              <AppText variant="secondary" style={{ textDecorationLine: 'underline' }}>
+                {sourceLine}
+              </AppText>
+            </Pressable>
+          ) : (
+            <AppText variant="secondary" color="muted">
+              {sourceLine}
+            </AppText>
+          )
+        ) : null}
         {creatorName ? (
           creatorUrl ? (
             <Pressable accessibilityRole="link" onPress={() => void Linking.openURL(creatorUrl)} style={{ minHeight: touch.min, justifyContent: 'center' }}>
@@ -131,7 +144,7 @@ function Credit({ recipe }: { recipe: AppRecipe }) {
             </AppText>
           )
         ) : null}
-        {originalUrl ? (
+        {originalUrl && !sourceLine ? (
           <Pressable accessibilityRole="link" onPress={() => void Linking.openURL(originalUrl)} style={{ minHeight: touch.min, justifyContent: 'center' }}>
             <AppText variant="secondary" style={{ textDecorationLine: 'underline' }}>
               {DETAIL_COPY.viewOriginal}

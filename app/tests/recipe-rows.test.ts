@@ -178,3 +178,20 @@ test('grocery list: server rows replace by id; "already on the list" needs every
   assert.equal(missingAlreadyOnList(`r_${UUID}`, lines, [{ ...row, checked: true }]), false, 'ticked rows do not count');
   assert.equal(missingAlreadyOnList(`r_${UUID}`, [], [row]), false);
 });
+
+test('a library recipe from an outside source carries a credit line and link', () => {
+  const base = {
+    id: UUID, slug: 'pancakes', title: 'Pancakes', dish_name: 'Pancakes', servings: 4, prep_minutes: null, cook_minutes: null,
+    ingredients: [], steps: [], image_url: null, created_at: '2026-01-01T00:00:00Z',
+  };
+  const own = libraryRecipeFromRow(base);
+  assert.equal(own.credit, null);
+  const wiki = libraryRecipeFromRow({
+    ...base,
+    source_name: 'Wikibooks Cookbook',
+    source_url: 'https://en.wikibooks.org/wiki/Cookbook:Pancake',
+    license: 'CC BY-SA 4.0',
+  });
+  assert.equal(wiki.credit?.sourceLine, 'Source: Wikibooks Cookbook, CC BY-SA 4.0');
+  assert.equal(wiki.credit?.originalUrl, 'https://en.wikibooks.org/wiki/Cookbook:Pancake');
+});
