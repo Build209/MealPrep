@@ -11,17 +11,7 @@ name: New app Android emulator
 # could not be set up. Screenshots: the "emulator-screens-<device>" artifacts, and on pull requests
 # from this repository the `emulator-screens-pr-<number>` branch.
 on:
-  pull_request:
-    paths:
-      - "app/**"
-      - "db/**"
-      - ".github/workflows/app-android-emulator.yml"
-  push:
-    branches: [rebuild/v1, main]
-    paths:
-      - "app/**"
-      - "db/**"
-      - ".github/workflows/app-android-emulator.yml"
+  # Manual only (owner's call, 2026-10-16): run from the Actions tab when wanted.
   workflow_dispatch:
 
 permissions:
