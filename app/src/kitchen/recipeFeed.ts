@@ -74,7 +74,13 @@ function seededHash(text: string): number {
  * missing, highest percent, most matched, name. Far recipes (4+ missing) come after them in a
  * rotation that is fixed for the day (same seed, same order) and changes the next day.
  */
-export function compareFeedMatches(seed: string) {
+/** Dish types that are an ingredient or a drink rather than a meal: they rank after meals with the same number missing. */
+export const COMPONENT_TAGS: ReadonlySet<string> = new Set(['sauce', 'spice mix', 'salad dressing', 'dip', 'marinade', 'condiment', 'dough', 'beverage']);
+
+export const isComponentRecipe = (recipe: { tags?: readonly string[] }): boolean =>
+  (recipe.tags ?? []).some((tag) => COMPONENT_TAGS.has(tag.toLowerCase()));
+
+export function compareFeedMatches(seed: string, componentIds?: ReadonlySet<string>) {
   return (a: RecipePantryMatch, b: RecipePantryMatch): number => {
     const aFar = a.missingCount >= FEED_ROTATE_FROM_MISSING;
     const bFar = b.missingCount >= FEED_ROTATE_FROM_MISSING;
@@ -82,6 +88,7 @@ export function compareFeedMatches(seed: string) {
     if (aFar) return seededHash(`${seed}|${a.recipeId}`) - seededHash(`${seed}|${b.recipeId}`) || a.recipeId.localeCompare(b.recipeId);
     return (
       a.missingCount - b.missingCount ||
+      Number(componentIds?.has(a.recipeId) ?? false) - Number(componentIds?.has(b.recipeId) ?? false) ||
       b.percentMatch - a.percentMatch ||
       b.matchedCount - a.matchedCount ||
       a.recipeName.localeCompare(b.recipeName)
@@ -92,7 +99,7 @@ export function compareFeedMatches(seed: string) {
 export function rankRecipeFeed<R extends MatchRecipe, P extends StockRow>(
   recipes: readonly R[],
   pantry: readonly P[],
-  options?: { moreLimit?: number; cookableLimit?: number; seed?: string; scoredById?: ReadonlyMap<string, RecipePantryMatch<P>>; hideFromMore?: (recipe: R) => boolean },
+  options?: { moreLimit?: number; cookableLimit?: number; seed?: string; isComponent?: (recipe: R) => boolean; scoredById?: ReadonlyMap<string, RecipePantryMatch<P>>; hideFromMore?: (recipe: R) => boolean },
 ): RecipeFeed<R, P> {
   const byId = new Map(recipes.map((recipe) => [recipe.id, recipe]));
   const index = buildPantryMatchIndex(recipes, pantry, options?.scoredById);
@@ -104,7 +111,8 @@ export function rankRecipeFeed<R extends MatchRecipe, P extends StockRow>(
     const recipe = byId.get(match.recipeId);
     return recipe ? { recipe, match } : null;
   };
-  const order = compareFeedMatches(options?.seed ?? todaySeed());
+  const componentIds = options?.isComponent ? new Set(recipes.filter(options.isComponent).map((r) => r.id)) : undefined;
+  const order = compareFeedMatches(options?.seed ?? todaySeed(), componentIds);
   const allCookable = [...matches].sort(order).map(entry).filter((e): e is FeedEntry<R, P> => e !== null);
   const cookableLimit = options?.cookableLimit ?? FEED_COOKABLE_LIMIT;
   const cookable = allCookable.slice(0, cookableLimit);

@@ -43,7 +43,7 @@ export function rankFeedWithAllergens<R extends MatchRecipe, P extends StockRow>
   recipes: readonly R[],
   pantry: readonly P[],
   userAllergens: readonly AllergenKey[],
-  options?: { moreLimit?: number; cookableLimit?: number; seed?: string; scoredById?: ReadonlyMap<string, RecipePantryMatch<P>>; flaggedLimit?: number; hideFromMore?: (recipe: R) => boolean },
+  options?: { moreLimit?: number; cookableLimit?: number; seed?: string; isComponent?: (recipe: R) => boolean; scoredById?: ReadonlyMap<string, RecipePantryMatch<P>>; flaggedLimit?: number; hideFromMore?: (recipe: R) => boolean },
 ): AllergenFeed<R, P> {
   if (userAllergens.length === 0) {
     return { ...rankRecipeFeed(recipes, pantry, options), flagged: [], flaggedHidden: 0 };
@@ -54,7 +54,7 @@ export function rankFeedWithAllergens<R extends MatchRecipe, P extends StockRow>
   const flaggedFeed = rankRecipeFeed(
     flagged.map((f) => f.item),
     pantry,
-    { moreLimit: Number.MAX_SAFE_INTEGER, cookableLimit: Number.MAX_SAFE_INTEGER, hideFromMore: options?.hideFromMore, scoredById: options?.scoredById, seed: options?.seed },
+    { moreLimit: Number.MAX_SAFE_INTEGER, cookableLimit: Number.MAX_SAFE_INTEGER, hideFromMore: options?.hideFromMore, scoredById: options?.scoredById, seed: options?.seed, isComponent: options?.isComponent },
   );
   const all = [...flaggedFeed.cookable, ...flaggedFeed.more].map((entry) => ({
     ...entry,
