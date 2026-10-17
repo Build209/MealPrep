@@ -201,7 +201,7 @@ export function libraryIngredientsFromJson(value: unknown, slug: string): Recipe
     const note = text(r.note);
     out.push({
       ingredientId: `lib-${slug}-${out.length}`,
-      name: note ? `${name} (${note})` : name,
+      name: note ? `${name} (${note.replace(/^\((.*)\)$/, '$1')})` : name,
       quantity: num(r.quantity) ?? 1,
       unit: text(r.unit) || 'each',
     });

@@ -4,6 +4,7 @@
  */
 import { formatIngredientText, formatQuantityWithUnit } from '../kitchen/formatQuantity';
 import type { CartStatusLine } from '../kitchen/recipeCart';
+import { isOptionalIngredient } from '../kitchen/recipeMatch';
 
 export const FEED_COPY = {
   title: 'Recipes',
@@ -51,6 +52,7 @@ export const DETAIL_COPY = {
   itemsNeeded: (n: number) => (n === 1 ? '1 item needed' : `${n} items needed`),
   breakdown: (pantry: number, cart: number) => `${pantry} in pantry · ${cart} in cart`,
   staple: 'Pantry staple',
+  optional: 'Optional',
   addMissing: (n: number) => (n === 1 ? 'Add 1 missing to grocery list' : `Add ${n} missing to grocery list`),
   adding: 'Adding...',
   onList: 'Missing items are on your grocery list',
@@ -94,7 +96,9 @@ export function ingredientRowText(
   if (line.status === 'staple' && heldInPantry) return { name, amount, status: DETAIL_COPY.have };
   if (line.status === 'have') return { name, amount, status: DETAIL_COPY.have };
   if (line.status === 'cart') return { name, amount, status: DETAIL_COPY.inCart };
-  if (line.status === 'staple') return { name, amount, status: DETAIL_COPY.staple };
+  if (line.status === 'staple') {
+    return { name, amount, status: isOptionalIngredient(line.ingredient.name) ? DETAIL_COPY.optional : DETAIL_COPY.staple };
+  }
   if (line.short && line.someInCart) {
     return { name, amount, status: DETAIL_COPY.shortWithCart(amountText(line.need, line.ingredient.unit) || String(line.need)) };
   }

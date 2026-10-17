@@ -1,4 +1,4 @@
-import { hideThinLibraryRecipe } from '../kitchen/recipeFeed';
+import { hideThinLibraryRecipe, isComponentRecipe } from '../kitchen/recipeFeed';
 import { useRouter } from 'expo-router';
 import { useMemo } from 'react';
 import { useScoredRecipes } from '../kitchen/useScoredRecipes';
@@ -38,7 +38,7 @@ export function RecipesFeed() {
   const feed = useMemo(
     () =>
       recipes.data && pantry.data && scored
-        ? rankFeedWithAllergens(recipes.data, pantry.data, userAllergens, { hideFromMore: hideThinLibraryRecipe, scoredById: scored })
+        ? rankFeedWithAllergens(recipes.data, pantry.data, userAllergens, { hideFromMore: hideThinLibraryRecipe, isComponent: isComponentRecipe, scoredById: scored })
         : null,
     [recipes.data, pantry.data, userAllergens, scored],
   );

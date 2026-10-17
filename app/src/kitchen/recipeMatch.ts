@@ -89,6 +89,11 @@ function isWaterIngredient(name: string, ingredientId: string): boolean {
 
 const STAPLE_CACHE = new LruCache<string, boolean>(20_000);
 
+/** "lemon juice (optional)", "parsley, optional": a recipe never needs these, so they are never counted or missing. */
+export function isOptionalIngredient(name: string): boolean {
+  return /\boptional\b/i.test(name);
+}
+
 /** Salt, pepper, water, oil and the like: assumed in every kitchen, never counted. */
 export function isPantryStaple(name: string, ingredientId: string): boolean {
   // Library ids ("lib-<slug>-3") name nothing, so those answers depend on the name alone.
@@ -256,7 +261,7 @@ export function scoreRecipeAgainstPantry<P extends StockRow>(recipe: MatchRecipe
   let scorable = 0;
 
   for (const ingredient of recipe.ingredients) {
-    if (isPantryStaple(ingredient.name, ingredient.ingredientId)) {
+    if (isPantryStaple(ingredient.name, ingredient.ingredientId) || isOptionalIngredient(ingredient.name)) {
       staples.push(ingredient);
       lines.push({ status: 'staple', ingredient });
       continue;
