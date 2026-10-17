@@ -51,10 +51,48 @@ export const FEED_MIN_INGREDIENT_LINES = 3;
 export const hideThinLibraryRecipe = (recipe: { id: string; ingredients: readonly unknown[] }): boolean =>
   recipe.id.startsWith('l_') && recipe.ingredients.length < FEED_MIN_INGREDIENT_LINES;
 
+/** From this many missing ingredients a recipe is "far": there are endless such options, so they rotate daily. */
+export const FEED_ROTATE_FROM_MISSING = 4;
+
+/** Today's date on the device (YYYY-MM-DD): the default rotation seed, so the far recipes change each day. */
+export function todaySeed(now: Date = new Date()): string {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+}
+
+function seededHash(text: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < text.length; i += 1) {
+    h ^= text.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+
+/**
+ * Feed order: close recipes (0 to 3 missing) are ranked on merit: nothing missing first, then fewest
+ * missing, highest percent, most matched, name. Far recipes (4+ missing) come after them in a
+ * rotation that is fixed for the day (same seed, same order) and changes the next day.
+ */
+export function compareFeedMatches(seed: string) {
+  return (a: RecipePantryMatch, b: RecipePantryMatch): number => {
+    const aFar = a.missingCount >= FEED_ROTATE_FROM_MISSING;
+    const bFar = b.missingCount >= FEED_ROTATE_FROM_MISSING;
+    if (aFar !== bFar) return aFar ? 1 : -1;
+    if (aFar) return seededHash(`${seed}|${a.recipeId}`) - seededHash(`${seed}|${b.recipeId}`) || a.recipeId.localeCompare(b.recipeId);
+    return (
+      a.missingCount - b.missingCount ||
+      b.percentMatch - a.percentMatch ||
+      b.matchedCount - a.matchedCount ||
+      a.recipeName.localeCompare(b.recipeName)
+    );
+  };
+}
+
 export function rankRecipeFeed<R extends MatchRecipe, P extends StockRow>(
   recipes: readonly R[],
   pantry: readonly P[],
-  options?: { moreLimit?: number; cookableLimit?: number; hideFromMore?: (recipe: R) => boolean },
+  options?: { moreLimit?: number; cookableLimit?: number; seed?: string; hideFromMore?: (recipe: R) => boolean },
 ): RecipeFeed<R, P> {
   const byId = new Map(recipes.map((recipe) => [recipe.id, recipe]));
   const index = buildPantryMatchIndex(recipes, pantry);
@@ -66,7 +104,8 @@ export function rankRecipeFeed<R extends MatchRecipe, P extends StockRow>(
     const recipe = byId.get(match.recipeId);
     return recipe ? { recipe, match } : null;
   };
-  const allCookable = matches.map(entry).filter((e): e is FeedEntry<R, P> => e !== null);
+  const order = compareFeedMatches(options?.seed ?? todaySeed());
+  const allCookable = [...matches].sort(order).map(entry).filter((e): e is FeedEntry<R, P> => e !== null);
   const cookableLimit = options?.cookableLimit ?? FEED_COOKABLE_LIMIT;
   const cookable = allCookable.slice(0, cookableLimit);
   const shown = new Set(allCookable.map((e) => e.recipe.id));
@@ -76,7 +115,7 @@ export function rankRecipeFeed<R extends MatchRecipe, P extends StockRow>(
       const recipe = byId.get(m.recipeId);
       return !(recipe && options?.hideFromMore?.(recipe));
     })
-    .sort((a, b) => a.missingCount - b.missingCount || b.matchedCount - a.matchedCount || a.recipeName.localeCompare(b.recipeName))
+    .sort(order)
     .map(entry)
     .filter((e): e is FeedEntry<R, P> => e !== null);
   const limit = options?.moreLimit ?? FEED_MORE_LIMIT;
