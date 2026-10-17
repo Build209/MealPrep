@@ -1,0 +1,34 @@
+{
+  "project": "emulator-pixel-7-portrait-1080x2400",
+  "engine": "chromium",
+  "order": "19",
+  "screen": "account",
+  "route": "/account",
+  "purpose": "none",
+  "viewport": "412x783",
+  "screenshots": [
+    "emulator-pixel-7-portrait-1080x2400/19-account.png",
+    "emulator-pixel-7-portrait-1080x2400/19-account-bottom.png"
+  ],
+  "checks": {
+    "noSidewaysScroll": true,
+    "tapTargets": true,
+    "textFits": true,
+    "tomatoRule": true
+  },
+  "sidewaysScroll": {
+    "scrollWidth": 412,
+    "innerWidth": 412
+  },
+  "tapTargetIssues": [],
+  "tapTargetAllowed": [],
+  "clippedText": [],
+  "truncatedText": [],
+  "offscreenControls": [],
+  "tomato": [],
+  "tomatoViolations": [],
+  "notes": [
+    "Free account: no Manage subscription button (that is the only money control Account has)."
+  ],
+  "reportOnly": {}
+}

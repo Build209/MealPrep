@@ -1,0 +1,3626 @@
+{
+  "generatedAt": "2026-10-17T02:36:46.341Z",
+  "commit": "c850c6f98f16d2337fed3ddb10ff4612806572ee",
+  "ref": "342/merge",
+  "run": "https://github.com/Build209/MealPrep/actions/runs/38994775483",
+  "engines": {
+    "emulator-pixel-7-landscape-2400x1080": "chromium",
+    "emulator-pixel-7-portrait-1080x2400": "chromium"
+  },
+  "screens": 63,
+  "screensPassing": 61,
+  "results": [
+    {
+      "project": "emulator-pixel-7-landscape-2400x1080",
+      "engine": "chromium",
+      "order": "01",
+      "screen": "sign-in",
+      "route": "/sign-in",
+      "purpose": "none",
+      "viewport": "863x304",
+      "screenshots": [
+        "emulator-pixel-7-landscape-2400x1080/01-sign-in.png",
+        "emulator-pixel-7-landscape-2400x1080/01-sign-in-bottom.png"
+      ],
+      "checks": {
+        "noSidewaysScroll": true,
+        "tapTargets": true,
+        "textFits": true,
+        "tomatoRule": true
+      },
+      "sidewaysScroll": {
+        "scrollWidth": 863,
+        "innerWidth": 863
+      },
+      "tapTargetIssues": [],
+      "tapTargetAllowed": [],
+      "clippedText": [],
+      "truncatedText": [],
+      "offscreenControls": [],
+      "tomato": [
+        {
+          "text": "Plan",
+          "tag": "h1",
+          "props": [
+            "color"
+          ],
+          "context": "brand"
+        }
+      ],
+      "tomatoViolations": [],
+      "notes": [],
+      "reportOnly": {}
+    },
+    {
+      "project": "emulator-pixel-7-landscape-2400x1080",
+      "engine": "chromium",
+      "order": "02",
+      "screen": "sign-up-18plus",
+      "route": "/sign-in",
+      "purpose": "none",
+      "viewport": "863x304",
+      "screenshots": [
+        "emulator-pixel-7-landscape-2400x1080/02-sign-up-18plus.png",
+        "emulator-pixel-7-landscape-2400x1080/02-sign-up-18plus-bottom.png"
+      ],
+      "checks": {
+        "noSidewaysScroll": true,
+        "tapTargets": true,
+        "textFits": true,
+        "tomatoRule": true
+      },
+      "sidewaysScroll": {
+        "scrollWidth": 863,
+        "innerWidth": 863
+      },
+      "tapTargetIssues": [],
+      "tapTargetAllowed": [],
+      "clippedText": [],
+      "truncatedText": [],
+      "offscreenControls": [],
+      "tomato": [
+        {
+          "text": "Plan",
+          "tag": "h1",
+          "props": [
+            "color"
+          ],
+          "context": "brand"
+        }
+      ],
+      "tomatoViolations": [],
+      "notes": [
+        "Screenshot before pressing Create account; the next screen (Home) is checked in 04."
+      ],
+      "reportOnly": {}
+    },
+    {
+      "project": "emulator-pixel-7-landscape-2400x1080",
+      "engine": "chromium",
+      "order": "03",
+      "screen": "forgot-password",
+      "route": "/sign-in",
+      "purpose": "none",
+      "viewport": "863x304",
+      "screenshots": [
+        "emulator-pixel-7-landscape-2400x1080/03-forgot-password.png",
+        "emulator-pixel-7-landscape-2400x1080/03-forgot-password-bottom.png"
+      ],
+      "checks": {
+        "noSidewaysScroll": true,
+        "tapTargets": true,
+        "textFits": true,
+        "tomatoRule": true
+      },
+      "sidewaysScroll": {
+        "scrollWidth": 863,
+        "innerWidth": 863
+      },
+      "tapTargetIssues": [],
+      "tapTargetAllowed": [],
+      "clippedText": [],
+      "truncatedText": [],
+      "offscreenControls": [],
+      "tomato": [
+        {
+          "text": "Plan",
+          "tag": "h1",
+          "props": [
+            "color"
+          ],
+          "context": "brand"
+        }
+      ],
+      "tomatoViolations": [],
+      "notes": [],
+      "reportOnly": {}
+    },
+    {
+      "project": "emulator-pixel-7-landscape-2400x1080",
+      "engine": "chromium",
+      "order": "04",
+      "screen": "home",
+      "route": "/",
+      "purpose": "none",
+      "viewport": "863x304",
+      "screenshots": [
+        "emulator-pixel-7-landscape-2400x1080/04-home.png",
+        "emulator-pixel-7-landscape-2400x1080/04-home-bottom.png"
+      ],
+      "checks": {
+        "noSidewaysScroll": true,
+        "tapTargets": true,
+        "textFits": true,
+        "tomatoRule": true
+      },
+      "sidewaysScroll": {
+        "scrollWidth": 863,
+        "innerWidth": 863
+      },
+      "tapTargetIssues": [],
+      "tapTargetAllowed": [],
+      "clippedText": [],
+      "truncatedText": [
+        {
+          "text": "Home",
+          "kind": "truncated",
+          "scroll": "38x18",
+          "client": "38x13"
+        },
+        {
+          "text": "Pantry",
+          "kind": "truncated",
+          "scroll": "42x18",
+          "client": "42x13"
+        },
+        {
+          "text": "Recipes",
+          "kind": "truncated",
+          "scroll": "52x18",
+          "client": "52x13"
+        },
+        {
+          "text": "Grocery",
+          "kind": "truncated",
+          "scroll": "51x18",
+          "client": "51x13"
+        }
+      ],
+      "offscreenControls": [],
+      "tomato": [
+        {
+          "text": "Plan",
+          "tag": "h1",
+          "props": [
+            "color"
+          ],
+          "context": "brand"
+        }
+      ],
+      "tomatoViolations": [],
+      "notes": [
+        "The promo slot under the counters is a link to Plans on the web (no ads, nothing loaded from outside)."
+      ],
+      "reportOnly": {}
+    },
+    {
+      "project": "emulator-pixel-7-landscape-2400x1080",
+      "engine": "chromium",
+      "order": "05",
+      "screen": "pantry-shelves",
+      "route": "/pantry",
+      "purpose": "none",
+      "viewport": "863x304",
+      "screenshots": [
+        "emulator-pixel-7-landscape-2400x1080/05-pantry-shelves.png",
+        "emulator-pixel-7-landscape-2400x1080/05-pantry-shelves-bottom.png"
+      ],
+      "checks": {
+        "noSidewaysScroll": true,
+        "tapTargets": true,
+        "textFits": true,
+        "tomatoRule": true
+      },
+      "sidewaysScroll": {
+        "scrollWidth": 863,
+        "innerWidth": 863
+      },
+      "tapTargetIssues": [],
+      "tapTargetAllowed": [],
+      "clippedText": [],
+      "truncatedText": [
+        {
+          "text": "Extra sharp aged white cheddar cheese block",
+          "kind": "truncated",
+          "scroll": "86x64",
+          "client": "86x48"
+        },
+        {
+          "text": "Home",
+          "kind": "truncated",
+          "scroll": "38x18",
+          "client": "38x13"
+        },
+        {
+          "text": "Pantry",
+          "kind": "truncated",
+          "scroll": "42x18",
+          "client": "42x13"
+        },
+        {
+          "text": "Recipes",
+          "kind": "truncated",
+          "scroll": "52x18",
+          "client": "52x13"
+        },
+        {
+          "text": "Grocery",
+          "kind": "truncated",
+          "scroll": "51x18",
+          "client": "51x13"
+        }
+      ],
+      "offscreenControls": [],
+      "tomato": [
+        {
+          "text": "Plan",
+          "tag": "h1",
+          "props": [
+            "color"
+          ],
+          "context": "brand"
+        },
+        {
+          "text": "Scan · 3 left this month",
+          "tag": "button",
+          "props": [
+            "border-top"
+          ],
+          "context": "camera"
+        },
+        {
+          "text": "",
+          "tag": "div",
+          "props": [
+            "background"
+          ],
+          "context": "camera"
+        },
+        {
+          "text": "",
+          "tag": "div",
+          "props": [
+            "border-top"
+          ],
+          "context": "camera"
+        },
+        {
+          "text": "",
+          "tag": "div",
+          "props": [
+            "border-top"
+          ],
+          "context": "camera"
+        }
+      ],
+      "tomatoViolations": [],
+      "notes": [
+        "Tomato is allowed here only on the Scan button (camera)."
+      ],
+      "reportOnly": {}
+    },
+    {
+      "project": "emulator-pixel-7-landscape-2400x1080",
+      "engine": "chromium",
+      "order": "06",
+      "screen": "pantry-list",
+      "route": "/pantry",
+      "purpose": "none",
+      "viewport": "863x304",
+      "screenshots": [
+        "emulator-pixel-7-landscape-2400x1080/06-pantry-list.png",
+        "emulator-pixel-7-landscape-2400x1080/06-pantry-list-bottom.png"
+      ],
+      "checks": {
+        "noSidewaysScroll": true,
+        "tapTargets": true,
+        "textFits": true,
+        "tomatoRule": true
+      },
+      "sidewaysScroll": {
+        "scrollWidth": 863,
+        "innerWidth": 863
+      },
+      "tapTargetIssues": [],
+      "tapTargetAllowed": [],
+      "clippedText": [],
+      "truncatedText": [
+        {
+          "text": "Home",
+          "kind": "truncated",
+          "scroll": "38x18",
+          "client": "38x13"
+        },
+        {
+          "text": "Pantry",
+          "kind": "truncated",
+          "scroll": "42x18",
+          "client": "42x13"
+        },
+        {
+          "text": "Recipes",
+          "kind": "truncated",
+          "scroll": "52x18",
+          "client": "52x13"
+        },
+        {
+          "text": "Grocery",
+          "kind": "truncated",
+          "scroll": "51x18",
+          "client": "51x13"
+        }
+      ],
+      "offscreenControls": [],
+      "tomato": [
+        {
+          "text": "Plan",
+          "tag": "h1",
+          "props": [
+            "color"
+          ],
+          "context": "brand"
+        },
+        {
+          "text": "Scan · 3 left this month",
+          "tag": "button",
+          "props": [
+            "border-top"
+          ],
+          "context": "camera"
+        },
+        {
+          "text": "",
+          "tag": "div",
+          "props": [
+            "background"
+          ],
+          "context": "camera"
+        },
+        {
+          "text": "",
+          "tag": "div",
+          "props": [
+            "border-top"
+          ],
+          "context": "camera"
+        },
+        {
+          "text": "",
+          "tag": "div",
+          "props": [
+            "border-top"
+          ],
+          "context": "camera"
+        }
+      ],
+      "tomatoViolations": [],
+      "notes": [
+        "Includes a long item name (\"Extra sharp aged white cheddar cheese block\") to test wrapping."
+      ],
+      "reportOnly": {}
+    },
+    {
+      "project": "emulator-pixel-7-landscape-2400x1080",
+      "engine": "chromium",
+      "order": "07",
+      "screen": "pantry-empty",
+      "route": "/pantry",
+      "purpose": "none",
+      "viewport": "863x304",
+      "screenshots": [
+        "emulator-pixel-7-landscape-2400x1080/07-pantry-empty.png",
+        "emulator-pixel-7-landscape-2400x1080/07-pantry-empty-bottom.png"
+      ],
+      "checks": {
+        "noSidewaysScroll": true,
+        "tapTargets": true,
+        "textFits": true,
+        "tomatoRule": true
+      },
+      "sidewaysScroll": {
+        "scrollWidth": 863,
+        "innerWidth": 863
+      },
+      "tapTargetIssues": [],
+      "tapTargetAllowed": [],
+      "clippedText": [],
+      "truncatedText": [
+        {
+          "text": "Home",
+          "kind": "truncated",
+          "scroll": "38x18",
+          "client": "38x13"
+        },
+        {
+          "text": "Pantry",
+          "kind": "truncated",
+          "scroll": "42x18",
+          "client": "42x13"
+        },
+        {
+          "text": "Recipes",
+          "kind": "truncated",
+          "scroll": "52x18",
+          "client": "52x13"
+        },
+        {
+          "text": "Grocery",
+          "kind": "truncated",
+          "scroll": "51x18",
+          "client": "51x13"
+        }
+      ],
+      "offscreenControls": [],
+      "tomato": [
+        {
+          "text": "Plan",
+          "tag": "h1",
+          "props": [
+            "color"
+          ],
+          "context": "brand"
+        },
+        {
+          "text": "Scan · 3 left this month",
+          "tag": "button",
+          "props": [
+            "border-top"
+          ],
+          "context": "camera"
+        },
+        {
+          "text": "",
+          "tag": "div",
+          "props": [
+            "background"
+          ],
+          "context": "camera"
+        },
+        {
+          "text": "",
+          "tag": "div",
+          "props": [
+            "border-top"
+          ],
+          "context": "camera"
+        },
+        {
+          "text": "",
+          "tag": "div",
+          "props": [
+            "border-top"
+          ],
+          "context": "camera"
+        }
+      ],
+      "tomatoViolations": [],
+      "notes": [],
+      "reportOnly": {}
+    },
+    {
+      "project": "emulator-pixel-7-landscape-2400x1080",
+      "engine": "chromium",
+      "order": "07a",
+      "screen": "pantry-clear-menu",
+      "route": "/pantry",
+      "purpose": "none",
+      "viewport": "863x304",
+      "screenshots": [
+        "emulator-pixel-7-landscape-2400x1080/07a-pantry-clear-menu.png",
+        "emulator-pixel-7-landscape-2400x1080/07a-pantry-clear-menu-bottom.png"
+      ],
+      "checks": {
+        "noSidewaysScroll": true,
+        "tapTargets": false,
+        "textFits": true,
+        "tomatoRule": true
+      },
+      "sidewaysScroll": {
+        "scrollWidth": 863,
+        "innerWidth": 863
+      },
+      "tapTargetIssues": [
+        {
+          "text": "Close",
+          "role": "button",
+          "width": 863.2,
+          "height": 30.4
+        }
+      ],
+      "tapTargetAllowed": [],
+      "clippedText": [],
+      "truncatedText": [
+        {
+          "text": "Extra sharp aged white cheddar cheese block",
+          "kind": "truncated",
+          "scroll": "86x64",
+          "client": "86x48"
+        },
+        {
+          "text": "Home",
+          "kind": "truncated",
+          "scroll": "38x18",
+          "client": "38x13"
+        },
+        {
+          "text": "Pantry",
+          "kind": "truncated",
+          "scroll": "42x18",
+          "client": "42x13"
+        },
+        {
+          "text": "Recipes",
+          "kind": "truncated",
+          "scroll": "52x18",
+          "client": "52x13"
+        },
+        {
+          "text": "Grocery",
+          "kind": "truncated",
+          "scroll": "51x18",
+          "client": "51x13"
+        }
+      ],
+      "offscreenControls": [],
+      "tomato": [
+        {
+          "text": "Plan",
+          "tag": "h1",
+          "props": [
+            "color"
+          ],
+          "context": "brand"
+        },
+        {
+          "text": "Scan · 3 left this month",
+          "tag": "button",
+          "props": [
+            "border-top"
+          ],
+          "context": "camera"
+        },
+        {
+          "text": "",
+          "tag": "div",
+          "props": [
+            "background"
+          ],
+          "context": "camera"
+        },
+        {
+          "text": "",
+          "tag": "div",
+          "props": [
+            "border-top"
+          ],
+          "context": "camera"
+        },
+        {
+          "text": "",
+          "tag": "div",
+          "props": [
+            "border-top"
+          ],
+          "context": "camera"
+        }
+      ],
+      "tomatoViolations": [],
+      "notes": [
+        "Neutral (ink) control, never tomato. Spice rack is empty in the seed, so its choice is disabled."
+      ],
+      "reportOnly": {}
+    },
+    {
+      "project": "emulator-pixel-7-landscape-2400x1080",
+      "engine": "chromium",
+      "order": "07b",
+      "screen": "pantry-clear-confirm",
+      "route": "/pantry",
+      "purpose": "none",
+      "viewport": "863x304",
+      "screenshots": [
+        "emulator-pixel-7-landscape-2400x1080/07b-pantry-clear-confirm.png"
+      ],
+      "checks": {
+        "noSidewaysScroll": true,
+        "tapTargets": false,
+        "textFits": true,
+        "tomatoRule": true
+      },
+      "sidewaysScroll": {
+        "scrollWidth": 863,
+        "innerWidth": 863
+      },
+      "tapTargetIssues": [
+        {
+          "text": "Close",
+          "role": "button",
+          "width": 863.2,
+          "height": 30.4
+        }
+      ],
+      "tapTargetAllowed": [],
+      "clippedText": [],
+      "truncatedText": [
+        {
+          "text": "Extra sharp aged white cheddar cheese block",
+          "kind": "truncated",
+          "scroll": "86x64",
+          "client": "86x48"
+        },
+        {
+          "text": "Home",
+          "kind": "truncated",
+          "scroll": "38x18",
+          "client": "38x13"
+        },
+        {
+          "text": "Pantry",
+          "kind": "truncated",
+          "scroll": "42x18",
+          "client": "42x13"
+        },
+        {
+          "text": "Recipes",
+          "kind": "truncated",
+          "scroll": "52x18",
+          "client": "52x13"
+        },
+        {
+          "text": "Grocery",
+          "kind": "truncated",
+          "scroll": "51x18",
+          "client": "51x13"
+        }
+      ],
+      "offscreenControls": [],
+      "tomato": [
+        {
+          "text": "Plan",
+          "tag": "h1",
+          "props": [
+            "color"
+          ],
+          "context": "brand"
+        },
+        {
+          "text": "Scan · 3 left this month",
+          "tag": "button",
+          "props": [
+            "border-top"
+          ],
+          "context": "camera"
+        },
+        {
+          "text": "",
+          "tag": "div",
+          "props": [
+            "background"
+          ],
+          "context": "camera"
+        },
+        {
+          "text": "",
+          "tag": "div",
+          "props": [
+            "border-top"
+          ],
+          "context": "camera"
+        },
+        {
+          "text": "",
+          "tag": "div",
+          "props": [
+            "border-top"
+          ],
+          "context": "camera"
+        }
+      ],
+      "tomatoViolations": [],
+      "notes": [
+        "The tour stops at the confirm; the seeded rows stay for the other screens."
+      ],
+      "reportOnly": {}
+    },
+    {
+      "project": "emulator-pixel-7-landscape-2400x1080",
+      "engine": "chromium",
+      "order": "08",
+      "screen": "scan",
+      "route": "/scan",
+      "purpose": "camera",
+      "viewport": "863x304",
+      "screenshots": [
+        "emulator-pixel-7-landscape-2400x1080/08-scan.png",
+        "emulator-pixel-7-landscape-2400x1080/08-scan-bottom.png"
+      ],
+      "checks": {
+        "noSidewaysScroll": true,
+        "tapTargets": true,
+        "textFits": true,
+        "tomatoRule": true
+      },
+      "sidewaysScroll": {
+        "scrollWidth": 863,
+        "innerWidth": 863
+      },
+      "tapTargetIssues": [],
+      "tapTargetAllowed": [],
+      "clippedText": [],
+      "truncatedText": [],
+      "offscreenControls": [],
+      "tomato": [
+        {
+          "text": "Take a photo",
+          "tag": "button",
+          "props": [
+            "border-top"
+          ],
+          "context": "camera"
+        },
+        {
+          "text": "",
+          "tag": "div",
+          "props": [
+            "background"
+          ],
+          "context": "camera"
+        },
+        {
+          "text": "",
+          "tag": "div",
+          "props": [
+            "border-top"
+          ],
+          "context": "camera"
+        },
+        {
+          "text": "",
+          "tag": "div",
+          "props": [
+            "border-top"
+          ],
+          "context": "camera"
+        },
+        {
+          "text": "Choose a photo",
+          "tag": "button",
+          "props": [
+            "border-top"
+          ],
+          "context": "camera"
+        },
+        {
+          "text": "",
+          "tag": "div",
+          "props": [
+            "background"
+          ],
+          "context": "camera"
+        },
+        {
+          "text": "",
+          "tag": "div",
+          "props": [
+            "border-top"
+          ],
+          "context": "camera"
+        },
+        {
+          "text": "",
+          "tag": "div",
+          "props": [
+            "border-top"
+          ],
+          "context": "camera"
+        }
+      ],
+      "tomatoViolations": [],
+      "notes": [
+        "No photo is taken: the real camera scan stays on the owner list."
+      ],
+      "reportOnly": {}
+    },
+    {
+      "project": "emulator-pixel-7-landscape-2400x1080",
+      "engine": "chromium",
+      "order": "09",
+      "screen": "grocery-ticked",
+      "route": "/grocery",
+      "purpose": "none",
+      "viewport": "863x304",
+      "screenshots": [
+        "emulator-pixel-7-landscape-2400x1080/09-grocery-ticked.png",
+        "emulator-pixel-7-landscape-2400x1080/09-grocery-ticked-bottom.png"
+      ],
+      "checks": {
+        "noSidewaysScroll": true,
+        "tapTargets": true,
+        "textFits": true,
+        "tomatoRule": true
+      },
+      "sidewaysScroll": {
+        "scrollWidth": 863,
+        "innerWidth": 863
+      },
+      "tapTargetIssues": [],
+      "tapTargetAllowed": [],
+      "clippedText": [],
+      "truncatedText": [
+        {
+          "text": "Home",
+          "kind": "truncated",
+          "scroll": "38x18",
+          "client": "38x13"
+        },
+        {
+          "text": "Pantry",
+          "kind": "truncated",
+          "scroll": "42x18",
+          "client": "42x13"
+        },
+        {
+          "text": "Recipes",
+          "kind": "truncated",
+          "scroll": "52x18",
+          "client": "52x13"
+        },
+        {
+          "text": "Grocery",
+          "kind": "truncated",
+          "scroll": "51x18",
+          "client": "51x13"
+        }
+      ],
+      "offscreenControls": [],
+      "tomato": [
+        {
+          "text": "Plan",
+          "tag": "h1",
+          "props": [
+            "color"
+          ],
+          "context": "brand"
+        }
+      ],
+      "tomatoViolations": [],
+      "notes": [],
+      "reportOnly": {}
+    },
+    {
+      "project": "emulator-pixel-7-landscape-2400x1080",
+      "engine": "chromium",
+      "order": "10",
+      "screen": "recipe-search",
+      "route": "/recipes/search?q=zppentawst",
+      "purpose": "none",
+      "viewport": "863x304",
+      "screenshots": [
+        "emulator-pixel-7-landscape-2400x1080/10-recipe-search.png",
+        "emulator-pixel-7-landscape-2400x1080/10-recipe-search-bottom.png"
+      ],
+      "checks": {
+        "noSidewaysScroll": true,
+        "tapTargets": true,
+        "textFits": true,
+        "tomatoRule": true
+      },
+      "sidewaysScroll": {
+        "scrollWidth": 863,
+        "innerWidth": 863
+      },
+      "tapTargetIssues": [],
+      "tapTargetAllowed": [],
+      "clippedText": [],
+      "truncatedText": [],
+      "offscreenControls": [],
+      "tomato": [],
+      "tomatoViolations": [],
+      "notes": [],
+      "reportOnly": {}
+    },
+    {
+      "project": "emulator-pixel-7-landscape-2400x1080",
+      "engine": "chromium",
+      "order": "11",
+      "screen": "recipes-saved",
+      "route": "/recipes/saved",
+      "purpose": "none",
+      "viewport": "863x304",
+      "screenshots": [
+        "emulator-pixel-7-landscape-2400x1080/11-recipes-saved.png"
+      ],
+      "checks": {
+        "noSidewaysScroll": true,
+        "tapTargets": true,
+        "textFits": true,
+        "tomatoRule": true
+      },
+      "sidewaysScroll": {
+        "scrollWidth": 863,
+        "innerWidth": 863
+      },
+      "tapTargetIssues": [],
+      "tapTargetAllowed": [],
+      "clippedText": [],
+      "truncatedText": [],
+      "offscreenControls": [],
+      "tomato": [],
+      "tomatoViolations": [],
+      "notes": [],
+      "reportOnly": {}
+    },
+    {
+      "project": "emulator-pixel-7-landscape-2400x1080",
+      "engine": "chromium",
+      "order": "12",
+      "screen": "recipe-page",
+      "route": "/recipe/r_4ee99002-8651-4f1d-a0a9-be289b5ca9d4",
+      "purpose": "none",
+      "viewport": "863x304",
+      "screenshots": [
+        "emulator-pixel-7-landscape-2400x1080/12-recipe-page.png",
+        "emulator-pixel-7-landscape-2400x1080/12-recipe-page-bottom.png"
+      ],
+      "checks": {
+        "noSidewaysScroll": true,
+        "tapTargets": true,
+        "textFits": true,
+        "tomatoRule": true
+      },
+      "sidewaysScroll": {
+        "scrollWidth": 863,
+        "innerWidth": 863
+      },
+      "tapTargetIssues": [],
+      "tapTargetAllowed": [],
+      "clippedText": [],
+      "truncatedText": [],
+      "offscreenControls": [],
+      "tomato": [],
+      "tomatoViolations": [],
+      "notes": [],
+      "reportOnly": {}
+    },
+    {
+      "project": "emulator-pixel-7-landscape-2400x1080",
+      "engine": "chromium",
+      "order": "13",
+      "screen": "recipe-import",
+      "route": "/recipes/import",
+      "purpose": "none",
+      "viewport": "863x304",
+      "screenshots": [
+        "emulator-pixel-7-landscape-2400x1080/13-recipe-import.png",
+        "emulator-pixel-7-landscape-2400x1080/13-recipe-import-bottom.png"
+      ],
+      "checks": {
+        "noSidewaysScroll": true,
+        "tapTargets": true,
+        "textFits": true,
+        "tomatoRule": true
+      },
+      "sidewaysScroll": {
+        "scrollWidth": 863,
+        "innerWidth": 863
+      },
+      "tapTargetIssues": [],
+      "tapTargetAllowed": [],
+      "clippedText": [],
+      "truncatedText": [],
+      "offscreenControls": [],
+      "tomato": [
+        {
+          "text": "Take a photo of a recipe",
+          "tag": "button",
+          "props": [
+            "border-top"
+          ],
+          "context": "camera"
+        },
+        {
+          "text": "",
+          "tag": "div",
+          "props": [
+            "background"
+          ],
+          "context": "camera"
+        },
+        {
+          "text": "",
+          "tag": "div",
+          "props": [
+            "border-top"
+          ],
+          "context": "camera"
+        },
+        {
+          "text": "",
+          "tag": "div",
+          "props": [
+            "border-top"
+          ],
+          "context": "camera"
+        },
+        {
+          "text": "Choose a recipe photo",
+          "tag": "button",
+          "props": [
+            "border-top"
+          ],
+          "context": "camera"
+        },
+        {
+          "text": "",
+          "tag": "div",
+          "props": [
+            "background"
+          ],
+          "context": "camera"
+        },
+        {
+          "text": "",
+          "tag": "div",
+          "props": [
+            "border-top"
+          ],
+          "context": "camera"
+        },
+        {
+          "text": "",
+          "tag": "div",
+          "props": [
+            "border-top"
+          ],
+          "context": "camera"
+        }
+      ],
+      "tomatoViolations": [],
+      "notes": [
+        "Photo import uses the camera/file picker: only the screen is checked."
+      ],
+      "reportOnly": {}
+    },
+    {
+      "project": "emulator-pixel-7-landscape-2400x1080",
+      "engine": "chromium",
+      "order": "14",
+      "screen": "creators",
+      "route": "/creators",
+      "purpose": "none",
+      "viewport": "863x304",
+      "screenshots": [
+        "emulator-pixel-7-landscape-2400x1080/14-creators.png",
+        "emulator-pixel-7-landscape-2400x1080/14-creators-bottom.png"
+      ],
+      "checks": {
+        "noSidewaysScroll": true,
+        "tapTargets": true,
+        "textFits": true,
+        "tomatoRule": true
+      },
+      "sidewaysScroll": {
+        "scrollWidth": 863,
+        "innerWidth": 863
+      },
+      "tapTargetIssues": [],
+      "tapTargetAllowed": [],
+      "clippedText": [],
+      "truncatedText": [],
+      "offscreenControls": [],
+      "tomato": [],
+      "tomatoViolations": [],
+      "notes": [],
+      "reportOnly": {}
+    },
+    {
+      "project": "emulator-pixel-7-landscape-2400x1080",
+      "engine": "chromium",
+      "order": "15",
+      "screen": "forky-answer",
+      "route": "/forky",
+      "purpose": "none",
+      "viewport": "863x304",
+      "screenshots": [
+        "emulator-pixel-7-landscape-2400x1080/15-forky-answer.png",
+        "emulator-pixel-7-landscape-2400x1080/15-forky-answer-bottom.png"
+      ],
+      "checks": {
+        "noSidewaysScroll": true,
+        "tapTargets": true,
+        "textFits": true,
+        "tomatoRule": true
+      },
+      "sidewaysScroll": {
+        "scrollWidth": 863,
+        "innerWidth": 863
+      },
+      "tapTargetIssues": [],
+      "tapTargetAllowed": [],
+      "clippedText": [],
+      "truncatedText": [],
+      "offscreenControls": [],
+      "tomato": [],
+      "tomatoViolations": [],
+      "notes": [
+        "The ask-forky function is stubbed: the answer text is the test's, not the AI's."
+      ],
+      "reportOnly": {}
+    },
+    {
+      "project": "emulator-pixel-7-landscape-2400x1080",
+      "engine": "chromium",
+      "order": "16",
+      "screen": "stores-zip",
+      "route": "/grocery?view=stores",
+      "purpose": "none",
+      "viewport": "863x304",
+      "screenshots": [
+        "emulator-pixel-7-landscape-2400x1080/16-stores-zip.png",
+        "emulator-pixel-7-landscape-2400x1080/16-stores-zip-bottom.png"
+      ],
+      "checks": {
+        "noSidewaysScroll": true,
+        "tapTargets": true,
+        "textFits": true,
+        "tomatoRule": true
+      },
+      "sidewaysScroll": {
+        "scrollWidth": 863,
+        "innerWidth": 863
+      },
+      "tapTargetIssues": [],
+      "tapTargetAllowed": [],
+      "clippedText": [],
+      "truncatedText": [
+        {
+          "text": "Home",
+          "kind": "truncated",
+          "scroll": "38x18",
+          "client": "38x13"
+        },
+        {
+          "text": "Pantry",
+          "kind": "truncated",
+          "scroll": "42x18",
+          "client": "42x13"
+        },
+        {
+          "text": "Recipes",
+          "kind": "truncated",
+          "scroll": "52x18",
+          "client": "52x13"
+        },
+        {
+          "text": "Grocery",
+          "kind": "truncated",
+          "scroll": "51x18",
+          "client": "51x13"
+        }
+      ],
+      "offscreenControls": [],
+      "tomato": [
+        {
+          "text": "Plan",
+          "tag": "h1",
+          "props": [
+            "color"
+          ],
+          "context": "brand"
+        }
+      ],
+      "tomatoViolations": [],
+      "notes": [
+        "GPS (\"Use my location\") needs the native permission prompt: owner list."
+      ],
+      "reportOnly": {}
+    },
+    {
+      "project": "emulator-pixel-7-landscape-2400x1080",
+      "engine": "chromium",
+      "order": "17",
+      "screen": "plans",
+      "route": "/plans",
+      "purpose": "money",
+      "viewport": "863x304",
+      "screenshots": [
+        "emulator-pixel-7-landscape-2400x1080/17-plans.png",
+        "emulator-pixel-7-landscape-2400x1080/17-plans-bottom.png"
+      ],
+      "checks": {
+        "noSidewaysScroll": true,
+        "tapTargets": true,
+        "textFits": true,
+        "tomatoRule": true
+      },
+      "sidewaysScroll": {
+        "scrollWidth": 863,
+        "innerWidth": 863
+      },
+      "tapTargetIssues": [],
+      "tapTargetAllowed": [
+        {
+          "text": "See Terms.",
+          "role": "link",
+          "width": 82.7,
+          "height": 20.6,
+          "why": "inline-link"
+        }
+      ],
+      "clippedText": [],
+      "truncatedText": [],
+      "offscreenControls": [],
+      "tomato": [
+        {
+          "text": "Subscribe for $53.88 a year",
+          "tag": "button",
+          "props": [
+            "background"
+          ],
+          "context": "money"
+        }
+      ],
+      "tomatoViolations": [],
+      "notes": [
+        "No checkout is created: the live Stripe test purchase stays on the owner list."
+      ],
+      "reportOnly": {}
+    },
+    {
+      "project": "emulator-pixel-7-landscape-2400x1080",
+      "engine": "chromium",
+      "order": "18",
+      "screen": "usage",
+      "route": "/usage",
+      "purpose": "money",
+      "viewport": "863x304",
+      "screenshots": [
+        "emulator-pixel-7-landscape-2400x1080/18-usage.png",
+        "emulator-pixel-7-landscape-2400x1080/18-usage-bottom.png"
+      ],
+      "checks": {
+        "noSidewaysScroll": true,
+        "tapTargets": true,
+        "textFits": true,
+        "tomatoRule": true
+      },
+      "sidewaysScroll": {
+        "scrollWidth": 863,
+        "innerWidth": 863
+      },
+      "tapTargetIssues": [],
+      "tapTargetAllowed": [],
+      "clippedText": [],
+      "truncatedText": [],
+      "offscreenControls": [],
+      "tomato": [],
+      "tomatoViolations": [],
+      "notes": [],
+      "reportOnly": {}
+    },
+    {
+      "project": "emulator-pixel-7-landscape-2400x1080",
+      "engine": "chromium",
+      "order": "19",
+      "screen": "account",
+      "route": "/account",
+      "purpose": "none",
+      "viewport": "863x304",
+      "screenshots": [
+        "emulator-pixel-7-landscape-2400x1080/19-account.png",
+        "emulator-pixel-7-landscape-2400x1080/19-account-bottom.png"
+      ],
+      "checks": {
+        "noSidewaysScroll": true,
+        "tapTargets": true,
+        "textFits": true,
+        "tomatoRule": true
+      },
+      "sidewaysScroll": {
+        "scrollWidth": 863,
+        "innerWidth": 863
+      },
+      "tapTargetIssues": [],
+      "tapTargetAllowed": [],
+      "clippedText": [],
+      "truncatedText": [],
+      "offscreenControls": [],
+      "tomato": [],
+      "tomatoViolations": [],
+      "notes": [
+        "Free account: no Manage subscription button (that is the only money control Account has)."
+      ],
+      "reportOnly": {}
+    },
+    {
+      "project": "emulator-pixel-7-landscape-2400x1080",
+      "engine": "chromium",
+      "order": "20",
+      "screen": "delete-account",
+      "route": "/delete-account",
+      "purpose": "none",
+      "viewport": "863x304",
+      "screenshots": [
+        "emulator-pixel-7-landscape-2400x1080/20-delete-account.png",
+        "emulator-pixel-7-landscape-2400x1080/20-delete-account-bottom.png"
+      ],
+      "checks": {
+        "noSidewaysScroll": true,
+        "tapTargets": true,
+        "textFits": true,
+        "tomatoRule": true
+      },
+      "sidewaysScroll": {
+        "scrollWidth": 863,
+        "innerWidth": 863
+      },
+      "tapTargetIssues": [],
+      "tapTargetAllowed": [
+        {
+          "text": "support@mealplanatic.app",
+          "role": "link",
+          "width": 174.9,
+          "height": 18.3,
+          "why": "inline-link"
+        }
+      ],
+      "clippedText": [],
+      "truncatedText": [],
+      "offscreenControls": [],
+      "tomato": [],
+      "tomatoViolations": [],
+      "notes": [],
+      "reportOnly": {}
+    },
+    {
+      "project": "emulator-pixel-7-landscape-2400x1080",
+      "engine": "chromium",
+      "order": "21",
+      "screen": "delete-account-confirm",
+      "route": "/delete-account",
+      "purpose": "none",
+      "viewport": "863x304",
+      "screenshots": [
+        "emulator-pixel-7-landscape-2400x1080/21-delete-account-confirm.png",
+        "emulator-pixel-7-landscape-2400x1080/21-delete-account-confirm-bottom.png"
+      ],
+      "checks": {
+        "noSidewaysScroll": true,
+        "tapTargets": true,
+        "textFits": true,
+        "tomatoRule": true
+      },
+      "sidewaysScroll": {
+        "scrollWidth": 863,
+        "innerWidth": 863
+      },
+      "tapTargetIssues": [],
+      "tapTargetAllowed": [
+        {
+          "text": "support@mealplanatic.app",
+          "role": "link",
+          "width": 174.9,
+          "height": 18.3,
+          "why": "inline-link"
+        }
+      ],
+      "clippedText": [],
+      "truncatedText": [],
+      "offscreenControls": [],
+      "tomato": [],
+      "tomatoViolations": [],
+      "notes": [
+        "The confirm button is never pressed; delete-user-account would get the tour's 503 anyway."
+      ],
+      "reportOnly": {}
+    },
+    {
+      "project": "emulator-pixel-7-landscape-2400x1080",
+      "engine": "chromium",
+      "order": "22",
+      "screen": "reset-password-expired",
+      "route": "/reset-password",
+      "purpose": "none",
+      "viewport": "863x304",
+      "screenshots": [
+        "emulator-pixel-7-landscape-2400x1080/22-reset-password-expired.png"
+      ],
+      "checks": {
+        "noSidewaysScroll": true,
+        "tapTargets": true,
+        "textFits": true,
+        "tomatoRule": true
+      },
+      "sidewaysScroll": {
+        "scrollWidth": 863,
+        "innerWidth": 863
+      },
+      "tapTargetIssues": [],
+      "tapTargetAllowed": [],
+      "clippedText": [],
+      "truncatedText": [],
+      "offscreenControls": [],
+      "tomato": [
+        {
+          "text": "Plan",
+          "tag": "h1",
+          "props": [
+            "color"
+          ],
+          "context": "brand"
+        }
+      ],
+      "tomatoViolations": [],
+      "notes": [
+        "The \"choose a new password\" form needs a recovery email: reset-password.spec.ts covers it on phones."
+      ],
+      "reportOnly": {}
+    },
+    {
+      "project": "emulator-pixel-7-landscape-2400x1080",
+      "engine": "chromium",
+      "order": "23",
+      "screen": "not-found",
+      "route": "/no-such-page-on-phones",
+      "purpose": "none",
+      "viewport": "863x304",
+      "screenshots": [
+        "emulator-pixel-7-landscape-2400x1080/23-not-found.png"
+      ],
+      "checks": {
+        "noSidewaysScroll": true,
+        "tapTargets": true,
+        "textFits": true,
+        "tomatoRule": true
+      },
+      "sidewaysScroll": {
+        "scrollWidth": 863,
+        "innerWidth": 863
+      },
+      "tapTargetIssues": [],
+      "tapTargetAllowed": [],
+      "clippedText": [],
+      "truncatedText": [],
+      "offscreenControls": [],
+      "tomato": [],
+      "tomatoViolations": [],
+      "notes": [],
+      "reportOnly": {}
+    },
+    {
+      "project": "emulator-pixel-7-landscape-2400x1080",
+      "engine": "chromium",
+      "order": "24",
+      "screen": "terms",
+      "route": "/terms.html",
+      "purpose": "none",
+      "viewport": "863x304",
+      "screenshots": [
+        "emulator-pixel-7-landscape-2400x1080/24-terms.png"
+      ],
+      "checks": {
+        "noSidewaysScroll": true,
+        "tapTargets": true,
+        "textFits": true,
+        "tomatoRule": true
+      },
+      "sidewaysScroll": {
+        "scrollWidth": 863,
+        "innerWidth": 863
+      },
+      "tapTargetIssues": [],
+      "tapTargetAllowed": [
+        {
+          "text": "Privacy Policy",
+          "role": "a",
+          "width": 97.7,
+          "height": 18.7,
+          "why": "inline-link"
+        },
+        {
+          "text": "support@mealplanatic.app",
+          "role": "a",
+          "width": 192.2,
+          "height": 18.7,
+          "why": "inline-link"
+        },
+        {
+          "text": "YouTube Terms of Service",
+          "role": "a",
+          "width": 185.4,
+          "height": 18.7,
+          "why": "inline-link"
+        },
+        {
+          "text": "account deletion page",
+          "role": "a",
+          "width": 157.5,
+          "height": 18.7,
+          "why": "inline-link"
+        },
+        {
+          "text": "support@mealplanatic.app",
+          "role": "a",
+          "width": 192.2,
+          "height": 18.7,
+          "why": "inline-link"
+        }
+      ],
+      "clippedText": [],
+      "truncatedText": [],
+      "offscreenControls": [],
+      "tomato": [],
+      "tomatoViolations": [],
+      "notes": [
+        "Static legal page (public/terms.html), not an app screen."
+      ],
+      "reportOnly": {}
+    },
+    {
+      "project": "emulator-pixel-7-landscape-2400x1080",
+      "engine": "chromium",
+      "order": "25",
+      "screen": "privacy",
+      "route": "/privacy.html",
+      "purpose": "none",
+      "viewport": "863x304",
+      "screenshots": [
+        "emulator-pixel-7-landscape-2400x1080/25-privacy.png"
+      ],
+      "checks": {
+        "noSidewaysScroll": true,
+        "tapTargets": true,
+        "textFits": true,
+        "tomatoRule": true
+      },
+      "sidewaysScroll": {
+        "scrollWidth": 863,
+        "innerWidth": 863
+      },
+      "tapTargetIssues": [],
+      "tapTargetAllowed": [
+        {
+          "text": "google.com/policies/privacy",
+          "role": "a",
+          "width": 202.2,
+          "height": 18.7,
+          "why": "inline-link"
+        },
+        {
+          "text": "Account deletion page",
+          "role": "a",
+          "width": 159.3,
+          "height": 18.7,
+          "why": "inline-link"
+        },
+        {
+          "text": "support@mealplanatic.app",
+          "role": "a",
+          "width": 192.2,
+          "height": 18.7,
+          "why": "inline-link"
+        }
+      ],
+      "clippedText": [],
+      "truncatedText": [],
+      "offscreenControls": [],
+      "tomato": [],
+      "tomatoViolations": [],
+      "notes": [
+        "Static legal page (public/privacy.html), not an app screen."
+      ],
+      "reportOnly": {}
+    },
+    {
+      "project": "emulator-pixel-7-landscape-2400x1080",
+      "engine": "chromium",
+      "order": "26",
+      "screen": "help",
+      "route": "/help",
+      "purpose": "none",
+      "viewport": "863x304",
+      "screenshots": [
+        "emulator-pixel-7-landscape-2400x1080/26-help.png",
+        "emulator-pixel-7-landscape-2400x1080/26-help-bottom.png"
+      ],
+      "checks": {
+        "noSidewaysScroll": true,
+        "tapTargets": true,
+        "textFits": true,
+        "tomatoRule": true
+      },
+      "sidewaysScroll": {
+        "scrollWidth": 863,
+        "innerWidth": 863
+      },
+      "tapTargetIssues": [],
+      "tapTargetAllowed": [],
+      "clippedText": [],
+      "truncatedText": [],
+      "offscreenControls": [],
+      "tomato": [],
+      "tomatoViolations": [],
+      "notes": [
+        "Contact us opens an email (mailto:), not followed here."
+      ],
+      "reportOnly": {}
+    },
+    {
+      "project": "emulator-pixel-7-landscape-2400x1080",
+      "engine": "chromium",
+      "order": "27",
+      "screen": "accessibility",
+      "route": "/accessibility.html",
+      "purpose": "none",
+      "viewport": "863x304",
+      "screenshots": [
+        "emulator-pixel-7-landscape-2400x1080/27-accessibility.png"
+      ],
+      "checks": {
+        "noSidewaysScroll": true,
+        "tapTargets": true,
+        "textFits": true,
+        "tomatoRule": true
+      },
+      "sidewaysScroll": {
+        "scrollWidth": 863,
+        "innerWidth": 863
+      },
+      "tapTargetIssues": [],
+      "tapTargetAllowed": [
+        {
+          "text": "support@mealplanatic.app",
+          "role": "a",
+          "width": 192.2,
+          "height": 18.7,
+          "why": "inline-link"
+        }
+      ],
+      "clippedText": [],
+      "truncatedText": [],
+      "offscreenControls": [],
+      "tomato": [],
+      "tomatoViolations": [],
+      "notes": [
+        "Static page (public/accessibility.html), not an app screen."
+      ],
+      "reportOnly": {}
+    },
+    {
+      "project": "emulator-pixel-7-landscape-2400x1080",
+      "engine": "chromium",
+      "order": "28",
+      "screen": "recipes-tab",
+      "route": "/recipes",
+      "purpose": "none",
+      "viewport": "863x304",
+      "screenshots": [
+        "emulator-pixel-7-landscape-2400x1080/28-recipes-tab.png",
+        "emulator-pixel-7-landscape-2400x1080/28-recipes-tab-bottom.png"
+      ],
+      "checks": {
+        "noSidewaysScroll": true,
+        "tapTargets": true,
+        "textFits": true,
+        "tomatoRule": true
+      },
+      "sidewaysScroll": {
+        "scrollWidth": 863,
+        "innerWidth": 863
+      },
+      "tapTargetIssues": [],
+      "tapTargetAllowed": [],
+      "clippedText": [],
+      "truncatedText": [
+        {
+          "text": "Home",
+          "kind": "truncated",
+          "scroll": "38x18",
+          "client": "38x13"
+        },
+        {
+          "text": "Pantry",
+          "kind": "truncated",
+          "scroll": "42x18",
+          "client": "42x13"
+        },
+        {
+          "text": "Recipes",
+          "kind": "truncated",
+          "scroll": "52x18",
+          "client": "52x13"
+        },
+        {
+          "text": "Grocery",
+          "kind": "truncated",
+          "scroll": "51x18",
+          "client": "51x13"
+        }
+      ],
+      "offscreenControls": [],
+      "tomato": [
+        {
+          "text": "Plan",
+          "tag": "h1",
+          "props": [
+            "color"
+          ],
+          "context": "brand"
+        }
+      ],
+      "tomatoViolations": [],
+      "notes": [],
+      "reportOnly": {}
+    },
+    {
+      "project": "emulator-pixel-7-landscape-2400x1080",
+      "engine": "chromium",
+      "order": "29",
+      "screen": "home-forky-ask",
+      "route": "/forky",
+      "purpose": "none",
+      "viewport": "863x304",
+      "screenshots": [
+        "emulator-pixel-7-landscape-2400x1080/29-home-forky-ask.png",
+        "emulator-pixel-7-landscape-2400x1080/29-home-forky-ask-bottom.png"
+      ],
+      "checks": {
+        "noSidewaysScroll": true,
+        "tapTargets": true,
+        "textFits": true,
+        "tomatoRule": true
+      },
+      "sidewaysScroll": {
+        "scrollWidth": 863,
+        "innerWidth": 863
+      },
+      "tapTargetIssues": [],
+      "tapTargetAllowed": [],
+      "clippedText": [],
+      "truncatedText": [],
+      "offscreenControls": [],
+      "tomato": [],
+      "tomatoViolations": [],
+      "notes": [
+        "The ask-forky function is stubbed: the answer text is the test's, not the AI's."
+      ],
+      "reportOnly": {}
+    },
+    {
+      "project": "emulator-pixel-7-landscape-2400x1080",
+      "engine": "chromium",
+      "order": "30",
+      "screen": "grocery-stores-switch",
+      "route": "/grocery?view=stores",
+      "purpose": "none",
+      "viewport": "863x304",
+      "screenshots": [
+        "emulator-pixel-7-landscape-2400x1080/30-grocery-stores-switch.png",
+        "emulator-pixel-7-landscape-2400x1080/30-grocery-stores-switch-bottom.png"
+      ],
+      "checks": {
+        "noSidewaysScroll": true,
+        "tapTargets": true,
+        "textFits": true,
+        "tomatoRule": true
+      },
+      "sidewaysScroll": {
+        "scrollWidth": 863,
+        "innerWidth": 863
+      },
+      "tapTargetIssues": [],
+      "tapTargetAllowed": [],
+      "clippedText": [],
+      "truncatedText": [
+        {
+          "text": "Home",
+          "kind": "truncated",
+          "scroll": "38x18",
+          "client": "38x13"
+        },
+        {
+          "text": "Pantry",
+          "kind": "truncated",
+          "scroll": "42x18",
+          "client": "42x13"
+        },
+        {
+          "text": "Recipes",
+          "kind": "truncated",
+          "scroll": "52x18",
+          "client": "52x13"
+        },
+        {
+          "text": "Grocery",
+          "kind": "truncated",
+          "scroll": "51x18",
+          "client": "51x13"
+        }
+      ],
+      "offscreenControls": [],
+      "tomato": [
+        {
+          "text": "Plan",
+          "tag": "h1",
+          "props": [
+            "color"
+          ],
+          "context": "brand"
+        }
+      ],
+      "tomatoViolations": [],
+      "notes": [
+        "Reached through /stores, which redirects to /grocery?view=stores."
+      ],
+      "reportOnly": {}
+    },
+    {
+      "project": "emulator-pixel-7-portrait-1080x2400",
+      "engine": "chromium",
+      "order": "01",
+      "screen": "sign-in",
+      "route": "/sign-in",
+      "purpose": "none",
+      "viewport": "412x783",
+      "screenshots": [
+        "emulator-pixel-7-portrait-1080x2400/01-sign-in.png"
+      ],
+      "checks": {
+        "noSidewaysScroll": true,
+        "tapTargets": true,
+        "textFits": true,
+        "tomatoRule": true
+      },
+      "sidewaysScroll": {
+        "scrollWidth": 412,
+        "innerWidth": 412
+      },
+      "tapTargetIssues": [],
+      "tapTargetAllowed": [],
+      "clippedText": [],
+      "truncatedText": [],
+      "offscreenControls": [],
+      "tomato": [
+        {
+          "text": "Plan",
+          "tag": "h1",
+          "props": [
+            "color"
+          ],
+          "context": "brand"
+        }
+      ],
+      "tomatoViolations": [],
+      "notes": [],
+      "reportOnly": {}
+    },
+    {
+      "project": "emulator-pixel-7-portrait-1080x2400",
+      "engine": "chromium",
+      "order": "02",
+      "screen": "sign-up-18plus",
+      "route": "/sign-in",
+      "purpose": "none",
+      "viewport": "412x783",
+      "screenshots": [
+        "emulator-pixel-7-portrait-1080x2400/02-sign-up-18plus.png"
+      ],
+      "checks": {
+        "noSidewaysScroll": true,
+        "tapTargets": true,
+        "textFits": true,
+        "tomatoRule": true
+      },
+      "sidewaysScroll": {
+        "scrollWidth": 412,
+        "innerWidth": 412
+      },
+      "tapTargetIssues": [],
+      "tapTargetAllowed": [],
+      "clippedText": [],
+      "truncatedText": [],
+      "offscreenControls": [],
+      "tomato": [
+        {
+          "text": "Plan",
+          "tag": "h1",
+          "props": [
+            "color"
+          ],
+          "context": "brand"
+        }
+      ],
+      "tomatoViolations": [],
+      "notes": [
+        "Screenshot before pressing Create account; the next screen (Home) is checked in 04."
+      ],
+      "reportOnly": {}
+    },
+    {
+      "project": "emulator-pixel-7-portrait-1080x2400",
+      "engine": "chromium",
+      "order": "03",
+      "screen": "forgot-password",
+      "route": "/sign-in",
+      "purpose": "none",
+      "viewport": "412x783",
+      "screenshots": [
+        "emulator-pixel-7-portrait-1080x2400/03-forgot-password.png"
+      ],
+      "checks": {
+        "noSidewaysScroll": true,
+        "tapTargets": true,
+        "textFits": true,
+        "tomatoRule": true
+      },
+      "sidewaysScroll": {
+        "scrollWidth": 412,
+        "innerWidth": 412
+      },
+      "tapTargetIssues": [],
+      "tapTargetAllowed": [],
+      "clippedText": [],
+      "truncatedText": [],
+      "offscreenControls": [],
+      "tomato": [
+        {
+          "text": "Plan",
+          "tag": "h1",
+          "props": [
+            "color"
+          ],
+          "context": "brand"
+        }
+      ],
+      "tomatoViolations": [],
+      "notes": [],
+      "reportOnly": {}
+    },
+    {
+      "project": "emulator-pixel-7-portrait-1080x2400",
+      "engine": "chromium",
+      "order": "04",
+      "screen": "home",
+      "route": "/",
+      "purpose": "none",
+      "viewport": "412x783",
+      "screenshots": [
+        "emulator-pixel-7-portrait-1080x2400/04-home.png",
+        "emulator-pixel-7-portrait-1080x2400/04-home-bottom.png"
+      ],
+      "checks": {
+        "noSidewaysScroll": true,
+        "tapTargets": true,
+        "textFits": true,
+        "tomatoRule": true
+      },
+      "sidewaysScroll": {
+        "scrollWidth": 412,
+        "innerWidth": 412
+      },
+      "tapTargetIssues": [],
+      "tapTargetAllowed": [],
+      "clippedText": [],
+      "truncatedText": [
+        {
+          "text": "Home",
+          "kind": "truncated",
+          "scroll": "38x18",
+          "client": "38x13"
+        },
+        {
+          "text": "Pantry",
+          "kind": "truncated",
+          "scroll": "42x18",
+          "client": "42x13"
+        },
+        {
+          "text": "Recipes",
+          "kind": "truncated",
+          "scroll": "52x18",
+          "client": "52x13"
+        },
+        {
+          "text": "Grocery",
+          "kind": "truncated",
+          "scroll": "51x18",
+          "client": "51x13"
+        }
+      ],
+      "offscreenControls": [],
+      "tomato": [
+        {
+          "text": "Plan",
+          "tag": "h1",
+          "props": [
+            "color"
+          ],
+          "context": "brand"
+        }
+      ],
+      "tomatoViolations": [],
+      "notes": [
+        "The promo slot under the counters is a link to Plans on the web (no ads, nothing loaded from outside)."
+      ],
+      "reportOnly": {}
+    },
+    {
+      "project": "emulator-pixel-7-portrait-1080x2400",
+      "engine": "chromium",
+      "order": "05",
+      "screen": "pantry-shelves",
+      "route": "/pantry",
+      "purpose": "none",
+      "viewport": "412x783",
+      "screenshots": [
+        "emulator-pixel-7-portrait-1080x2400/05-pantry-shelves.png"
+      ],
+      "checks": {
+        "noSidewaysScroll": true,
+        "tapTargets": true,
+        "textFits": true,
+        "tomatoRule": true
+      },
+      "sidewaysScroll": {
+        "scrollWidth": 412,
+        "innerWidth": 412
+      },
+      "tapTargetIssues": [],
+      "tapTargetAllowed": [],
+      "clippedText": [],
+      "truncatedText": [
+        {
+          "text": "Extra sharp aged white cheddar cheese block",
+          "kind": "truncated",
+          "scroll": "86x64",
+          "client": "86x48"
+        },
+        {
+          "text": "Home",
+          "kind": "truncated",
+          "scroll": "38x18",
+          "client": "38x13"
+        },
+        {
+          "text": "Pantry",
+          "kind": "truncated",
+          "scroll": "42x18",
+          "client": "42x13"
+        },
+        {
+          "text": "Recipes",
+          "kind": "truncated",
+          "scroll": "52x18",
+          "client": "52x13"
+        },
+        {
+          "text": "Grocery",
+          "kind": "truncated",
+          "scroll": "51x18",
+          "client": "51x13"
+        }
+      ],
+      "offscreenControls": [],
+      "tomato": [
+        {
+          "text": "Plan",
+          "tag": "h1",
+          "props": [
+            "color"
+          ],
+          "context": "brand"
+        },
+        {
+          "text": "Scan · 3 left this month",
+          "tag": "button",
+          "props": [
+            "border-top"
+          ],
+          "context": "camera"
+        },
+        {
+          "text": "",
+          "tag": "div",
+          "props": [
+            "background"
+          ],
+          "context": "camera"
+        },
+        {
+          "text": "",
+          "tag": "div",
+          "props": [
+            "border-top"
+          ],
+          "context": "camera"
+        },
+        {
+          "text": "",
+          "tag": "div",
+          "props": [
+            "border-top"
+          ],
+          "context": "camera"
+        }
+      ],
+      "tomatoViolations": [],
+      "notes": [
+        "Tomato is allowed here only on the Scan button (camera)."
+      ],
+      "reportOnly": {}
+    },
+    {
+      "project": "emulator-pixel-7-portrait-1080x2400",
+      "engine": "chromium",
+      "order": "06",
+      "screen": "pantry-list",
+      "route": "/pantry",
+      "purpose": "none",
+      "viewport": "412x783",
+      "screenshots": [
+        "emulator-pixel-7-portrait-1080x2400/06-pantry-list.png",
+        "emulator-pixel-7-portrait-1080x2400/06-pantry-list-bottom.png"
+      ],
+      "checks": {
+        "noSidewaysScroll": true,
+        "tapTargets": true,
+        "textFits": true,
+        "tomatoRule": true
+      },
+      "sidewaysScroll": {
+        "scrollWidth": 412,
+        "innerWidth": 412
+      },
+      "tapTargetIssues": [],
+      "tapTargetAllowed": [],
+      "clippedText": [],
+      "truncatedText": [
+        {
+          "text": "Home",
+          "kind": "truncated",
+          "scroll": "38x18",
+          "client": "38x13"
+        },
+        {
+          "text": "Pantry",
+          "kind": "truncated",
+          "scroll": "42x18",
+          "client": "42x13"
+        },
+        {
+          "text": "Recipes",
+          "kind": "truncated",
+          "scroll": "52x18",
+          "client": "52x13"
+        },
+        {
+          "text": "Grocery",
+          "kind": "truncated",
+          "scroll": "51x18",
+          "client": "51x13"
+        }
+      ],
+      "offscreenControls": [],
+      "tomato": [
+        {
+          "text": "Plan",
+          "tag": "h1",
+          "props": [
+            "color"
+          ],
+          "context": "brand"
+        },
+        {
+          "text": "Scan · 3 left this month",
+          "tag": "button",
+          "props": [
+            "border-top"
+          ],
+          "context": "camera"
+        },
+        {
+          "text": "",
+          "tag": "div",
+          "props": [
+            "background"
+          ],
+          "context": "camera"
+        },
+        {
+          "text": "",
+          "tag": "div",
+          "props": [
+            "border-top"
+          ],
+          "context": "camera"
+        },
+        {
+          "text": "",
+          "tag": "div",
+          "props": [
+            "border-top"
+          ],
+          "context": "camera"
+        }
+      ],
+      "tomatoViolations": [],
+      "notes": [
+        "Includes a long item name (\"Extra sharp aged white cheddar cheese block\") to test wrapping."
+      ],
+      "reportOnly": {}
+    },
+    {
+      "project": "emulator-pixel-7-portrait-1080x2400",
+      "engine": "chromium",
+      "order": "07",
+      "screen": "pantry-empty",
+      "route": "/pantry",
+      "purpose": "none",
+      "viewport": "412x783",
+      "screenshots": [
+        "emulator-pixel-7-portrait-1080x2400/07-pantry-empty.png"
+      ],
+      "checks": {
+        "noSidewaysScroll": true,
+        "tapTargets": true,
+        "textFits": true,
+        "tomatoRule": true
+      },
+      "sidewaysScroll": {
+        "scrollWidth": 412,
+        "innerWidth": 412
+      },
+      "tapTargetIssues": [],
+      "tapTargetAllowed": [],
+      "clippedText": [],
+      "truncatedText": [
+        {
+          "text": "Home",
+          "kind": "truncated",
+          "scroll": "38x18",
+          "client": "38x13"
+        },
+        {
+          "text": "Pantry",
+          "kind": "truncated",
+          "scroll": "42x18",
+          "client": "42x13"
+        },
+        {
+          "text": "Recipes",
+          "kind": "truncated",
+          "scroll": "52x18",
+          "client": "52x13"
+        },
+        {
+          "text": "Grocery",
+          "kind": "truncated",
+          "scroll": "51x18",
+          "client": "51x13"
+        }
+      ],
+      "offscreenControls": [],
+      "tomato": [
+        {
+          "text": "Plan",
+          "tag": "h1",
+          "props": [
+            "color"
+          ],
+          "context": "brand"
+        },
+        {
+          "text": "Scan · 3 left this month",
+          "tag": "button",
+          "props": [
+            "border-top"
+          ],
+          "context": "camera"
+        },
+        {
+          "text": "",
+          "tag": "div",
+          "props": [
+            "background"
+          ],
+          "context": "camera"
+        },
+        {
+          "text": "",
+          "tag": "div",
+          "props": [
+            "border-top"
+          ],
+          "context": "camera"
+        },
+        {
+          "text": "",
+          "tag": "div",
+          "props": [
+            "border-top"
+          ],
+          "context": "camera"
+        }
+      ],
+      "tomatoViolations": [],
+      "notes": [],
+      "reportOnly": {}
+    },
+    {
+      "project": "emulator-pixel-7-portrait-1080x2400",
+      "engine": "chromium",
+      "order": "07a",
+      "screen": "pantry-clear-menu",
+      "route": "/pantry",
+      "purpose": "none",
+      "viewport": "412x783",
+      "screenshots": [
+        "emulator-pixel-7-portrait-1080x2400/07a-pantry-clear-menu.png"
+      ],
+      "checks": {
+        "noSidewaysScroll": true,
+        "tapTargets": true,
+        "textFits": true,
+        "tomatoRule": true
+      },
+      "sidewaysScroll": {
+        "scrollWidth": 412,
+        "innerWidth": 412
+      },
+      "tapTargetIssues": [],
+      "tapTargetAllowed": [],
+      "clippedText": [],
+      "truncatedText": [
+        {
+          "text": "Extra sharp aged white cheddar cheese block",
+          "kind": "truncated",
+          "scroll": "86x64",
+          "client": "86x48"
+        },
+        {
+          "text": "Home",
+          "kind": "truncated",
+          "scroll": "38x18",
+          "client": "38x13"
+        },
+        {
+          "text": "Pantry",
+          "kind": "truncated",
+          "scroll": "42x18",
+          "client": "42x13"
+        },
+        {
+          "text": "Recipes",
+          "kind": "truncated",
+          "scroll": "52x18",
+          "client": "52x13"
+        },
+        {
+          "text": "Grocery",
+          "kind": "truncated",
+          "scroll": "51x18",
+          "client": "51x13"
+        }
+      ],
+      "offscreenControls": [],
+      "tomato": [
+        {
+          "text": "Plan",
+          "tag": "h1",
+          "props": [
+            "color"
+          ],
+          "context": "brand"
+        },
+        {
+          "text": "Scan · 3 left this month",
+          "tag": "button",
+          "props": [
+            "border-top"
+          ],
+          "context": "camera"
+        },
+        {
+          "text": "",
+          "tag": "div",
+          "props": [
+            "background"
+          ],
+          "context": "camera"
+        },
+        {
+          "text": "",
+          "tag": "div",
+          "props": [
+            "border-top"
+          ],
+          "context": "camera"
+        },
+        {
+          "text": "",
+          "tag": "div",
+          "props": [
+            "border-top"
+          ],
+          "context": "camera"
+        }
+      ],
+      "tomatoViolations": [],
+      "notes": [
+        "Neutral (ink) control, never tomato. Spice rack is empty in the seed, so its choice is disabled."
+      ],
+      "reportOnly": {}
+    },
+    {
+      "project": "emulator-pixel-7-portrait-1080x2400",
+      "engine": "chromium",
+      "order": "07b",
+      "screen": "pantry-clear-confirm",
+      "route": "/pantry",
+      "purpose": "none",
+      "viewport": "412x783",
+      "screenshots": [
+        "emulator-pixel-7-portrait-1080x2400/07b-pantry-clear-confirm.png"
+      ],
+      "checks": {
+        "noSidewaysScroll": true,
+        "tapTargets": true,
+        "textFits": true,
+        "tomatoRule": true
+      },
+      "sidewaysScroll": {
+        "scrollWidth": 412,
+        "innerWidth": 412
+      },
+      "tapTargetIssues": [],
+      "tapTargetAllowed": [],
+      "clippedText": [],
+      "truncatedText": [
+        {
+          "text": "Extra sharp aged white cheddar cheese block",
+          "kind": "truncated",
+          "scroll": "86x64",
+          "client": "86x48"
+        },
+        {
+          "text": "Home",
+          "kind": "truncated",
+          "scroll": "38x18",
+          "client": "38x13"
+        },
+        {
+          "text": "Pantry",
+          "kind": "truncated",
+          "scroll": "42x18",
+          "client": "42x13"
+        },
+        {
+          "text": "Recipes",
+          "kind": "truncated",
+          "scroll": "52x18",
+          "client": "52x13"
+        },
+        {
+          "text": "Grocery",
+          "kind": "truncated",
+          "scroll": "51x18",
+          "client": "51x13"
+        }
+      ],
+      "offscreenControls": [],
+      "tomato": [
+        {
+          "text": "Plan",
+          "tag": "h1",
+          "props": [
+            "color"
+          ],
+          "context": "brand"
+        },
+        {
+          "text": "Scan · 3 left this month",
+          "tag": "button",
+          "props": [
+            "border-top"
+          ],
+          "context": "camera"
+        },
+        {
+          "text": "",
+          "tag": "div",
+          "props": [
+            "background"
+          ],
+          "context": "camera"
+        },
+        {
+          "text": "",
+          "tag": "div",
+          "props": [
+            "border-top"
+          ],
+          "context": "camera"
+        },
+        {
+          "text": "",
+          "tag": "div",
+          "props": [
+            "border-top"
+          ],
+          "context": "camera"
+        }
+      ],
+      "tomatoViolations": [],
+      "notes": [
+        "The tour stops at the confirm; the seeded rows stay for the other screens."
+      ],
+      "reportOnly": {}
+    },
+    {
+      "project": "emulator-pixel-7-portrait-1080x2400",
+      "engine": "chromium",
+      "order": "08",
+      "screen": "scan",
+      "route": "/scan",
+      "purpose": "camera",
+      "viewport": "412x783",
+      "screenshots": [
+        "emulator-pixel-7-portrait-1080x2400/08-scan.png"
+      ],
+      "checks": {
+        "noSidewaysScroll": true,
+        "tapTargets": true,
+        "textFits": true,
+        "tomatoRule": true
+      },
+      "sidewaysScroll": {
+        "scrollWidth": 412,
+        "innerWidth": 412
+      },
+      "tapTargetIssues": [],
+      "tapTargetAllowed": [],
+      "clippedText": [],
+      "truncatedText": [],
+      "offscreenControls": [],
+      "tomato": [
+        {
+          "text": "Take a photo",
+          "tag": "button",
+          "props": [
+            "border-top"
+          ],
+          "context": "camera"
+        },
+        {
+          "text": "",
+          "tag": "div",
+          "props": [
+            "background"
+          ],
+          "context": "camera"
+        },
+        {
+          "text": "",
+          "tag": "div",
+          "props": [
+            "border-top"
+          ],
+          "context": "camera"
+        },
+        {
+          "text": "",
+          "tag": "div",
+          "props": [
+            "border-top"
+          ],
+          "context": "camera"
+        },
+        {
+          "text": "Choose a photo",
+          "tag": "button",
+          "props": [
+            "border-top"
+          ],
+          "context": "camera"
+        },
+        {
+          "text": "",
+          "tag": "div",
+          "props": [
+            "background"
+          ],
+          "context": "camera"
+        },
+        {
+          "text": "",
+          "tag": "div",
+          "props": [
+            "border-top"
+          ],
+          "context": "camera"
+        },
+        {
+          "text": "",
+          "tag": "div",
+          "props": [
+            "border-top"
+          ],
+          "context": "camera"
+        }
+      ],
+      "tomatoViolations": [],
+      "notes": [
+        "No photo is taken: the real camera scan stays on the owner list."
+      ],
+      "reportOnly": {}
+    },
+    {
+      "project": "emulator-pixel-7-portrait-1080x2400",
+      "engine": "chromium",
+      "order": "09",
+      "screen": "grocery-ticked",
+      "route": "/grocery",
+      "purpose": "none",
+      "viewport": "412x783",
+      "screenshots": [
+        "emulator-pixel-7-portrait-1080x2400/09-grocery-ticked.png",
+        "emulator-pixel-7-portrait-1080x2400/09-grocery-ticked-bottom.png"
+      ],
+      "checks": {
+        "noSidewaysScroll": true,
+        "tapTargets": true,
+        "textFits": true,
+        "tomatoRule": true
+      },
+      "sidewaysScroll": {
+        "scrollWidth": 412,
+        "innerWidth": 412
+      },
+      "tapTargetIssues": [],
+      "tapTargetAllowed": [],
+      "clippedText": [],
+      "truncatedText": [
+        {
+          "text": "Home",
+          "kind": "truncated",
+          "scroll": "38x18",
+          "client": "38x13"
+        },
+        {
+          "text": "Pantry",
+          "kind": "truncated",
+          "scroll": "42x18",
+          "client": "42x13"
+        },
+        {
+          "text": "Recipes",
+          "kind": "truncated",
+          "scroll": "52x18",
+          "client": "52x13"
+        },
+        {
+          "text": "Grocery",
+          "kind": "truncated",
+          "scroll": "51x18",
+          "client": "51x13"
+        }
+      ],
+      "offscreenControls": [],
+      "tomato": [
+        {
+          "text": "Plan",
+          "tag": "h1",
+          "props": [
+            "color"
+          ],
+          "context": "brand"
+        }
+      ],
+      "tomatoViolations": [],
+      "notes": [],
+      "reportOnly": {}
+    },
+    {
+      "project": "emulator-pixel-7-portrait-1080x2400",
+      "engine": "chromium",
+      "order": "10",
+      "screen": "recipe-search",
+      "route": "/recipes/search?q=zpnwrdjehw",
+      "purpose": "none",
+      "viewport": "412x783",
+      "screenshots": [
+        "emulator-pixel-7-portrait-1080x2400/10-recipe-search.png"
+      ],
+      "checks": {
+        "noSidewaysScroll": true,
+        "tapTargets": true,
+        "textFits": true,
+        "tomatoRule": true
+      },
+      "sidewaysScroll": {
+        "scrollWidth": 412,
+        "innerWidth": 412
+      },
+      "tapTargetIssues": [],
+      "tapTargetAllowed": [],
+      "clippedText": [],
+      "truncatedText": [],
+      "offscreenControls": [],
+      "tomato": [],
+      "tomatoViolations": [],
+      "notes": [],
+      "reportOnly": {}
+    },
+    {
+      "project": "emulator-pixel-7-portrait-1080x2400",
+      "engine": "chromium",
+      "order": "11",
+      "screen": "recipes-saved",
+      "route": "/recipes/saved",
+      "purpose": "none",
+      "viewport": "412x783",
+      "screenshots": [
+        "emulator-pixel-7-portrait-1080x2400/11-recipes-saved.png"
+      ],
+      "checks": {
+        "noSidewaysScroll": true,
+        "tapTargets": true,
+        "textFits": true,
+        "tomatoRule": true
+      },
+      "sidewaysScroll": {
+        "scrollWidth": 412,
+        "innerWidth": 412
+      },
+      "tapTargetIssues": [],
+      "tapTargetAllowed": [],
+      "clippedText": [],
+      "truncatedText": [],
+      "offscreenControls": [],
+      "tomato": [],
+      "tomatoViolations": [],
+      "notes": [],
+      "reportOnly": {}
+    },
+    {
+      "project": "emulator-pixel-7-portrait-1080x2400",
+      "engine": "chromium",
+      "order": "12",
+      "screen": "recipe-page",
+      "route": "/recipe/r_14395851-fca3-4cbc-a185-1a8f395821d9",
+      "purpose": "none",
+      "viewport": "412x783",
+      "screenshots": [
+        "emulator-pixel-7-portrait-1080x2400/12-recipe-page.png",
+        "emulator-pixel-7-portrait-1080x2400/12-recipe-page-bottom.png"
+      ],
+      "checks": {
+        "noSidewaysScroll": true,
+        "tapTargets": true,
+        "textFits": true,
+        "tomatoRule": true
+      },
+      "sidewaysScroll": {
+        "scrollWidth": 412,
+        "innerWidth": 412
+      },
+      "tapTargetIssues": [],
+      "tapTargetAllowed": [],
+      "clippedText": [],
+      "truncatedText": [],
+      "offscreenControls": [],
+      "tomato": [],
+      "tomatoViolations": [],
+      "notes": [],
+      "reportOnly": {}
+    },
+    {
+      "project": "emulator-pixel-7-portrait-1080x2400",
+      "engine": "chromium",
+      "order": "13",
+      "screen": "recipe-import",
+      "route": "/recipes/import",
+      "purpose": "none",
+      "viewport": "412x783",
+      "screenshots": [
+        "emulator-pixel-7-portrait-1080x2400/13-recipe-import.png"
+      ],
+      "checks": {
+        "noSidewaysScroll": true,
+        "tapTargets": true,
+        "textFits": true,
+        "tomatoRule": true
+      },
+      "sidewaysScroll": {
+        "scrollWidth": 412,
+        "innerWidth": 412
+      },
+      "tapTargetIssues": [],
+      "tapTargetAllowed": [],
+      "clippedText": [],
+      "truncatedText": [],
+      "offscreenControls": [],
+      "tomato": [
+        {
+          "text": "Take a photo of a recipe",
+          "tag": "button",
+          "props": [
+            "border-top"
+          ],
+          "context": "camera"
+        },
+        {
+          "text": "",
+          "tag": "div",
+          "props": [
+            "background"
+          ],
+          "context": "camera"
+        },
+        {
+          "text": "",
+          "tag": "div",
+          "props": [
+            "border-top"
+          ],
+          "context": "camera"
+        },
+        {
+          "text": "",
+          "tag": "div",
+          "props": [
+            "border-top"
+          ],
+          "context": "camera"
+        },
+        {
+          "text": "Choose a recipe photo",
+          "tag": "button",
+          "props": [
+            "border-top"
+          ],
+          "context": "camera"
+        },
+        {
+          "text": "",
+          "tag": "div",
+          "props": [
+            "background"
+          ],
+          "context": "camera"
+        },
+        {
+          "text": "",
+          "tag": "div",
+          "props": [
+            "border-top"
+          ],
+          "context": "camera"
+        },
+        {
+          "text": "",
+          "tag": "div",
+          "props": [
+            "border-top"
+          ],
+          "context": "camera"
+        }
+      ],
+      "tomatoViolations": [],
+      "notes": [
+        "Photo import uses the camera/file picker: only the screen is checked."
+      ],
+      "reportOnly": {}
+    },
+    {
+      "project": "emulator-pixel-7-portrait-1080x2400",
+      "engine": "chromium",
+      "order": "14",
+      "screen": "creators",
+      "route": "/creators",
+      "purpose": "none",
+      "viewport": "412x783",
+      "screenshots": [
+        "emulator-pixel-7-portrait-1080x2400/14-creators.png"
+      ],
+      "checks": {
+        "noSidewaysScroll": true,
+        "tapTargets": true,
+        "textFits": true,
+        "tomatoRule": true
+      },
+      "sidewaysScroll": {
+        "scrollWidth": 412,
+        "innerWidth": 412
+      },
+      "tapTargetIssues": [],
+      "tapTargetAllowed": [],
+      "clippedText": [],
+      "truncatedText": [],
+      "offscreenControls": [],
+      "tomato": [],
+      "tomatoViolations": [],
+      "notes": [],
+      "reportOnly": {}
+    },
+    {
+      "project": "emulator-pixel-7-portrait-1080x2400",
+      "engine": "chromium",
+      "order": "15",
+      "screen": "forky-answer",
+      "route": "/forky",
+      "purpose": "none",
+      "viewport": "412x783",
+      "screenshots": [
+        "emulator-pixel-7-portrait-1080x2400/15-forky-answer.png"
+      ],
+      "checks": {
+        "noSidewaysScroll": true,
+        "tapTargets": true,
+        "textFits": true,
+        "tomatoRule": true
+      },
+      "sidewaysScroll": {
+        "scrollWidth": 412,
+        "innerWidth": 412
+      },
+      "tapTargetIssues": [],
+      "tapTargetAllowed": [],
+      "clippedText": [],
+      "truncatedText": [],
+      "offscreenControls": [],
+      "tomato": [],
+      "tomatoViolations": [],
+      "notes": [
+        "The ask-forky function is stubbed: the answer text is the test's, not the AI's."
+      ],
+      "reportOnly": {}
+    },
+    {
+      "project": "emulator-pixel-7-portrait-1080x2400",
+      "engine": "chromium",
+      "order": "17",
+      "screen": "plans",
+      "route": "/plans",
+      "purpose": "money",
+      "viewport": "412x783",
+      "screenshots": [
+        "emulator-pixel-7-portrait-1080x2400/17-plans.png",
+        "emulator-pixel-7-portrait-1080x2400/17-plans-bottom.png"
+      ],
+      "checks": {
+        "noSidewaysScroll": true,
+        "tapTargets": true,
+        "textFits": true,
+        "tomatoRule": true
+      },
+      "sidewaysScroll": {
+        "scrollWidth": 412,
+        "innerWidth": 412
+      },
+      "tapTargetIssues": [],
+      "tapTargetAllowed": [
+        {
+          "text": "See Terms.",
+          "role": "link",
+          "width": 82.7,
+          "height": 20.6,
+          "why": "inline-link"
+        }
+      ],
+      "clippedText": [],
+      "truncatedText": [],
+      "offscreenControls": [],
+      "tomato": [
+        {
+          "text": "Subscribe for $53.88 a year",
+          "tag": "button",
+          "props": [
+            "background"
+          ],
+          "context": "money"
+        }
+      ],
+      "tomatoViolations": [],
+      "notes": [
+        "No checkout is created: the live Stripe test purchase stays on the owner list."
+      ],
+      "reportOnly": {}
+    },
+    {
+      "project": "emulator-pixel-7-portrait-1080x2400",
+      "engine": "chromium",
+      "order": "18",
+      "screen": "usage",
+      "route": "/usage",
+      "purpose": "money",
+      "viewport": "412x783",
+      "screenshots": [
+        "emulator-pixel-7-portrait-1080x2400/18-usage.png"
+      ],
+      "checks": {
+        "noSidewaysScroll": true,
+        "tapTargets": true,
+        "textFits": true,
+        "tomatoRule": true
+      },
+      "sidewaysScroll": {
+        "scrollWidth": 412,
+        "innerWidth": 412
+      },
+      "tapTargetIssues": [],
+      "tapTargetAllowed": [],
+      "clippedText": [],
+      "truncatedText": [],
+      "offscreenControls": [],
+      "tomato": [],
+      "tomatoViolations": [],
+      "notes": [],
+      "reportOnly": {}
+    },
+    {
+      "project": "emulator-pixel-7-portrait-1080x2400",
+      "engine": "chromium",
+      "order": "19",
+      "screen": "account",
+      "route": "/account",
+      "purpose": "none",
+      "viewport": "412x783",
+      "screenshots": [
+        "emulator-pixel-7-portrait-1080x2400/19-account.png",
+        "emulator-pixel-7-portrait-1080x2400/19-account-bottom.png"
+      ],
+      "checks": {
+        "noSidewaysScroll": true,
+        "tapTargets": true,
+        "textFits": true,
+        "tomatoRule": true
+      },
+      "sidewaysScroll": {
+        "scrollWidth": 412,
+        "innerWidth": 412
+      },
+      "tapTargetIssues": [],
+      "tapTargetAllowed": [],
+      "clippedText": [],
+      "truncatedText": [],
+      "offscreenControls": [],
+      "tomato": [],
+      "tomatoViolations": [],
+      "notes": [
+        "Free account: no Manage subscription button (that is the only money control Account has)."
+      ],
+      "reportOnly": {}
+    },
+    {
+      "project": "emulator-pixel-7-portrait-1080x2400",
+      "engine": "chromium",
+      "order": "20",
+      "screen": "delete-account",
+      "route": "/delete-account",
+      "purpose": "none",
+      "viewport": "412x783",
+      "screenshots": [
+        "emulator-pixel-7-portrait-1080x2400/20-delete-account.png"
+      ],
+      "checks": {
+        "noSidewaysScroll": true,
+        "tapTargets": true,
+        "textFits": true,
+        "tomatoRule": true
+      },
+      "sidewaysScroll": {
+        "scrollWidth": 412,
+        "innerWidth": 412
+      },
+      "tapTargetIssues": [],
+      "tapTargetAllowed": [
+        {
+          "text": "support@mealplanatic.app",
+          "role": "link",
+          "width": 174.9,
+          "height": 18.3,
+          "why": "inline-link"
+        }
+      ],
+      "clippedText": [],
+      "truncatedText": [],
+      "offscreenControls": [],
+      "tomato": [],
+      "tomatoViolations": [],
+      "notes": [],
+      "reportOnly": {}
+    },
+    {
+      "project": "emulator-pixel-7-portrait-1080x2400",
+      "engine": "chromium",
+      "order": "21",
+      "screen": "delete-account-confirm",
+      "route": "/delete-account",
+      "purpose": "none",
+      "viewport": "412x783",
+      "screenshots": [
+        "emulator-pixel-7-portrait-1080x2400/21-delete-account-confirm.png",
+        "emulator-pixel-7-portrait-1080x2400/21-delete-account-confirm-bottom.png"
+      ],
+      "checks": {
+        "noSidewaysScroll": true,
+        "tapTargets": true,
+        "textFits": true,
+        "tomatoRule": true
+      },
+      "sidewaysScroll": {
+        "scrollWidth": 412,
+        "innerWidth": 412
+      },
+      "tapTargetIssues": [],
+      "tapTargetAllowed": [
+        {
+          "text": "support@mealplanatic.app",
+          "role": "link",
+          "width": 174.9,
+          "height": 18.3,
+          "why": "inline-link"
+        }
+      ],
+      "clippedText": [],
+      "truncatedText": [],
+      "offscreenControls": [],
+      "tomato": [],
+      "tomatoViolations": [],
+      "notes": [
+        "The confirm button is never pressed; delete-user-account would get the tour's 503 anyway."
+      ],
+      "reportOnly": {}
+    },
+    {
+      "project": "emulator-pixel-7-portrait-1080x2400",
+      "engine": "chromium",
+      "order": "22",
+      "screen": "reset-password-expired",
+      "route": "/reset-password",
+      "purpose": "none",
+      "viewport": "412x783",
+      "screenshots": [
+        "emulator-pixel-7-portrait-1080x2400/22-reset-password-expired.png"
+      ],
+      "checks": {
+        "noSidewaysScroll": true,
+        "tapTargets": true,
+        "textFits": true,
+        "tomatoRule": true
+      },
+      "sidewaysScroll": {
+        "scrollWidth": 412,
+        "innerWidth": 412
+      },
+      "tapTargetIssues": [],
+      "tapTargetAllowed": [],
+      "clippedText": [],
+      "truncatedText": [],
+      "offscreenControls": [],
+      "tomato": [
+        {
+          "text": "Plan",
+          "tag": "h1",
+          "props": [
+            "color"
+          ],
+          "context": "brand"
+        }
+      ],
+      "tomatoViolations": [],
+      "notes": [
+        "The \"choose a new password\" form needs a recovery email: reset-password.spec.ts covers it on phones."
+      ],
+      "reportOnly": {}
+    },
+    {
+      "project": "emulator-pixel-7-portrait-1080x2400",
+      "engine": "chromium",
+      "order": "23",
+      "screen": "not-found",
+      "route": "/no-such-page-on-phones",
+      "purpose": "none",
+      "viewport": "412x783",
+      "screenshots": [
+        "emulator-pixel-7-portrait-1080x2400/23-not-found.png"
+      ],
+      "checks": {
+        "noSidewaysScroll": true,
+        "tapTargets": true,
+        "textFits": true,
+        "tomatoRule": true
+      },
+      "sidewaysScroll": {
+        "scrollWidth": 412,
+        "innerWidth": 412
+      },
+      "tapTargetIssues": [],
+      "tapTargetAllowed": [],
+      "clippedText": [],
+      "truncatedText": [],
+      "offscreenControls": [],
+      "tomato": [],
+      "tomatoViolations": [],
+      "notes": [],
+      "reportOnly": {}
+    },
+    {
+      "project": "emulator-pixel-7-portrait-1080x2400",
+      "engine": "chromium",
+      "order": "24",
+      "screen": "terms",
+      "route": "/terms.html",
+      "purpose": "none",
+      "viewport": "412x783",
+      "screenshots": [
+        "emulator-pixel-7-portrait-1080x2400/24-terms.png"
+      ],
+      "checks": {
+        "noSidewaysScroll": true,
+        "tapTargets": true,
+        "textFits": true,
+        "tomatoRule": true
+      },
+      "sidewaysScroll": {
+        "scrollWidth": 412,
+        "innerWidth": 412
+      },
+      "tapTargetIssues": [],
+      "tapTargetAllowed": [
+        {
+          "text": "Privacy Policy",
+          "role": "a",
+          "width": 97.7,
+          "height": 18.7,
+          "why": "inline-link"
+        },
+        {
+          "text": "support@mealplanatic.app",
+          "role": "a",
+          "width": 192.2,
+          "height": 18.7,
+          "why": "inline-link"
+        },
+        {
+          "text": "YouTube Terms of Service",
+          "role": "a",
+          "width": 367.3,
+          "height": 43.5,
+          "why": "inline-link"
+        },
+        {
+          "text": "account deletion page",
+          "role": "a",
+          "width": 157.5,
+          "height": 18.7,
+          "why": "inline-link"
+        },
+        {
+          "text": "support@mealplanatic.app",
+          "role": "a",
+          "width": 192.2,
+          "height": 18.7,
+          "why": "inline-link"
+        }
+      ],
+      "clippedText": [],
+      "truncatedText": [],
+      "offscreenControls": [],
+      "tomato": [],
+      "tomatoViolations": [],
+      "notes": [
+        "Static legal page (public/terms.html), not an app screen."
+      ],
+      "reportOnly": {}
+    },
+    {
+      "project": "emulator-pixel-7-portrait-1080x2400",
+      "engine": "chromium",
+      "order": "25",
+      "screen": "privacy",
+      "route": "/privacy.html",
+      "purpose": "none",
+      "viewport": "412x783",
+      "screenshots": [
+        "emulator-pixel-7-portrait-1080x2400/25-privacy.png"
+      ],
+      "checks": {
+        "noSidewaysScroll": true,
+        "tapTargets": true,
+        "textFits": true,
+        "tomatoRule": true
+      },
+      "sidewaysScroll": {
+        "scrollWidth": 412,
+        "innerWidth": 412
+      },
+      "tapTargetIssues": [],
+      "tapTargetAllowed": [
+        {
+          "text": "google.com/policies/privacy",
+          "role": "a",
+          "width": 202.2,
+          "height": 18.7,
+          "why": "inline-link"
+        },
+        {
+          "text": "Account deletion page",
+          "role": "a",
+          "width": 159.3,
+          "height": 18.7,
+          "why": "inline-link"
+        },
+        {
+          "text": "support@mealplanatic.app",
+          "role": "a",
+          "width": 192.2,
+          "height": 18.7,
+          "why": "inline-link"
+        }
+      ],
+      "clippedText": [],
+      "truncatedText": [],
+      "offscreenControls": [],
+      "tomato": [],
+      "tomatoViolations": [],
+      "notes": [
+        "Static legal page (public/privacy.html), not an app screen."
+      ],
+      "reportOnly": {}
+    },
+    {
+      "project": "emulator-pixel-7-portrait-1080x2400",
+      "engine": "chromium",
+      "order": "26",
+      "screen": "help",
+      "route": "/help",
+      "purpose": "none",
+      "viewport": "412x783",
+      "screenshots": [
+        "emulator-pixel-7-portrait-1080x2400/26-help.png",
+        "emulator-pixel-7-portrait-1080x2400/26-help-bottom.png"
+      ],
+      "checks": {
+        "noSidewaysScroll": true,
+        "tapTargets": true,
+        "textFits": true,
+        "tomatoRule": true
+      },
+      "sidewaysScroll": {
+        "scrollWidth": 412,
+        "innerWidth": 412
+      },
+      "tapTargetIssues": [],
+      "tapTargetAllowed": [],
+      "clippedText": [],
+      "truncatedText": [],
+      "offscreenControls": [],
+      "tomato": [],
+      "tomatoViolations": [],
+      "notes": [
+        "Contact us opens an email (mailto:), not followed here."
+      ],
+      "reportOnly": {}
+    },
+    {
+      "project": "emulator-pixel-7-portrait-1080x2400",
+      "engine": "chromium",
+      "order": "27",
+      "screen": "accessibility",
+      "route": "/accessibility.html",
+      "purpose": "none",
+      "viewport": "412x783",
+      "screenshots": [
+        "emulator-pixel-7-portrait-1080x2400/27-accessibility.png"
+      ],
+      "checks": {
+        "noSidewaysScroll": true,
+        "tapTargets": true,
+        "textFits": true,
+        "tomatoRule": true
+      },
+      "sidewaysScroll": {
+        "scrollWidth": 412,
+        "innerWidth": 412
+      },
+      "tapTargetIssues": [],
+      "tapTargetAllowed": [
+        {
+          "text": "support@mealplanatic.app",
+          "role": "a",
+          "width": 192.2,
+          "height": 18.7,
+          "why": "inline-link"
+        }
+      ],
+      "clippedText": [],
+      "truncatedText": [],
+      "offscreenControls": [],
+      "tomato": [],
+      "tomatoViolations": [],
+      "notes": [
+        "Static page (public/accessibility.html), not an app screen."
+      ],
+      "reportOnly": {}
+    },
+    {
+      "project": "emulator-pixel-7-portrait-1080x2400",
+      "engine": "chromium",
+      "order": "28",
+      "screen": "recipes-tab",
+      "route": "/recipes",
+      "purpose": "none",
+      "viewport": "412x783",
+      "screenshots": [
+        "emulator-pixel-7-portrait-1080x2400/28-recipes-tab.png",
+        "emulator-pixel-7-portrait-1080x2400/28-recipes-tab-bottom.png"
+      ],
+      "checks": {
+        "noSidewaysScroll": true,
+        "tapTargets": true,
+        "textFits": true,
+        "tomatoRule": true
+      },
+      "sidewaysScroll": {
+        "scrollWidth": 412,
+        "innerWidth": 412
+      },
+      "tapTargetIssues": [],
+      "tapTargetAllowed": [],
+      "clippedText": [],
+      "truncatedText": [
+        {
+          "text": "Home",
+          "kind": "truncated",
+          "scroll": "38x18",
+          "client": "38x13"
+        },
+        {
+          "text": "Pantry",
+          "kind": "truncated",
+          "scroll": "42x18",
+          "client": "42x13"
+        },
+        {
+          "text": "Recipes",
+          "kind": "truncated",
+          "scroll": "52x18",
+          "client": "52x13"
+        },
+        {
+          "text": "Grocery",
+          "kind": "truncated",
+          "scroll": "51x18",
+          "client": "51x13"
+        }
+      ],
+      "offscreenControls": [],
+      "tomato": [
+        {
+          "text": "Plan",
+          "tag": "h1",
+          "props": [
+            "color"
+          ],
+          "context": "brand"
+        }
+      ],
+      "tomatoViolations": [],
+      "notes": [],
+      "reportOnly": {}
+    },
+    {
+      "project": "emulator-pixel-7-portrait-1080x2400",
+      "engine": "chromium",
+      "order": "29",
+      "screen": "home-forky-ask",
+      "route": "/forky",
+      "purpose": "none",
+      "viewport": "412x783",
+      "screenshots": [
+        "emulator-pixel-7-portrait-1080x2400/29-home-forky-ask.png"
+      ],
+      "checks": {
+        "noSidewaysScroll": true,
+        "tapTargets": true,
+        "textFits": true,
+        "tomatoRule": true
+      },
+      "sidewaysScroll": {
+        "scrollWidth": 412,
+        "innerWidth": 412
+      },
+      "tapTargetIssues": [],
+      "tapTargetAllowed": [],
+      "clippedText": [],
+      "truncatedText": [],
+      "offscreenControls": [],
+      "tomato": [],
+      "tomatoViolations": [],
+      "notes": [
+        "The ask-forky function is stubbed: the answer text is the test's, not the AI's."
+      ],
+      "reportOnly": {}
+    },
+    {
+      "project": "emulator-pixel-7-portrait-1080x2400",
+      "engine": "chromium",
+      "order": "30",
+      "screen": "grocery-stores-switch",
+      "route": "/grocery?view=stores",
+      "purpose": "none",
+      "viewport": "412x783",
+      "screenshots": [
+        "emulator-pixel-7-portrait-1080x2400/30-grocery-stores-switch.png",
+        "emulator-pixel-7-portrait-1080x2400/30-grocery-stores-switch-bottom.png"
+      ],
+      "checks": {
+        "noSidewaysScroll": true,
+        "tapTargets": true,
+        "textFits": true,
+        "tomatoRule": true
+      },
+      "sidewaysScroll": {
+        "scrollWidth": 412,
+        "innerWidth": 412
+      },
+      "tapTargetIssues": [],
+      "tapTargetAllowed": [],
+      "clippedText": [],
+      "truncatedText": [
+        {
+          "text": "Home",
+          "kind": "truncated",
+          "scroll": "38x18",
+          "client": "38x13"
+        },
+        {
+          "text": "Pantry",
+          "kind": "truncated",
+          "scroll": "42x18",
+          "client": "42x13"
+        },
+        {
+          "text": "Recipes",
+          "kind": "truncated",
+          "scroll": "52x18",
+          "client": "52x13"
+        },
+        {
+          "text": "Grocery",
+          "kind": "truncated",
+          "scroll": "51x18",
+          "client": "51x13"
+        }
+      ],
+      "offscreenControls": [],
+      "tomato": [
+        {
+          "text": "Plan",
+          "tag": "h1",
+          "props": [
+            "color"
+          ],
+          "context": "brand"
+        }
+      ],
+      "tomatoViolations": [],
+      "notes": [
+        "Reached through /stores, which redirects to /grocery?view=stores."
+      ],
+      "reportOnly": {}
+    }
+  ]
+}

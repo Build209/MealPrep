@@ -1,0 +1,38 @@
+{
+  "project": "emulator-flip-unfolded-1080x2636",
+  "engine": "chromium",
+  "order": "10",
+  "screen": "recipe-search",
+  "route": "/recipes/search?q=zpptrgdhqy",
+  "purpose": "none",
+  "viewport": "360x775",
+  "screenshots": [
+    "emulator-flip-unfolded-1080x2636/10-recipe-search.png"
+  ],
+  "checks": {
+    "noSidewaysScroll": true,
+    "tapTargets": true,
+    "textFits": true,
+    "tomatoRule": true
+  },
+  "sidewaysScroll": {
+    "scrollWidth": 360,
+    "innerWidth": 360
+  },
+  "tapTargetIssues": [],
+  "tapTargetAllowed": [],
+  "clippedText": [],
+  "truncatedText": [
+    {
+      "text": "Phone Test Chef · Watch on YouTube",
+      "kind": "truncated",
+      "scroll": "206x16",
+      "client": "156x16"
+    }
+  ],
+  "offscreenControls": [],
+  "tomato": [],
+  "tomatoViolations": [],
+  "notes": [],
+  "reportOnly": {}
+}
