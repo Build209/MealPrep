@@ -30,7 +30,20 @@ export const FEED_COPY = {
   forkyPlaceholder: 'Ask Forky to find a recipe',
   forkyInputA11y: 'Ask Forky about a recipe',
   forkySendA11y: 'Send recipe question to Forky',
+  // Short form the notice shrinks to a few seconds after the tab opens (full text on tap). New wording, compliance to confirm.
+  forkyNoticeShort: 'Forky is an AI helper and can be wrong. Tap to read the full notice.',
 } as const;
+
+/**
+ * Whether the Recipes Ask Forky bar shows the FULL AI notice (compliance verdict, PR #356, option B).
+ * The question auto-sends when /forky opens, so the bar is the last place to say that saved allergens
+ * are sent with it. The full notice therefore stays up whenever the person has saved allergens, and
+ * also while that is still unknown (loading), so the first paint never hides it. Only a person with
+ * no saved allergens (nothing leaves the phone) gets the 6-second reminder and the short line.
+ */
+export function showFullForkyNotice(input: { noticeOpen: boolean; isLoading: boolean; hasAllergens: boolean }): boolean {
+  return input.noticeOpen || input.isLoading || input.hasAllergens;
+}
 
 export const DETAIL_COPY = {
   back: 'Back',
