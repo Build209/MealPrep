@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { Image, Pressable, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { containsLine } from '../allergens/copy';
 import type { AllergenKey } from '../allergens/types';
 import { recipeHref, servingsAndTime, type AppRecipe } from '../data/recipes';
@@ -7,6 +7,7 @@ import { recipeStatus, recipeStatusLabel } from '../kitchen/recipeFeed';
 import type { RecipePantryMatch } from '../kitchen/recipeMatch';
 import { colors, radius, space, touch } from '../theme/tokens';
 import { AppText } from '../ui/AppText';
+import { RecipePhoto } from '../ui/RecipePhoto';
 import { StatusSticker } from './StatusSticker';
 
 const THUMB = 72;
@@ -34,15 +35,7 @@ export function RecipeCard({ recipe, match, allergens = [] }: { recipe: AppRecip
         opacity: pressed ? 0.85 : 1,
       })}
     >
-      {recipe.imageUrl ? (
-        <Image
-          source={{ uri: recipe.imageUrl }}
-          accessibilityIgnoresInvertColors
-          style={{ width: THUMB, height: THUMB, borderRadius: radius.control, backgroundColor: colors.sand }}
-        />
-      ) : (
-        <View style={{ width: THUMB, height: THUMB, borderRadius: radius.control, backgroundColor: colors.sand }} />
-      )}
+      <RecipePhoto uri={recipe.imageUrl} tags={recipe.tags} title={recipe.name} width={THUMB} height={THUMB} />
       <View style={{ flex: 1, gap: 4, justifyContent: 'center' }}>
         <AppText bold numberOfLines={2}>
           {recipe.name}

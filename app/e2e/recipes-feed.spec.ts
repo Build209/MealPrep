@@ -154,10 +154,16 @@ test('feed statuses, detail have/missing, add missing to grocery once', async ({
   await expect(card(page, pastaName, 'Ready to cook')).toBeVisible();
   await expect(card(page, tacoName, '3 missing')).toBeVisible();
 
+  // Neither seeded recipe has a photo, so each card shows an illustrated placeholder (pasta by title; tacos fall back to the plate).
+  await expect(card(page, pastaName, 'Ready to cook').getByTestId('recipe-placeholder')).toBeVisible();
+  await expect(card(page, pastaName, 'Ready to cook').locator('#recipe-placeholder-pasta')).toBeVisible();
+  await expect(card(page, tacoName, '3 missing').locator('#recipe-placeholder-generic')).toBeVisible();
+
   // Detail.
   await card(page, tacoName, '3 missing').click();
   await expect(page).toHaveURL(new RegExp(`/recipe/r_${tacoId}$`));
   await expect(page.getByRole('heading', { name: tacoName })).toBeVisible();
+  await expect(page.locator('#recipe-placeholder-generic').filter({ visible: true })).toHaveCount(1); // the detail's own tile; the feed card underneath stays mounted but this one is the large one
   await expect(page.getByText('4 servings · 30 min', { exact: true }).filter({ visible: true })).toBeVisible(); // the Recipes tab stays mounted underneath
   await expect(page.getByLabel('Tortillas, 8 each, In pantry', { exact: true })).toBeVisible();
   await expect(page.getByLabel('Ground beef, 1 lb, Need ½ lb more', { exact: true })).toBeVisible();
