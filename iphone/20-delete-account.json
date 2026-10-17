@@ -1,0 +1,39 @@
+{
+  "project": "iphone",
+  "engine": "webkit",
+  "order": "20",
+  "screen": "delete-account",
+  "route": "/delete-account",
+  "purpose": "none",
+  "viewport": "393x659",
+  "screenshots": [
+    "iphone/20-delete-account.png"
+  ],
+  "checks": {
+    "noSidewaysScroll": true,
+    "tapTargets": true,
+    "textFits": true,
+    "tomatoRule": true
+  },
+  "sidewaysScroll": {
+    "scrollWidth": 393,
+    "innerWidth": 393
+  },
+  "tapTargetIssues": [],
+  "tapTargetAllowed": [
+    {
+      "text": "support@mealplanatic.app",
+      "role": "link",
+      "width": 174.9,
+      "height": 18,
+      "why": "inline-link"
+    }
+  ],
+  "clippedText": [],
+  "truncatedText": [],
+  "offscreenControls": [],
+  "tomato": [],
+  "tomatoViolations": [],
+  "notes": [],
+  "reportOnly": {}
+}

@@ -1,0 +1,41 @@
+{
+  "project": "android",
+  "engine": "chromium",
+  "order": "21",
+  "screen": "delete-account-confirm",
+  "route": "/delete-account",
+  "purpose": "none",
+  "viewport": "412x839",
+  "screenshots": [
+    "android/21-delete-account-confirm.png"
+  ],
+  "checks": {
+    "noSidewaysScroll": true,
+    "tapTargets": true,
+    "textFits": true,
+    "tomatoRule": true
+  },
+  "sidewaysScroll": {
+    "scrollWidth": 412,
+    "innerWidth": 412
+  },
+  "tapTargetIssues": [],
+  "tapTargetAllowed": [
+    {
+      "text": "support@mealplanatic.app",
+      "role": "link",
+      "width": 172,
+      "height": 18,
+      "why": "inline-link"
+    }
+  ],
+  "clippedText": [],
+  "truncatedText": [],
+  "offscreenControls": [],
+  "tomato": [],
+  "tomatoViolations": [],
+  "notes": [
+    "The confirm button is never pressed; delete-user-account would get the tour's 503 anyway."
+  ],
+  "reportOnly": {}
+}

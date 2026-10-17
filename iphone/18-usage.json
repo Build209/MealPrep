@@ -1,0 +1,31 @@
+{
+  "project": "iphone",
+  "engine": "webkit",
+  "order": "18",
+  "screen": "usage",
+  "route": "/usage",
+  "purpose": "money",
+  "viewport": "393x659",
+  "screenshots": [
+    "iphone/18-usage.png"
+  ],
+  "checks": {
+    "noSidewaysScroll": true,
+    "tapTargets": true,
+    "textFits": true,
+    "tomatoRule": true
+  },
+  "sidewaysScroll": {
+    "scrollWidth": 393,
+    "innerWidth": 393
+  },
+  "tapTargetIssues": [],
+  "tapTargetAllowed": [],
+  "clippedText": [],
+  "truncatedText": [],
+  "offscreenControls": [],
+  "tomato": [],
+  "tomatoViolations": [],
+  "notes": [],
+  "reportOnly": {}
+}
