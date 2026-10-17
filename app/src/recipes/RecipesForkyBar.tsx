@@ -10,7 +10,8 @@ import { colors, fonts, radius, touch, type as typeScale } from '../theme/tokens
 import { AppText } from '../ui/AppText';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
-import { FEED_COPY } from './recipeLogic';
+import { useAllergenPrefs } from '../allergens/useAllergenPrefs';
+import { FEED_COPY, showFullForkyNotice } from './recipeLogic';
 
 /**
  * A slim Ask Forky bar at the top of the Recipes tab (owner, 2026-10-17: option B of the mockup,
@@ -33,6 +34,7 @@ export function RecipesForkyBar() {
   const router = useRouter();
   const { session } = useAuth();
   const { allowance } = useForkyAllowance(session?.user.id ?? null);
+  const { allergens, isLoading: allergensLoading } = useAllergenPrefs();
   const [draft, setDraft] = useState('');
   const [error, setError] = useState<string | null>(null);
   const canSend = draft.trim().length > 0;
@@ -60,7 +62,10 @@ export function RecipesForkyBar() {
   }
 
   const left = allowance.state === 'known' ? ` ${questionsLeftText(allowance.remaining)}.` : '';
-  const note = `${noticeOpen ? ASK_FORKY_COPY.aiNotice : FEED_COPY.forkyNoticeShort}${left}`;
+  // Saved allergens are sent with the question, so the full notice never collapses for them (compliance verdict, PR #356).
+  const mustShowFull = allergensLoading || allergens.length > 0;
+  const showFull = showFullForkyNotice({ noticeOpen, isLoading: allergensLoading, hasAllergens: allergens.length > 0 });
+  const note = `${showFull ? ASK_FORKY_COPY.aiNotice : FEED_COPY.forkyNoticeShort}${left}`;
 
   return (
     <Card style={{ gap: 6, paddingVertical: 10, paddingLeft: 12, paddingRight: 10 }}>
@@ -117,8 +122,10 @@ export function RecipesForkyBar() {
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={`${ASK_FORKY_COPY.aiNotice}${left}`}
-        accessibilityState={{ expanded: noticeOpen }}
-        onPress={() => setNoticeOpen((open) => !open)}
+        accessibilityState={{ expanded: showFull }}
+        onPress={() => {
+          if (!mustShowFull) setNoticeOpen((open) => !open);
+        }}
         testID="recipes-forky-note-toggle"
       >
         <AppText variant="label" color="muted" testID="recipes-forky-note">
