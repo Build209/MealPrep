@@ -57,3 +57,18 @@ test('the recipes counter name is one copy line (owner may rename it)', () => {
   assert.equal(HOME_COPY.readyToCook, 'Ready to cook');
   assert.equal(HOME_COPY.counterA11y(HOME_COPY.readyToCook, '3', 'Recipes'), 'Ready to cook: 3. Opens Recipes.');
 });
+
+test('Home does not count the one-and-two-ingredient library recipes the list hides', () => {
+  const thin = { id: 'l_thin', name: 'Boiled eggs', ingredients: [{ ingredientId: 'eggs', name: 'Eggs', quantity: 2, unit: 'each' }] };
+  const meal = {
+    id: 'l_meal',
+    name: 'Egg fried rice',
+    ingredients: [
+      { ingredientId: 'eggs', name: 'Eggs', quantity: 2, unit: 'each' },
+      { ingredientId: 'rice', name: 'White rice', quantity: 1, unit: 'cup' },
+      { ingredientId: 'salt', name: 'Salt', quantity: 1, unit: 'tsp' },
+    ],
+  };
+  assert.equal(readyToCookCount([thin, meal], pantry), 2, 'the plain rule counts both');
+  assert.equal(homeCounts({ recipes: [thin, meal], pantry, grocery: [] }).ready, 1, 'Home counts what the list can show');
+});

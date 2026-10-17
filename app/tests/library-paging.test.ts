@@ -12,7 +12,10 @@ test('readAllPages joins pages until a short page and asks for the right ranges'
     return Array.from({ length: Math.max(0, Math.min(to + 1, total) - from) }, (_, i) => from + i);
   });
   assert.equal(rows.length, total);
-  assert.deepEqual(asked, [[0, 999], [1000, 1999], [2000, 2999]]);
+  assert.deepEqual(asked[0], [0, 999], 'the first page is asked for alone');
+  assert.deepEqual(asked.slice(1).sort((a, b) => a[0] - b[0]), [[1000, 1999], [2000, 2999], [3000, 3999]], 'the rest together');
+  assert.deepEqual(rows.slice(0, 3), [0, 1, 2]);
+  assert.deepEqual(rows.slice(-1), [total - 1], 'joined in order');
   assert.equal(LIBRARY_PAGE_SIZE, 1000);
 });
 
