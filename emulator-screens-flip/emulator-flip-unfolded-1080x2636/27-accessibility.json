@@ -1,0 +1,41 @@
+{
+  "project": "emulator-flip-unfolded-1080x2636",
+  "engine": "chromium",
+  "order": "27",
+  "screen": "accessibility",
+  "route": "/accessibility.html",
+  "purpose": "none",
+  "viewport": "360x775",
+  "screenshots": [
+    "emulator-flip-unfolded-1080x2636/27-accessibility.png"
+  ],
+  "checks": {
+    "noSidewaysScroll": true,
+    "tapTargets": true,
+    "textFits": true,
+    "tomatoRule": true
+  },
+  "sidewaysScroll": {
+    "scrollWidth": 360,
+    "innerWidth": 360
+  },
+  "tapTargetIssues": [],
+  "tapTargetAllowed": [
+    {
+      "text": "support@mealplanatic.app",
+      "role": "a",
+      "width": 192.2,
+      "height": 19,
+      "why": "inline-link"
+    }
+  ],
+  "clippedText": [],
+  "truncatedText": [],
+  "offscreenControls": [],
+  "tomato": [],
+  "tomatoViolations": [],
+  "notes": [
+    "Static page (public/accessibility.html), not an app screen."
+  ],
+  "reportOnly": {}
+}
