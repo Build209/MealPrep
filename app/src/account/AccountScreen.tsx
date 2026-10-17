@@ -12,6 +12,7 @@ import { HELP_COPY } from '../help/copy';
 import { Card } from '../ui/Card';
 import { ACCOUNT_SCREEN_COPY as COPY, PROFILE_COPY } from './copy';
 import { AvatarEditor } from './profile/AvatarEditor';
+import { ExportKitchenCard } from './export/ExportKitchenCard';
 import { FamilyPlanCard } from './profile/FamilyPlanCard';
 import { ProfileForm } from './profile/ProfileForm';
 
@@ -65,6 +66,7 @@ export function AccountScreen() {
           statusLine={statusLine}
           />
           <FamilyPlanCard />
+          <ExportKitchenCard />
         </>
       )}
 
