@@ -43,6 +43,8 @@ export const STORES_COPY = {
   saveFailed: (message: string) => `Couldn't save your location. ${message}`,
   /** Old app wording. Compliance has an open question on the correct credit for Overture data (status doc, compliance item 4). */
   attribution: 'Store data © OpenStreetMap contributors, Overture Maps Foundation',
+  /** Compliance rule 5: logos only identify each store. */
+  logoNotice: 'Store names and logos belong to their owners and are shown only to identify each store. MealPlanatic is not affiliated with or endorsed by them.',
   directions: 'Directions',
   weeklyAd: 'Weekly ad',
   weeklyAdThirdParty: 'Weekly ad (third-party)',

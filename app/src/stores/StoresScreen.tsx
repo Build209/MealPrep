@@ -457,6 +457,9 @@ export function StoresScreen({
       <AppText variant="label" color="muted">
         {STORES_COPY.attribution}
       </AppText>
+      <AppText variant="label" color="muted">
+        {STORES_COPY.logoNotice}
+      </AppText>
     </Screen>
   );
 }
