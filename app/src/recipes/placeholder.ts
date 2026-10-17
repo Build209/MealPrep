@@ -60,12 +60,12 @@ const GLYPH: Record<PlaceholderCategory, string> = {
 
 /** Checked in this order: the first category whose words appear wins (so "chicken soup" is soup, not meat). */
 const RULES: ReadonlyArray<readonly [PlaceholderCategory, RegExp]> = [
-  ['drink', /\b(smoothies?|drinks?|beverages?|juices?|lemonades?|cocktails?|tea|coffee|shakes?|milkshakes?|punch|cider|latte|lassi|cocoa|beers?|wines?|sangria|eggnog)\b/],
+  ['drink', /\b(smoothies?|drinks?|beverages?|juices?|lemonades?|cocktails?|tea|coffee|shakes?|milkshakes?|punch|cider|latte|lassi|cocoa|milks?|beers?|wines?|sangria|eggnog)\b/],
   ['soup', /\b(soups?|stews?|chowders?|broths?|bisques?|gumbo|chili|chilli|ramen|pho|minestrone|goulash|consomme|stocks?)\b/],
   ['salad', /\b(salads?|slaws?|coleslaw|tabbouleh|salsa)\b/],
   ['sauce', /\b(sauces?|dips?|dressings?|gravy|gravies|marinades?|spreads?|hummus|pesto|guacamole|relish|chutneys?|syrups?|jams?|jellies|condiments?|mayonnaise|vinaigrettes?|glazes?|rubs?|seasonings?|spices?|butters?)\b/],
-  ['dessert', /\b(desserts?|sweets?|cakes?|cupcakes?|cookies?|brownies?|pies?|tarts?|puddings?|custards?|ice\s?cream|candy|candies|fudge|truffles?|mousse|cobblers?|crisps?|crumbles?|cheesecakes?|pastr(?:y|ies)|donuts?|doughnuts?|chocolates?|sorbets?|gelato|pralines?|macarons?|flans?|baklava|biscotti|candied|frosting|icing|marshmallows?|bars?)\b/],
-  ['bread', /\b(breads?|baking|baked|rolls?|buns?|biscuits?|muffins?|scones?|bagels?|pizzas?|focaccia|loaf|loaves|pretzels?|crackers?|flatbreads?|naan|pita|tortillas?|pancakes?|waffles?|crepes?|toast|sandwich(?:es)?|doughs?|cornbread|croissants?|baguettes?|breadsticks?|calzones?)\b/],
+  ['dessert', /\b(desserts?|sweets?|cakes?|cupcakes?|cookies?|brownies?|pies?|tarts?|puddings?|custards?|ice\s?cream|candy|candies|fudge|truffles?|mousse|cobblers?|crisps?|crumbles?|cheesecakes?|pastr(?:y|ies)|donuts?|doughnuts?|chocolates?|sorbets?|gelato|pralines?|macarons?|flans?|baklava|confections?|biscotti|candied|frosting|icing|marshmallows?|bars?)\b/],
+  ['bread', /\b(breads?|baking|baked|rolls?|buns?|biscuits?|muffins?|scones?|bagels?|pizzas?|focaccia|loaf|loaves|pretzels?|crackers?|flatbreads?|naan|pita|tortillas?|pancakes?|waffles?|crepes?|toast|sandwich(?:es)?|doughs?|cornbread|croissants?|baguettes?|breadsticks?|calzones?|burritos?|tacos?|enchiladas?|quesadillas?|wraps?|empanadas?)\b/],
   ['pasta', /\b(pastas?|noodles?|spaghetti|macaroni|lasagn[ae]|fettuccine|linguine|penne|ravioli|gnocchi|tortellini|udon|lo\s?mein|pad\s?thai|vermicelli|orzo|manicotti|rigatoni|dumplings?)\b/],
   ['rice', /\b(rice|risotto|pilaf|pilau|paella|biryani|grains?|quinoa|couscous|barley|oats?|oatmeal|porridge|polenta|bulgur|millet|congee|jambalaya|cereals?|granola|farro)\b/],
   ['seafood', /\b(fish|seafood|salmon|tuna|shrimps?|prawns?|crabs?|lobsters?|cod|tilapia|trout|halibut|mussels?|clams?|oysters?|scallops?|squid|calamari|sardines?|anchov(?:y|ies)|catfish|snapper|mackerel|haddock|bass|sushi|ceviche)\b/],
@@ -76,7 +76,7 @@ const RULES: ReadonlyArray<readonly [PlaceholderCategory, RegExp]> = [
 ];
 
 function categoryOf(text: string): PlaceholderCategory | null {
-  const s = text.toLowerCase().replace(/[_\-/]+/g, ' ');
+  const s = text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[_\-/]+/g, ' ');
   if (!s.trim()) return null;
   for (const [category, pattern] of RULES) if (pattern.test(s)) return category;
   return null;

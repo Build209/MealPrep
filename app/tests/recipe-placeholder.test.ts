@@ -104,3 +104,12 @@ test('library rows carry their tags through to the recipe', () => {
   assert.equal(recipe.imageUrl, null);
   assert.deepEqual(libraryRecipeFromRow({ ...row, tags: null }).tags, []);
 });
+
+test('placeholder: odd live Wikibooks tags land in a real category', () => {
+  assert.equal(placeholderFor(['soufflé'], 'Cheese Soufflé').category, 'egg');
+  assert.equal(placeholderFor(['burrito'], 'Bean Burrito').category, 'bread');
+  assert.equal(placeholderFor(['confection'], 'Nut Brittle').category, 'dessert');
+  assert.equal(placeholderFor(['nut and grain milk'], 'Almond Milk').category, 'drink');
+  assert.equal(placeholderFor(['maltese'], 'Maltese Rabbit Stew').category, 'soup');
+  assert.equal(placeholderFor(['camping'], 'Trail Mix').category, 'generic');
+});
