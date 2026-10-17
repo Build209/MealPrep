@@ -30,6 +30,8 @@ export const FEED_COPY = {
   forkyPlaceholder: 'Ask Forky to find a recipe',
   forkyInputA11y: 'Ask Forky about a recipe',
   forkySendA11y: 'Send recipe question to Forky',
+  // Short form the notice shrinks to a few seconds after the tab opens (full text on tap). New wording, compliance to confirm.
+  forkyNoticeShort: 'Forky is an AI helper and can be wrong. Tap to read the full notice.',
 } as const;
 
 export const DETAIL_COPY = {

@@ -1,6 +1,6 @@
-import { useRouter } from 'expo-router';
-import { useState } from 'react';
-import { Image, TextInput, View } from 'react-native';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { useCallback, useState } from 'react';
+import { Image, Pressable, TextInput, View } from 'react-native';
 import { useAuth } from '../auth/AuthProvider';
 import { OFFLINE_MESSAGE, isOnlineNow } from '../data/online';
 import { FORKY_IDEA } from '../forky/art';
@@ -19,11 +19,16 @@ import { FEED_COPY } from './recipeLogic';
  * function and counts the allowance. Nothing is sent from here, so it spends the same monthly
  * questions as Home and the chat.
  *
- * The AI notice (compliance rules 9 and 17) is word for word ASK_FORKY_COPY.aiNotice, always on
- * screen, here at the 12 px label size so the bar stays one row; the questions-left line follows
- * it in the same paragraph. Offline: nothing opens, the question stays in the box, and the app's
+ * The AI notice (compliance rules 9 and 17): on every visit to the tab the full ASK_FORKY_COPY.aiNotice
+ * shows for NOTICE_FULL_MS at the 12 px label size, then shrinks to a one-line form that stays on
+ * screen (owner, 2026-10-17: reminder each use, then it gets out of the way); a tap shows the full
+ * text again. Screen readers always get the full text. Compliance to confirm before merge. The
+ * questions-left line follows it in the same paragraph. Offline: nothing opens, the question stays in the box, and the app's
  * offline line shows.
  */
+/** How long the full notice stays up each time the tab is opened, before it shrinks to one line. */
+export const NOTICE_FULL_MS = 6000;
+
 export function RecipesForkyBar() {
   const router = useRouter();
   const { session } = useAuth();
@@ -31,6 +36,15 @@ export function RecipesForkyBar() {
   const [draft, setDraft] = useState('');
   const [error, setError] = useState<string | null>(null);
   const canSend = draft.trim().length > 0;
+  // Full notice on every visit, then the short line; a tap on the short line brings the full text back.
+  const [noticeOpen, setNoticeOpen] = useState(true);
+  useFocusEffect(
+    useCallback(() => {
+      setNoticeOpen(true);
+      const timer = setTimeout(() => setNoticeOpen(false), NOTICE_FULL_MS);
+      return () => clearTimeout(timer);
+    }, []),
+  );
 
   function submit() {
     const question = draft.trim();
@@ -45,10 +59,8 @@ export function RecipesForkyBar() {
     router.push({ pathname: '/forky', params: { q: question, ask: String(Date.now()) } });
   }
 
-  const note =
-    allowance.state === 'known'
-      ? `${ASK_FORKY_COPY.aiNotice} ${questionsLeftText(allowance.remaining)}.`
-      : ASK_FORKY_COPY.aiNotice;
+  const left = allowance.state === 'known' ? ` ${questionsLeftText(allowance.remaining)}.` : '';
+  const note = `${noticeOpen ? ASK_FORKY_COPY.aiNotice : FEED_COPY.forkyNoticeShort}${left}`;
 
   return (
     <Card style={{ gap: 6, paddingVertical: 10, paddingLeft: 12, paddingRight: 10 }}>
@@ -102,9 +114,17 @@ export function RecipesForkyBar() {
           {error}
         </AppText>
       ) : null}
-      <AppText variant="label" color="muted" testID="recipes-forky-note">
-        {note}
-      </AppText>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`${ASK_FORKY_COPY.aiNotice}${left}`}
+        accessibilityState={{ expanded: noticeOpen }}
+        onPress={() => setNoticeOpen((open) => !open)}
+        testID="recipes-forky-note-toggle"
+      >
+        <AppText variant="label" color="muted" testID="recipes-forky-note">
+          {note}
+        </AppText>
+      </Pressable>
     </Card>
   );
 }
