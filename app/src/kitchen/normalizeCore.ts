@@ -51,40 +51,55 @@ const PANTRY_PHRASE_KEYS_SORTED = Object.keys(PANTRY_SCAN_PHRASE_SYNONYMS).sort(
   (a, b) => b.length - a.length,
 );
 
+const spaced = (text: string) => text.replace(/\s+/g, '\\s+');
+
+/** Built once: these patterns used to be rebuilt for every ingredient name. */
+const BRAND_PATTERNS = PANTRY_BRANDS_SORTED.map((brand) => new RegExp(`\\b${spaced(brand)}\\b`, 'gi'));
+
 function stripPantryScanBrands(text: string): string {
   let out = text;
-  for (const brand of PANTRY_BRANDS_SORTED) {
-    const pattern = new RegExp(`\\b${brand.replace(/\s+/g, '\\s+')}\\b`, 'gi');
-    out = out.replace(pattern, ' ');
-  }
+  for (const pattern of BRAND_PATTERNS) out = out.replace(pattern, ' ');
   return out;
 }
 
 const PANTRY_PHRASE_WHOLE_NAME_ONLY = new Set(['oatmeal', 'syrup']);
 
+type PhraseRule = {
+  key: string;
+  replacement: string;
+  /** Presence test (no `g` flag, so no lastIndex state), and the replacing pattern. */
+  has: RegExp;
+  replace: RegExp;
+  replacementHas: RegExp | null;
+  whole: RegExp | null;
+};
+
+const PHRASE_RULES: PhraseRule[] = PANTRY_PHRASE_KEYS_SORTED.map((key) => {
+  const replacement = PANTRY_SCAN_PHRASE_SYNONYMS[key] ?? key;
+  return {
+    key,
+    replacement,
+    has: new RegExp(`\\b${spaced(key)}\\b`, 'i'),
+    replace: new RegExp(`\\b${spaced(key)}\\b`, 'gi'),
+    replacementHas: replacement.toLowerCase().startsWith(key.toLowerCase()) ? new RegExp(`\\b${spaced(replacement)}\\b`, 'i') : null,
+    whole: PANTRY_PHRASE_WHOLE_NAME_ONLY.has(key) ? new RegExp(`^${spaced(key)}$`, 'i') : null,
+  };
+});
+
 function applyPantryScanPhraseSynonyms(text: string): string {
   let out = text;
-  for (const key of PANTRY_PHRASE_KEYS_SORTED) {
-    const replacement = PANTRY_SCAN_PHRASE_SYNONYMS[key] ?? key;
-    const pattern = new RegExp(`\\b${key.replace(/\s+/g, '\\s+')}\\b`, 'gi');
-    if (!pattern.test(out)) continue;
-    if (
-      replacement.toLowerCase().startsWith(key.toLowerCase()) &&
-      new RegExp(`\\b${replacement.replace(/\s+/g, '\\s+')}\\b`, 'i').test(out)
-    ) {
-      continue;
-    }
+  for (const rule of PHRASE_RULES) {
+    const { key } = rule;
+    if (!rule.has.test(out)) continue;
+    if (rule.replacementHas && rule.replacementHas.test(out)) continue;
     if (key === 'syrup' && /\b(?:pancake|maple|corn|chocolate|waffle|breakfast)\s+syrup\b/i.test(out)) {
       continue;
     }
     if (key === 'oatmeal' && /\binstant\s+oatmeal\b/i.test(out)) {
       continue;
     }
-    if (PANTRY_PHRASE_WHOLE_NAME_ONLY.has(key)) {
-      const whole = new RegExp(`^${key.replace(/\s+/g, '\\s+')}$`, 'i');
-      if (!whole.test(out.trim())) continue;
-    }
-    out = out.replace(pattern, replacement);
+    if (rule.whole && !rule.whole.test(out.trim())) continue;
+    out = out.replace(rule.replace, rule.replacement);
   }
   return out;
 }

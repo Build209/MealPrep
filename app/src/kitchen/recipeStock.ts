@@ -6,6 +6,7 @@
 import { convertIngredientQuantity, ingredientUnitsConvertible } from './ingredientUnits';
 import { expandSynonymKeys, fuzzyNameScore, FUZZY_MATCH_THRESHOLD, normalizeIngredientName } from './ingredientNormalize';
 import { convertQuantity } from './unitConversion';
+import { LruCache } from './lruCache';
 
 /** One ingredient line of a recipe, as the matcher reads it. */
 export type RecipeIngredientLine = {
@@ -43,8 +44,30 @@ function ingredientLookupKeys(ing: RecipeIngredientLine): string[] {
   return [...keys];
 }
 
-function keysOverlap(ingKeys: string[], pantryKeys: string[]): boolean {
-  const pantrySet = new Set(pantryKeys.filter(Boolean));
+/** Lookup keys never change for a given row object, and a pantry row is compared with thousands of recipe lines. */
+const PANTRY_KEY_SETS = new WeakMap<StockRow, ReadonlySet<string>>();
+
+function pantryKeySet(item: StockRow): ReadonlySet<string> {
+  let set = PANTRY_KEY_SETS.get(item);
+  if (!set) {
+    set = new Set(pantryLookupKeys(item).filter(Boolean));
+    PANTRY_KEY_SETS.set(item, set);
+  }
+  return set;
+}
+
+const INGREDIENT_KEYS_CACHE = new LruCache<string, string[]>(20_000);
+
+function cachedIngredientLookupKeys(ing: RecipeIngredientLine): string[] {
+  const cacheKey = `${ing.name}\u0000${ing.ingredientId}`;
+  const hit = INGREDIENT_KEYS_CACHE.get(cacheKey);
+  if (hit) return hit;
+  const keys = ingredientLookupKeys(ing);
+  INGREDIENT_KEYS_CACHE.set(cacheKey, keys);
+  return keys;
+}
+
+function keysOverlap(ingKeys: string[], pantrySet: ReadonlySet<string>): boolean {
   return ingKeys.some((k) => !!k && pantrySet.has(k));
 }
 
@@ -65,7 +88,7 @@ export function isEggsPantryRow(item: Pick<StockRow, 'ingredientId' | 'name'>): 
 function pantryItemMatchesIngredient(item: StockRow, ingredient: RecipeIngredientLine): boolean {
   if (isEggComponentIngredient(ingredient.name) && isEggsPantryRow(item)) return true;
   if (item.ingredientId === ingredient.ingredientId) return true;
-  if (keysOverlap(ingredientLookupKeys(ingredient), pantryLookupKeys(item))) return true;
+  if (keysOverlap(cachedIngredientLookupKeys(ingredient), pantryKeySet(item))) return true;
   const fuzzy = Math.max(
     fuzzyNameScore(ingredient.name, item.name),
     fuzzyNameScore(ingredient.name, idAsName(item.ingredientId)),
