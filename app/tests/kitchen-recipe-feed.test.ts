@@ -29,7 +29,7 @@ const pantryRow = (name: string, quantity = 1, unit = 'each', category = 'produc
 
 test('feed: cookable first (two or more pantry ingredients), the rest under More, nothing lost', () => {
   const pantry = ['chicken breast', 'jasmine rice', 'onion', 'garlic', 'bell pepper'].map((n) => pantryRow(n));
-  const feed = rankRecipeFeed(recipes, pantry, { moreLimit: 100 });
+  const feed = rankRecipeFeed(recipes, pantry, { moreLimit: 100, cookableLimit: 100, seed: '2026-10-16' });
   assert.ok(feed.cookable.length >= 1);
   assert.equal(feed.usedPartialFallback, false);
   assert.ok(feed.cookable.every((e) => e.match.matchedCount >= 2));
@@ -37,9 +37,12 @@ test('feed: cookable first (two or more pantry ingredients), the rest under More
   assert.equal(feed.cookable.length + feed.more.length, recipes.length, 'every recipe appears once');
   const ids = new Set([...feed.cookable, ...feed.more].map((e) => e.recipe.id));
   assert.equal(ids.size, recipes.length);
-  for (let i = 1; i < feed.more.length; i++) {
-    assert.ok(feed.more[i - 1]!.match.missingCount <= feed.more[i]!.match.missingCount, 'More is fewest missing first');
+  // Close recipes (under 4 missing) come first, fewest missing first; 4+ missing rotate daily after them.
+  const close = feed.more.filter((e) => e.match.missingCount < 4);
+  for (let i = 1; i < close.length; i++) {
+    assert.ok(close[i - 1]!.match.missingCount <= close[i]!.match.missingCount, 'close recipes: fewest missing first');
   }
+  assert.deepEqual(feed.more.slice(0, close.length), close, 'close recipes come before far ones');
 });
 
 test('feed: partial fallback when nothing reaches two; empty pantry has no cookable list', () => {
