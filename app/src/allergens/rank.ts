@@ -43,7 +43,7 @@ export function rankFeedWithAllergens<R extends MatchRecipe, P extends StockRow>
   recipes: readonly R[],
   pantry: readonly P[],
   userAllergens: readonly AllergenKey[],
-  options?: { moreLimit?: number; cookableLimit?: number; flaggedLimit?: number; hideFromMore?: (recipe: R) => boolean },
+  options?: { moreLimit?: number; cookableLimit?: number; seed?: string; flaggedLimit?: number; hideFromMore?: (recipe: R) => boolean },
 ): AllergenFeed<R, P> {
   if (userAllergens.length === 0) {
     return { ...rankRecipeFeed(recipes, pantry, options), flagged: [], flaggedHidden: 0 };
