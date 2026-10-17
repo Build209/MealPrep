@@ -126,6 +126,26 @@ export const PROFILE_COPY = {
   saveFailed: "Couldn't save your profile. Check your connection and try again.",
 } as const;
 
+/**
+ * Words for "Export your kitchen" on the Account screen. All NEW: not through compliance yet
+ * (request doc: "Compliance request - Export your kitchen 2026-10-17"). No claims about other
+ * apps; "Mealime" is not named anywhere in the app.
+ */
+export const EXPORT_COPY = {
+  title: 'Export your kitchen',
+  explain:
+    'Download your pantry, grocery list, saved recipes and the recipes you added, in a file that is yours to keep.',
+  leavesOut: 'Photos, plan details and food preferences are not included.',
+  jsonButton: 'Download file (JSON)',
+  textButton: 'Download readable list',
+  working: 'Getting your kitchen…',
+  done: (counts: { pantry: number; groceryList: number; savedRecipes: number; myRecipes: number }) =>
+    `Exported ${counts.pantry} pantry, ${counts.groceryList} grocery, ${counts.savedRecipes} saved and ${counts.myRecipes} of your own recipes.`,
+  offline: "You're offline. Exporting needs a connection.",
+  failed: "Couldn't export your kitchen. Check your connection and try again.",
+  nativeShareTitle: 'My MealPlanatic kitchen',
+} as const;
+
 /** The family plan setup card. It does not work yet: no control is live and nothing is sent anywhere. */
 export const FAMILY_PLAN_COPY = {
   title: 'Family plan',
