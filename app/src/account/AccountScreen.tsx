@@ -8,6 +8,7 @@ import { colors } from '../theme/tokens';
 import { AppText } from '../ui/AppText';
 import { Button } from '../ui/Button';
 import { Screen } from '../ui/Screen';
+import { UsualsSettingsCard } from '../usuals/UsualsSettingsCard';
 import { HELP_COPY } from '../help/copy';
 import { Card } from '../ui/Card';
 import { ACCOUNT_SCREEN_COPY as COPY, PROFILE_COPY } from './copy';
@@ -57,6 +58,7 @@ export function AccountScreen() {
             <AvatarEditor avatarPath={profile.data.avatarPath} name={profile.data.name} email={profile.data.email} />
             <ProfileForm profile={profile.data} />
           </Card>
+          <UsualsSettingsCard />
           <CurrentPlan
           plan={profile.data.plan}
           planTier={profile.data.planTier}
