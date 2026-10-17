@@ -53,6 +53,10 @@ export type RecipePantryMatch<P extends StockRow = StockRow> = {
   matchedCount: number;
   missingCount: number;
   percentMatch: number;
+  /** Matched ingredients whose pantry row is use-by today or within EXPIRING_SOON_DAYS (never already past). */
+  expiringSoonCount?: number;
+  /** percentMatch plus the use-it-up bonus; what the feed sorts on. Absent means percentMatch alone. */
+  rankScore?: number;
   matched: MatchedIngredient<P>[];
   /** Missing lines; quantity is what is still needed, in the recipe's unit. */
   missing: RecipeIngredientLine[];
@@ -73,6 +77,30 @@ export type IngredientStatusLine<P extends StockRow = StockRow> =
 export const DEFAULT_MIN_MATCHED_INGREDIENTS = 2;
 export const PARTIAL_MIN_MATCHED_COUNT = 1;
 export const PARTIAL_MATCH_LIMIT = 12;
+
+/** Use-it-up bonus: a pantry item due within this many days counts as expiring soon. */
+export const EXPIRING_SOON_DAYS = 3;
+/** Points added to percentMatch for each expiring-soon ingredient a recipe uses... */
+export const EXPIRING_BONUS_POINTS = 10;
+/** ...counting at most this many, so the bonus (20 points) never outweighs a clearly better match. */
+export const EXPIRING_BONUS_MAX_ITEMS = 2;
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** Whole days from today (the device's calendar day) to a 'YYYY-MM-DD' date; null when it is not a date. */
+function daysUntil(dateOnly: string | null | undefined, now: Date): number | null {
+  const m = typeof dateOnly === 'string' ? /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateOnly) : null;
+  if (!m) return null;
+  const due = Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+  const today = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+  return Math.round((due - today) / DAY_MS);
+}
+
+/** Due today through EXPIRING_SOON_DAYS from now. Already past is not "use it up": it is not suggested as food. */
+function isExpiringSoon(item: StockRow, now: Date): boolean {
+  const days = daysUntil((item as { expiresOn?: string | null }).expiresOn, now);
+  return days !== null && days >= 0 && days <= EXPIRING_SOON_DAYS;
+}
 
 const STRIP = new Set<string>(INGREDIENT_STRIP_TOKENS);
 const WATER_MODIFIERS = new Set(['hot', 'cold', 'warm', 'boiling', 'ice', 'iced', 'room', 'temperature']);
@@ -214,7 +242,11 @@ function findPantryMatch<P extends StockRow>(
 }
 
 /** One recipe against the pantry. */
-export function scoreRecipeAgainstPantry<P extends StockRow>(recipe: MatchRecipe, pantry: readonly P[]): RecipePantryMatch<P> {
+export function scoreRecipeAgainstPantry<P extends StockRow>(
+  recipe: MatchRecipe,
+  pantry: readonly P[],
+  now: Date = new Date(),
+): RecipePantryMatch<P> {
   const used = new Set<string>();
   const matched: MatchedIngredient<P>[] = [];
   const missing: RecipeIngredientLine[] = [];
@@ -248,13 +280,20 @@ export function scoreRecipeAgainstPantry<P extends StockRow>(recipe: MatchRecipe
     }
   }
 
+  const percentMatch = scorable > 0 && pantry.length > 0 ? Math.round((matched.length / scorable) * 100) : 0;
+  const expiringSoonCount = matched.filter((m) => isExpiringSoon(m.matchedPantryItem, now)).length;
+  // The bonus only reorders recipes that already match; a recipe with no match gets none.
+  const bonus = matched.length > 0 ? Math.min(expiringSoonCount, EXPIRING_BONUS_MAX_ITEMS) * EXPIRING_BONUS_POINTS : 0;
+
   return {
     recipeId: recipe.id,
     recipeName: recipe.name,
     totalIngredients: scorable,
     matchedCount: matched.length,
     missingCount: missing.length,
-    percentMatch: scorable > 0 && pantry.length > 0 ? Math.round((matched.length / scorable) * 100) : 0,
+    percentMatch,
+    expiringSoonCount,
+    rankScore: percentMatch + bonus,
     matched,
     missing,
     staples,
@@ -262,9 +301,17 @@ export function scoreRecipeAgainstPantry<P extends StockRow>(recipe: MatchRecipe
   };
 }
 
+/**
+ * Best first: highest rank score (percent matched plus the use-it-up bonus), then percent, then most
+ * matched, then fewest missing, then name. Percent comes before count so a recipe the pantry nearly
+ * covers outranks a long recipe the pantry only half covers.
+ */
 export function compareRecipePantryMatches(a: RecipePantryMatch, b: RecipePantryMatch): number {
-  if (b.matchedCount !== a.matchedCount) return b.matchedCount - a.matchedCount;
+  const scoreA = a.rankScore ?? a.percentMatch;
+  const scoreB = b.rankScore ?? b.percentMatch;
+  if (scoreB !== scoreA) return scoreB - scoreA;
   if (b.percentMatch !== a.percentMatch) return b.percentMatch - a.percentMatch;
+  if (b.matchedCount !== a.matchedCount) return b.matchedCount - a.matchedCount;
   if (a.missingCount !== b.missingCount) return a.missingCount - b.missingCount;
   return a.recipeName.localeCompare(b.recipeName);
 }
@@ -275,8 +322,12 @@ export type PantryMatchIndex<P extends StockRow = StockRow> = {
   ranked: RecipePantryMatch<P>[];
 };
 
-export function buildPantryMatchIndex<P extends StockRow>(recipes: readonly MatchRecipe[], pantry: readonly P[]): PantryMatchIndex<P> {
-  const all = recipes.map((recipe) => scoreRecipeAgainstPantry(recipe, pantry));
+export function buildPantryMatchIndex<P extends StockRow>(
+  recipes: readonly MatchRecipe[],
+  pantry: readonly P[],
+  now: Date = new Date(),
+): PantryMatchIndex<P> {
+  const all = recipes.map((recipe) => scoreRecipeAgainstPantry(recipe, pantry, now));
   const byRecipeId = new Map(all.map((m) => [m.recipeId, m]));
   if (pantry.length === 0) return { byRecipeId, ranked: [] };
   return { byRecipeId, ranked: [...all].sort(compareRecipePantryMatches) };

@@ -164,7 +164,7 @@ test('empty pantry ranks nothing; filters return nothing', () => {
   });
 });
 
-test('ranking order: matched count, then percent, then fewest missing, then name', () => {
+test('ranking order: percent, then matched count, then fewest missing, then name', () => {
   const base = { recipeId: '', totalIngredients: 4, matched: [], missing: [], staples: [], lines: [] };
   const rows = [
     { ...base, recipeId: 'b', recipeName: 'B', matchedCount: 2, missingCount: 2, percentMatch: 50 },
@@ -172,10 +172,55 @@ test('ranking order: matched count, then percent, then fewest missing, then name
     { ...base, recipeId: 'c', recipeName: 'C', matchedCount: 3, missingCount: 1, percentMatch: 75 },
     { ...base, recipeId: 'd', recipeName: 'D', matchedCount: 2, missingCount: 0, percentMatch: 100 },
   ];
-  assert.deepEqual([...rows].sort(compareRecipePantryMatches).map((r) => r.recipeId), ['c', 'd', 'a', 'b']);
+  assert.deepEqual([...rows].sort(compareRecipePantryMatches).map((r) => r.recipeId), ['d', 'c', 'a', 'b']);
   const filtered = filterRankedMatches(rows, 'have_all', 0);
   assert.deepEqual(filtered.map((r) => r.recipeId), ['d']);
   assert.deepEqual(filterRankedMatches(rows, 'missing_1_2', 0).map((r) => r.recipeId).sort(), ['a', 'b', 'c']);
+});
+
+test('ranking: a small recipe the pantry fully covers beats a long recipe it half covers', () => {
+  const line = (name: string) => ({ ingredientId: slug(name), name, quantity: 1, unit: 'each' });
+  const small: MatchRecipe = { id: 'small', name: 'Small', ingredients: ['Eggs', 'Cheddar', 'Tortillas'].map(line) };
+  const long: MatchRecipe = {
+    id: 'long',
+    name: 'Aaa Long',
+    ingredients: ['Eggs', 'Cheddar', 'Tortillas', 'Salsa', 'Avocado', 'Cilantro'].map(line),
+  };
+  const pantry = pantryFrom(['Eggs', 'Cheddar', 'Tortillas']);
+  const { ranked } = buildPantryMatchIndex([long, small], pantry, new Date(2026, 9, 16));
+  assert.deepEqual(ranked.map((m) => m.recipeId), ['small', 'long']);
+});
+
+test('ranking: use-by within 3 days lifts a recipe; past dates and far dates do not', () => {
+  const line = (name: string) => ({ ingredientId: slug(name), name, quantity: 1, unit: 'each' });
+  const a: MatchRecipe = { id: 'a', name: 'A dish', ingredients: ['Eggs', 'Cheddar', 'Tortillas', 'Salsa'].map(line) };
+  const b: MatchRecipe = { id: 'b', name: 'B dish', ingredients: ['Chicken', 'Rice', 'Peas', 'Carrots'].map(line) };
+  const now = new Date(2026, 9, 16); // Fri Oct 16, 2026
+  const pantryWith = (expiresOn: string | null) => [
+    ...pantryFrom(['Eggs', 'Cheddar', 'Tortillas']).map((p) => ({ ...p, expiresOn: null as string | null })),
+    ...pantryFrom(['Chicken', 'Rice', 'Peas']).map((p, i) => ({ ...p, id: `q${i}`, expiresOn: i === 0 ? expiresOn : null })),
+  ];
+  const order = (expiresOn: string | null) =>
+    buildPantryMatchIndex([a, b], pantryWith(expiresOn), now).ranked.map((m) => m.recipeId).join('');
+  assert.equal(order(null), 'ab', 'tie on percent falls back to name');
+  assert.equal(order('2026-10-16'), 'ba', 'due today lifts B');
+  assert.equal(order('2026-10-19'), 'ba', 'due in 3 days lifts B');
+  assert.equal(order('2026-10-20'), 'ab', 'due in 4 days does not');
+  assert.equal(order('2026-10-15'), 'ab', 'already past does not');
+  assert.equal(order('not a date'), 'ab', 'bad date does not');
+  const b1 = buildPantryMatchIndex([b], pantryWith('2026-10-16'), now).ranked[0]!;
+  assert.equal(b1.expiringSoonCount, 1);
+  assert.equal(b1.rankScore, b1.percentMatch + 10);
+});
+
+test('ranking: the use-it-up bonus is capped at two items', () => {
+  const line = (name: string) => ({ ingredientId: slug(name), name, quantity: 1, unit: 'each' });
+  const r: MatchRecipe = { id: 'r', name: 'R', ingredients: ['Eggs', 'Cheddar', 'Tortillas', 'Salsa'].map(line) };
+  const now = new Date(2026, 9, 16);
+  const pantry = pantryFrom(['Eggs', 'Cheddar', 'Tortillas']).map((p) => ({ ...p, expiresOn: '2026-10-17' as string | null }));
+  const m = buildPantryMatchIndex([r], pantry, now).ranked[0]!;
+  assert.equal(m.expiringSoonCount, 3);
+  assert.equal(m.rankScore, m.percentMatch + 20);
 });
 
 test('units: families convert, distinct count units do not, ingredient bridges', () => {

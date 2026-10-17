@@ -49,10 +49,10 @@ export const hideThinLibraryRecipe = (recipe: { id: string; ingredients: readonl
 export function rankRecipeFeed<R extends MatchRecipe, P extends StockRow>(
   recipes: readonly R[],
   pantry: readonly P[],
-  options?: { moreLimit?: number; hideFromMore?: (recipe: R) => boolean },
+  options?: { moreLimit?: number; hideFromMore?: (recipe: R) => boolean; now?: Date },
 ): RecipeFeed<R, P> {
   const byId = new Map(recipes.map((recipe) => [recipe.id, recipe]));
-  const index = buildPantryMatchIndex(recipes, pantry);
+  const index = buildPantryMatchIndex(recipes, pantry, options?.now);
   const { matches, usedPartialFallback } = filterRankedMatchesWithPartialFallback(index.ranked, 'all', 0, {
     minMatchedCount: DEFAULT_MIN_MATCHED_INGREDIENTS,
     pantryItemCount: pantry.length,
