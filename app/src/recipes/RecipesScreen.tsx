@@ -7,9 +7,11 @@ import { Screen } from '../ui/Screen';
 import { FEED_COPY } from './recipeLogic';
 import { RecipesActions } from './RecipesActions';
 import { RecipesFeed } from './RecipesFeed';
+import { RecipesForkyBar } from './RecipesForkyBar';
 
 /**
- * The Recipes tab (owner, 2026-10-15; this was Home until then): the ways into Search, Saved and
+ * The Recipes tab (owner, 2026-10-15; this was Home until then): an Ask Forky bar (2026-10-17),
+ * the ways into Search, Saved and
  * Import, then "Cook from your pantry" (PRODUCT.md: recipes someone can cook now come first), then
  * creator videos with "See all creator videos" (/creators).
  */
@@ -17,6 +19,7 @@ export function RecipesScreen() {
   const router = useRouter();
   return (
     <Screen title={FEED_COPY.title}>
+      <RecipesForkyBar />
       <RecipesActions />
       <RecipesFeed />
       <View style={{ gap: 4, marginTop: space.gap }}>
