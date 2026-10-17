@@ -92,10 +92,10 @@ export function compareFeedMatches(seed: string) {
 export function rankRecipeFeed<R extends MatchRecipe, P extends StockRow>(
   recipes: readonly R[],
   pantry: readonly P[],
-  options?: { moreLimit?: number; cookableLimit?: number; seed?: string; hideFromMore?: (recipe: R) => boolean },
+  options?: { moreLimit?: number; cookableLimit?: number; seed?: string; scoredById?: ReadonlyMap<string, RecipePantryMatch<P>>; hideFromMore?: (recipe: R) => boolean },
 ): RecipeFeed<R, P> {
   const byId = new Map(recipes.map((recipe) => [recipe.id, recipe]));
-  const index = buildPantryMatchIndex(recipes, pantry);
+  const index = buildPantryMatchIndex(recipes, pantry, options?.scoredById);
   const { matches, usedPartialFallback } = filterRankedMatchesWithPartialFallback(index.ranked, 'all', 0, {
     minMatchedCount: DEFAULT_MIN_MATCHED_INGREDIENTS,
     pantryItemCount: pantry.length,
@@ -128,11 +128,15 @@ export function rankRecipeFeed<R extends MatchRecipe, P extends StockRow>(
  * (a recipe of only staples such as salt and water does not count). An empty pantry counts 0.
  * Home's "Ready to cook" counter (src/home/). Pure (tests/home-counts.test.ts).
  */
-export function readyToCookCount(recipes: readonly MatchRecipe[], pantry: readonly StockRow[]): number {
+export function readyToCookCount(
+  recipes: readonly MatchRecipe[],
+  pantry: readonly StockRow[],
+  scoredById?: ReadonlyMap<string, RecipePantryMatch>,
+): number {
   if (pantry.length === 0) return 0;
   let ready = 0;
   for (const recipe of recipes) {
-    const match = scoreRecipeAgainstPantry(recipe, pantry);
+    const match = scoredById?.get(recipe.id) ?? scoreRecipeAgainstPantry(recipe, pantry);
     if (match.missingCount === 0 && match.matchedCount >= 1) ready += 1;
   }
   return ready;

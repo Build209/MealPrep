@@ -4,7 +4,7 @@
  * (tests/home-counts.test.ts).
  */
 import { readyToCookCount } from '../kitchen/recipeFeed';
-import type { MatchRecipe, StockRow } from '../kitchen/recipeMatch';
+import type { MatchRecipe, RecipePantryMatch, StockRow } from '../kitchen/recipeMatch';
 
 export type HomeCounts = {
   /** Recipes with nothing missing (the "Ready to cook" sticker), from the pantry match. */
@@ -19,10 +19,12 @@ export function homeCounts(input: {
   recipes: readonly MatchRecipe[] | undefined;
   pantry: readonly StockRow[] | undefined;
   grocery: readonly { checked: boolean }[] | undefined;
+  /** Matches scored off the main thread (src/kitchen/scoreAll.ts); `ready` stays null until they arrive. */
+  scoredById?: ReadonlyMap<string, RecipePantryMatch> | null;
 }): HomeCounts {
-  const { recipes, pantry, grocery } = input;
+  const { recipes, pantry, grocery, scoredById } = input;
   return {
-    ready: recipes && pantry ? readyToCookCount(recipes, pantry) : null,
+    ready: recipes && pantry && scoredById !== null ? readyToCookCount(recipes, pantry, scoredById) : null,
     pantry: pantry ? pantry.length : null,
     grocery: grocery ? grocery.filter((item) => !item.checked).length : null,
   };
