@@ -37,3 +37,26 @@ test('thin library recipes are kept out of More recipes; thin master and own rec
   const ids = rankRecipeFeed(recipes, [], { hideFromMore: hideThinLibraryRecipe }).more.map((e) => e.recipe.id).sort();
   assert.deepEqual(ids, ['l_full', 'r_thin']);
 });
+
+test('the cookable list is capped and the rest are counted, not dropped from "More recipes"', () => {
+  const recipes = Array.from({ length: 50 }, (_, i) => ({
+    id: `l_${i}`,
+    name: `Egg dish ${i}`,
+    ingredients: [
+      { ingredientId: `lib-${i}-0`, name: 'butter', quantity: 1, unit: 'each' },
+      { ingredientId: `lib-${i}-1`, name: 'garlic', quantity: 1, unit: 'each' },
+      { ingredientId: `lib-${i}-2`, name: 'unobtainium', quantity: 1, unit: 'each' },
+    ],
+  }));
+  const pantry = [
+    { id: 'p1', ingredientId: 'butter', name: 'butter', quantity: 1, unit: 'each', category: 'dairy' },
+    { id: 'p2', ingredientId: 'garlic', name: 'garlic', quantity: 1, unit: 'each', category: 'produce' },
+  ];
+  const feed = rankRecipeFeed(recipes, pantry);
+  assert.equal(feed.cookable.length, 30);
+  assert.equal(feed.cookableHidden, 20);
+  assert.equal(feed.more.length, 0);
+  const all = rankRecipeFeed(recipes, pantry, { cookableLimit: 100 });
+  assert.equal(all.cookable.length, 50);
+  assert.equal(all.cookableHidden, 0);
+});

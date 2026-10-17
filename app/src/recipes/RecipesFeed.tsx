@@ -90,6 +90,11 @@ export function RecipesFeed() {
             {feed.cookable.map(({ recipe, match }) => (
               <RecipeCard key={recipe.id} recipe={recipe} match={match} />
             ))}
+            {feed.cookableHidden > 0 ? (
+              <AppText variant="secondary" color="muted">
+                {FEED_COPY.moreHidden(feed.cookableHidden)}
+              </AppText>
+            ) : null}
           </>
         )}
       </View>
