@@ -46,6 +46,8 @@ export type RecipeCredit = {
   creatorUrl: string | null;
   /** Where the recipe came from. */
   originalUrl: string | null;
+  /** Full credit line for outside-source recipes, e.g. "Source: Wikibooks Cookbook, CC BY-SA 4.0". */
+  sourceLine?: string;
 };
 
 export type AppRecipe = {
@@ -115,9 +117,28 @@ export type LibraryRecipeRow = {
   steps: unknown; // jsonb string[]
   image_url: string | null;
   created_at: string;
+  /** Set for recipes taken from an outside source, e.g. 'Wikibooks Cookbook'. Null for MealPlanatic's own. */
+  source_name?: string | null;
+  source_url?: string | null;
+  /** e.g. 'CC BY-SA 4.0'. */
+  license?: string | null;
 };
 
-export const LIBRARY_RECIPE_COLUMNS = 'id, slug, title, dish_name, servings, prep_minutes, cook_minutes, ingredients, steps, image_url, created_at';
+export const LIBRARY_RECIPE_COLUMNS =
+  'id, slug, title, dish_name, servings, prep_minutes, cook_minutes, ingredients, steps, image_url, created_at, source_name, source_url, license';
+
+/** Credit for a library recipe from an outside source: "Source: Wikibooks Cookbook, CC BY-SA 4.0" linking the original page. */
+export function creditFromLibraryRow(row: Pick<LibraryRecipeRow, 'source_name' | 'source_url' | 'license'>): RecipeCredit | null {
+  const name = text(row.source_name);
+  if (!name) return null;
+  const license = text(row.license);
+  return {
+    creatorName: null,
+    creatorUrl: null,
+    originalUrl: safeHttpUrl(row.source_url),
+    sourceLine: `Source: ${name}${license ? `, ${license}` : ''}`,
+  };
+}
 
 // ------------------------------------------------------------------- mappers
 
@@ -228,7 +249,7 @@ export function libraryRecipeFromRow(row: LibraryRecipeRow): AppRecipe {
     ingredients: libraryIngredientsFromJson(row.ingredients, text(row.slug) || row.id),
     steps: stepsFromJson(row.steps),
     isMealPlanatic: true,
-    credit: null,
+    credit: creditFromLibraryRow(row),
     createdAt: row.created_at,
   };
 }
