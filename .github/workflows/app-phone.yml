@@ -12,17 +12,7 @@ name: New app phone pass
 # `phone-screens-pr-<number>`. The tests run with a read-only token; only the small publish job,
 # which runs no code from the pull request, can push.
 on:
-  pull_request:
-    paths:
-      - "app/**"
-      - "db/**"
-      - ".github/workflows/app-phone.yml"
-  push:
-    branches: [rebuild/v1, main]
-    paths:
-      - "app/**"
-      - "db/**"
-      - ".github/workflows/app-phone.yml"
+  # Manual only (owner's call, 2026-10-16): run from the Actions tab when wanted.
   workflow_dispatch:
 
 permissions:
