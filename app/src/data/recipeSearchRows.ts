@@ -55,6 +55,8 @@ export type SearchableRecipe = {
   minutes: number | null;
   servings: number;
   imageUrl: string | null;
+  /** Dish-type tag(s), for the photo placeholder. */
+  tags: string[];
   ingredients: RecipeIngredientLine[];
   /** The signed-in person's own recipe (imported or written by them). */
   own: boolean;
@@ -135,6 +137,7 @@ export function searchableFromRecipeRow(row: SearchRecipeRow, userId: string | n
     minutes: typeof row.minutes === 'number' && row.minutes > 0 ? row.minutes : null,
     servings: Math.max(1, typeof row.servings === 'number' ? row.servings : 4),
     imageUrl: imageAddress(row.image_url),
+    tags: [text(row.tag)].filter(Boolean),
     ingredients: ingredientLines(row.ingredients),
     own: !row.is_master && userId !== null && row.created_by === userId,
   };
@@ -159,6 +162,7 @@ export function searchableFromLibraryRow(row: SearchLibraryRow): SearchableRecip
     minutes: prep + cook > 0 ? prep + cook : null,
     servings: Math.max(1, typeof row.servings === 'number' ? row.servings : 4),
     imageUrl: imageAddress(row.image_url),
+    tags: Array.isArray(row.tags) ? row.tags.map(text).filter(Boolean) : [],
     ingredients: ingredientLines(row.ingredients),
     own: false,
   };

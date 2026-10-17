@@ -38,6 +38,7 @@ function recipe(over: Partial<SearchableRecipe> & { title: string }): Searchable
     minutes: null,
     servings: 4,
     imageUrl: null,
+    tags: [],
     ingredients: [],
     own: false,
     ...over,

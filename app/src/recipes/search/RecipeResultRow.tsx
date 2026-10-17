@@ -6,7 +6,7 @@ import type { SearchableRecipe } from '../../data/recipeSearch';
 import { saveTargetForRecipe } from '../../data/savedRecipes';
 import { space } from '../../theme/tokens';
 import { AppText } from '../../ui/AppText';
-import { PhotoThumb } from '../../ui/PhotoThumb';
+import { RecipePhoto } from '../../ui/RecipePhoto';
 import { recipeHref } from '../links';
 import { SaveButton } from '../saved/SaveButton';
 
@@ -22,7 +22,7 @@ export function RecipeResultRow({ recipe, note, allergens = [] }: { recipe: Sear
         onPress={() => router.push(recipeHref(recipe.routeId))}
         style={({ pressed }) => ({ flex: 1, flexDirection: 'row', alignItems: 'center', gap: space.gap, minHeight: 44, opacity: pressed ? 0.85 : 1 })}
       >
-        <PhotoThumb uri={recipe.imageUrl} width={64} height={64} />
+        <RecipePhoto uri={recipe.imageUrl} tags={recipe.tags} title={recipe.title} width={64} height={64} />
         <View style={{ flex: 1, gap: 2 }}>
           <AppText variant="body" bold numberOfLines={2}>
             {recipe.title}

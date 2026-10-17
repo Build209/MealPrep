@@ -8,6 +8,7 @@ import { AppText } from '../../ui/AppText';
 import { Button } from '../../ui/Button';
 import { Card } from '../../ui/Card';
 import { PhotoThumb } from '../../ui/PhotoThumb';
+import { RecipePhoto } from '../../ui/RecipePhoto';
 import { Screen } from '../../ui/Screen';
 import { recipeHref } from '../links';
 import { SaveButton } from './SaveButton';
@@ -30,7 +31,11 @@ function SavedRow({ saved }: { saved: SavedRecipe }) {
   const note = noteFor(saved);
   const body = (
     <>
-      <PhotoThumb uri={saved.imageUrl} width={link.kind === 'video' ? 96 : 64} height={link.kind === 'video' ? 54 : 64} />
+      {link.kind === 'recipe' ? (
+        <RecipePhoto uri={saved.imageUrl} title={saved.title} width={64} height={64} />
+      ) : (
+        <PhotoThumb uri={saved.imageUrl} width={link.kind === 'video' ? 96 : 64} height={link.kind === 'video' ? 54 : 64} />
+      )}
       <View style={{ flex: 1, gap: 2 }}>
         <AppText bold numberOfLines={2}>
           {saved.title}

@@ -18,6 +18,7 @@ import { colors, radius, space, touch } from '../theme/tokens';
 import { AppText } from '../ui/AppText';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
+import { RecipePhoto } from '../ui/RecipePhoto';
 import { Screen } from '../ui/Screen';
 import {
   allSelected,
@@ -314,7 +315,9 @@ export function RecipeDetailScreen({ id }: { id: string }) {
           accessibilityLabel={`Photo of ${r.name}`}
           style={{ width: '100%', aspectRatio: 4 / 3, borderRadius: radius.card, backgroundColor: colors.sand }}
         />
-      ) : null}
+      ) : (
+        <RecipePhoto uri={null} tags={r.tags} title={r.name} width="100%" aspectRatio={16 / 9} iconSize={72} borderRadius={radius.card} />
+      )}
 
       <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: space.gap }}>
         <View style={{ flex: 1, gap: 6 }}>

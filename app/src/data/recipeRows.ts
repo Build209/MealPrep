@@ -66,6 +66,8 @@ export type AppRecipe = {
   /** Total minutes, or null when unknown. */
   minutes: number | null;
   imageUrl: string | null;
+  /** Dish-type tags (library tags, or the recipe's one tag); drive the photo placeholder. */
+  tags: string[];
   ingredients: RecipeIngredientLine[];
   steps: string[];
   /** A MealPlanatic recipe (master or library), not the person's own. */
@@ -97,11 +99,12 @@ export type RecipeRow = {
   source_channel_url: string | null;
   source_author_url: string | null;
   image_url: string | null;
+  tag?: string | null;
 };
 
 export const RECIPE_COLUMNS =
   'id, slug, name, description, servings, minutes, ingredients, steps, is_master, created_by, created_at, source_url, ' +
-  'source_type, source_title, prep_minutes, cook_minutes, source_channel_name, source_channel_url, source_author_url, image_url';
+  'source_type, source_title, prep_minutes, cook_minutes, source_channel_name, source_channel_url, source_author_url, image_url, tag';
 
 // ----------------------------------------------------- public.library_recipes
 
@@ -116,6 +119,7 @@ export type LibraryRecipeRow = {
   ingredients: unknown; // jsonb [{ name, quantity, unit, note }]
   steps: unknown; // jsonb string[]
   image_url: string | null;
+  tags?: string[] | null;
   created_at: string;
   /** Set for recipes taken from an outside source, e.g. 'Wikibooks Cookbook'. Null for MealPlanatic's own. */
   source_name?: string | null;
@@ -125,7 +129,7 @@ export type LibraryRecipeRow = {
 };
 
 export const LIBRARY_RECIPE_COLUMNS =
-  'id, slug, title, dish_name, servings, prep_minutes, cook_minutes, ingredients, steps, image_url, created_at, source_name, source_url, license';
+  'id, slug, title, dish_name, servings, prep_minutes, cook_minutes, ingredients, steps, image_url, tags, created_at, source_name, source_url, license';
 
 /** Credit for a library recipe from an outside source: "Source: Wikibooks Cookbook, CC BY-SA 4.0" linking the original page. */
 export function creditFromLibraryRow(row: Pick<LibraryRecipeRow, 'source_name' | 'source_url' | 'license'>): RecipeCredit | null {
@@ -226,6 +230,7 @@ export function recipeFromRow(row: RecipeRow): AppRecipe {
     servings: Math.max(1, num(row.servings) ?? 1),
     minutes: minutes && minutes > 0 ? minutes : split > 0 ? split : null,
     imageUrl: safeHttpUrl(row.image_url),
+    tags: [text(row.tag)].filter(Boolean),
     ingredients: recipeIngredientsFromJson(row.ingredients),
     steps: stepsFromJson(row.steps),
     isMealPlanatic: row.is_master === true,
@@ -246,6 +251,7 @@ export function libraryRecipeFromRow(row: LibraryRecipeRow): AppRecipe {
     servings: Math.max(1, num(row.servings) ?? 1),
     minutes: total > 0 ? total : null,
     imageUrl: safeHttpUrl(row.image_url),
+    tags: Array.isArray(row.tags) ? row.tags.map(text).filter(Boolean) : [],
     ingredients: libraryIngredientsFromJson(row.ingredients, text(row.slug) || row.id),
     steps: stepsFromJson(row.steps),
     isMealPlanatic: true,
