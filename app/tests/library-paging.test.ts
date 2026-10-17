@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { LIBRARY_PAGE_SIZE, readAllPages } from '../src/data/libraryPaging';
-import { rankRecipeFeed } from '../src/kitchen/recipeFeed';
+import { hideThinLibraryRecipe, rankRecipeFeed } from '../src/kitchen/recipeFeed';
 
 test('readAllPages joins pages until a short page and asks for the right ranges', async () => {
   const total = 2500;
@@ -26,12 +26,14 @@ test('readAllPages stops after one page when the library is small', async () => 
   assert.equal(calls, 1);
 });
 
-test('minIngredientLines keeps one-line recipes out of More recipes', () => {
+test('thin library recipes are kept out of More recipes; thin master and own recipes stay', () => {
   const ing = (name: string) => ({ ingredientId: name, name, quantity: 1, unit: 'each' });
   const recipes = [
-    { id: 'thin', name: 'Thin', ingredients: [ing('water')] },
-    { id: 'full', name: 'Full', ingredients: [ing('a'), ing('b'), ing('c'), ing('d')] },
+    { id: 'l_thin', name: 'Thin library', ingredients: [ing('water')] },
+    { id: 'r_thin', name: 'Own thin', ingredients: [ing('rice')] },
+    { id: 'l_full', name: 'Full library', ingredients: [ing('a'), ing('b'), ing('c')] },
   ];
-  assert.equal(rankRecipeFeed(recipes, []).more.length, 2);
-  assert.deepEqual(rankRecipeFeed(recipes, [], { minIngredientLines: 3 }).more.map((e) => e.recipe.id), ['full']);
+  assert.equal(rankRecipeFeed(recipes, []).more.length, 3);
+  const ids = rankRecipeFeed(recipes, [], { hideFromMore: hideThinLibraryRecipe }).more.map((e) => e.recipe.id).sort();
+  assert.deepEqual(ids, ['l_full', 'r_thin']);
 });
