@@ -13,7 +13,7 @@ import { StatusSticker } from './StatusSticker';
 const THUMB = 72;
 
 /** One recipe in the feed: photo, name, servings and time, and its status sticker. Opens the detail. */
-export function RecipeCard({ recipe, match, allergens = [] }: { recipe: AppRecipe; match: RecipePantryMatch; allergens?: readonly AllergenKey[] }) {
+export function RecipeCard({ recipe, match, allergens = [], gearNote = null }: { recipe: AppRecipe; match: RecipePantryMatch; allergens?: readonly AllergenKey[]; gearNote?: string | null }) {
   const router = useRouter();
   const status = recipeStatus(match);
   const contains = containsLine(allergens);
@@ -44,6 +44,11 @@ export function RecipeCard({ recipe, match, allergens = [] }: { recipe: AppRecip
           {servingsAndTime(recipe)}
         </AppText>
         <StatusSticker status={status} />
+        {gearNote ? (
+          <AppText variant="secondary" color="muted" testID="gear-note">
+            {gearNote}
+          </AppText>
+        ) : null}
         {contains ? (
           <AppText variant="secondary" color="danger" bold testID="allergen-contains">
             {contains}

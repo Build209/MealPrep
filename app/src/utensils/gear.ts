@@ -82,6 +82,18 @@ export function gearStatus(recipe: TaggedRecipe, owned: ReadonlySet<string> | nu
 }
 
 /**
+ * Stable split by gear: entries that fit (or are unknown) first, entries that need missing gear after,
+ * each group in the order given. With `owned` null the entries come back unchanged.
+ */
+export function demoteLacking<T>(items: readonly T[], recipeOf: (item: T) => TaggedRecipe, owned: ReadonlySet<string> | null, swaps: readonly GearSwap[]): T[] {
+  if (owned === null) return [...items];
+  const fits: T[] = [];
+  const lacks: T[] = [];
+  for (const it of items) (gearStatus(recipeOf(it), owned, swaps).kind === 'needs' ? lacks : fits).push(it);
+  return [...fits, ...lacks];
+}
+
+/**
  * Soft sort (or filter, with `onlyMakeable`). Stable: recipes keep the order they came in, those that
  * need missing gear go after the rest. With `owned` null the same array contents come back untouched.
  */
@@ -92,10 +104,9 @@ export function sortByGear<T extends TaggedRecipe>(
   options?: { onlyMakeable?: boolean },
 ): T[] {
   if (owned === null) return [...recipes];
-  const fits: T[] = [];
-  const lacks: T[] = [];
-  for (const r of recipes) (gearStatus(r, owned, swaps).kind === 'needs' ? lacks : fits).push(r);
-  return options?.onlyMakeable ? fits : [...fits, ...lacks];
+  const ordered = demoteLacking(recipes, (r) => r, owned, swaps);
+  if (!options?.onlyMakeable) return ordered;
+  return ordered.filter((r) => gearStatus(r, owned, swaps).kind !== 'needs');
 }
 
 export type ShelfKey = 'heat' | 'pots_pans' | 'tools';
