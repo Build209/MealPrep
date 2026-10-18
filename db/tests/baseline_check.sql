@@ -16,14 +16,18 @@ declare
 begin
   select count(*) into n from pg_class c where c.relnamespace = 'public'::regnamespace and c.relkind = 'r'
     -- Added by a later migration in this folder (checked in daily_caps_check.sql), not live yet.
-    and c.relname not in ('daily_usage', 'ai_rate_limits', 'scan_correction_daily_counts');
+    and c.relname not in ('daily_usage', 'ai_rate_limits', 'scan_correction_daily_counts',
+      -- Utensils tables: on live since 2026-10-17, checked in utensils_check.sql.
+      'equipment', 'user_equipment', 'equipment_swaps', 'equipment_requests', 'recipe_adaptations');
   if n <> 29 then raise exception 'expected 29 public tables, found %', n; end if;
 
   select count(*) into n from pg_class c where c.relnamespace = 'public'::regnamespace and c.relkind = 'r' and not c.relrowsecurity;
   if n <> 0 then raise exception '% public tables have row level security off', n; end if;
 
   select count(*) into n from pg_policies where schemaname = 'public'
-    and policyname not in ('daily_usage_select_own');
+    and policyname not in ('daily_usage_select_own',
+      -- Utensils policies (utensils_check.sql).
+      'equipment_read', 'user_equipment_own', 'equipment_swaps_read', 'recipe_adaptations_read');
   if n <> 46 then raise exception 'expected 46 public policies, found %', n; end if;
 
   select count(*) into n from pg_proc p where p.pronamespace = 'public'::regnamespace
