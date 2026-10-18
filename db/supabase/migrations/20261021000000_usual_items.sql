@@ -1,9 +1,8 @@
 -- Usual items (Features handoff, Feature 2): remember what a person buys, so the Grocery tab can
 -- offer "your usuals" when one is due. Account level: it follows the person across phones.
 --
--- NOT APPLIED TO LIVE. Needs the owner's yes, and compliance review of the privacy-page line
--- before the app code that reads it ships. Safe to run before the app code: nothing reads these
--- tables until that code is on live.
+-- NOT APPLIED TO LIVE. Needs the owner's yes. The privacy-page line is live (#361). The trigger
+-- starts recording as soon as this runs, so apply only after the privacy page is live.
 --
 -- What is stored (per account): the item's name as it was on the grocery list, a lower-case key
 -- for matching, and the day it was ticked off as bought. No quantity, price, store, photo, or
@@ -74,6 +73,11 @@ begin
     insert into public.purchase_history (user_id, name_key, name, bought_on)
     values (new.user_id, v_key, v_name, current_date)
     on conflict (user_id, name_key, bought_on) do nothing;
+
+    -- Drop this person's purchases older than 13 months (same as the usage log; compliance
+    -- verdict 2026-10-18). Usual-item logic only uses recent gaps.
+    delete from public.purchase_history
+     where user_id = new.user_id and bought_on < current_date - interval '13 months';
 
     -- Keep the newest 400 purchases for this person.
     delete from public.purchase_history

@@ -193,6 +193,11 @@ test('Recipes: the Ask Forky bar at the top sends the question into the chat and
   const note = page.getByTestId('recipes-forky-note').filter({ visible: true });
   await expect(note).toContainText(AI_NOTICE);
   await expect(note).toContainText('5 questions left this month');
+  // After a few seconds it shrinks to the short line, which stays on screen; a tap brings the full text back.
+  await expect(note).toContainText('Tap to read the full notice', { timeout: 10_000 });
+  await expect(note).toContainText('5 questions left this month');
+  await page.getByTestId('recipes-forky-note-toggle').filter({ visible: true }).click();
+  await expect(note).toContainText(AI_NOTICE);
 
   await box.fill('Find me a quick dinner');
   await send.click();

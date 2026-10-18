@@ -1,6 +1,6 @@
 /**
- * Words for "Your usuals" (Grocery tab) and its Account control. All NEW: not through compliance
- * yet (request doc: "Compliance request - Usual items 2026-10-17"). No savings or money claims;
+ * Words for "Your usuals" (Grocery tab) and its Account control. All NEW: reviewed by compliance
+ * 2026-10-18 ("Compliance verdict - Usual items"; two lines changed per that verdict). No savings or money claims;
  * nothing says the app "knows" or "learns" you.
  */
 export const USUALS_COPY = {
@@ -18,9 +18,9 @@ export const USUALS_COPY = {
 
   accountTitle: 'Your usuals',
   accountExplain:
-    'When you tick an item off your grocery list, MealPlanatic keeps the item name and the day. It uses that to suggest items you buy regularly. Only you can see it.',
+    'When you tick an item off your grocery list, MealPlanatic keeps the item name and the day. It uses that to suggest items you buy regularly. It isn't shared with other users.',
   forget: 'Forget my usuals',
   forgetting: 'Forgetting…',
-  forgotten: 'Done. Your usuals were cleared.',
+  forgotten: 'Done. Your usuals were cleared. Ticking items on your list will start them again.',
   forgetFailed: "Couldn't clear your usuals. Check your connection and try again.",
 } as const;

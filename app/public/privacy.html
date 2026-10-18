@@ -53,7 +53,7 @@
   </head>
   <body>
     <h1>Privacy Policy</h1>
-    <p class="muted">MealPlanatic · Last updated: October 16, 2026</p>
+    <p class="muted">MealPlanatic · Last updated: October 18, 2026</p>
 
     <p>
       MealPlanatic helps you plan meals, track your pantry, build grocery lists, compare store prices, and discover
@@ -105,13 +105,18 @@
       </li>
       <li>
         <strong>Usage log (signed-in accounts):</strong> a record of actions you take in the app, such as opening
-        it, saving a scan, ticking a grocery item, marking a meal as made, opening or closing one of Forky's tips,
-        or starting a purchase. Each entry holds the name of the action, the time, whether you used the web or
+        the app, signing in, saving a scan or an imported recipe, asking Forky a question, opening Ask Forky, seeing
+        one of Forky's tips, looking at the plans screen, or starting a purchase. Each entry holds the name of the action, the time, whether you used the web or
         a phone app, and at most a number or a short label (for example which tip, or how many items). It does not
         hold item or recipe names, what you type to Forky, photos, or your location. We use it to see which
         features help, to make Forky's tips less repetitive, and to show you your own activity. We do not use it for
         advertising and do not share it with anyone except Supabase, which stores it for us. Entries are deleted
         after 13 months. If you browse without an account, nothing is added to this log.
+      </li>
+      <li>
+        <strong>Usual items (signed-in accounts):</strong> when you tick an item off your grocery list, we keep the
+        item's name and the day, tied to your account, to suggest items you buy regularly. Only the app shows it to
+        you. You can clear it at any time in Account, and it is deleted with your account.
       </li>
     </ul>
 
@@ -186,7 +191,8 @@
     <h2>Service providers</h2>
     <p>
       We use <strong>Supabase</strong> (database, authentication, file storage, and server functions) to host and process
-      your data. Photo scanning uses <strong>Google Gemini</strong> only when you start a scan. Ask Forky uses <strong>Anthropic</strong> only when you send him a question. Recipe search uses
+      your data. Sign-up confirmation and password reset emails are sent through <strong>Resend</strong>, which
+      receives your email address and the content of the email so it can deliver them. Photo scanning uses <strong>Google Gemini</strong> only when you start a scan. Ask Forky uses <strong>Anthropic</strong> only when you send him a question. Recipe search uses
       <strong>RecipeAPI.io</strong> through our proxy. Store deals may use <strong>Kroger</strong> APIs where configured.
       Nutrition data may include <strong>USDA</strong> sources via our backend. These providers process data on our
       instructions to run the app.
@@ -214,11 +220,6 @@
       to read the video's title and caption for the import. That request carries nothing else about you.
     </p>
     <p>
-      Classic recipes are loaded by your device directly from <strong>TheMealDB</strong>. It receives the request
-      from your device, including the recipe category or the words you search for and, when we match recipes to
-      what you have, the name of an ingredient. We do not send it your name, email or account details.
-    </p>
-    <p>
       Payments for paid plans are handled by <strong>Stripe</strong>. We do not see or store your full card
       number. We keep a record of your subscription, its price and dates.
     </p>
@@ -227,8 +228,12 @@
     <p>
       You can delete your account in the app (<strong>Home → Account → Delete account</strong>) or on the web at
       <a href="https://mealplanatic.app/delete-account">Account deletion page</a>. That removes your
-      profile (including your diets, allergens and dietary notes), pantry, meal plans, grocery lists, saved stores, personal recipes, usage log, auth account, and the scan photos and
+      profile (including your diets, allergens and dietary notes), pantry, meal plans, grocery lists, saved stores, personal recipes, usage log, usual items, auth account, and the scan photos and
       profile photo tied to your account.
+    </p>
+    <p>
+      You can download your pantry, grocery list, saved recipes and the recipes you added from Account, Export your
+      kitchen. The file is made on your device from your own data.
     </p>
     <p>
       Deleting your account also cancels your paid plan. We keep billing records (your subscription, its price and

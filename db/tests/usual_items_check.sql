@@ -1,4 +1,4 @@
--- Checks for db/supabase/migrations/20261020000000_usual_items.sql: ticking a grocery row records
+-- Checks for db/supabase/migrations/20261021000000_usual_items.sql: ticking a grocery row records
 -- one purchase (name and day), the same item twice in a day counts once, unticking takes the day's
 -- purchase back, clients cannot write purchases, people see and delete only their own rows, the
 -- 400-row cap holds, settings are own-only and capped, anonymous callers get nothing, and account
@@ -147,8 +147,11 @@ $$;
 -- 5. The 400-purchase cap, and F sees none of E's rows.
 reset role;
 insert into public.purchase_history (user_id, name_key, name, bought_on, created_at)
-  select '00000000-0000-4000-8000-0000000000e5', 'seed-' || g, 'Seed ' || g, current_date - g, now() - make_interval(mins => g)
+  select '00000000-0000-4000-8000-0000000000e5', 'seed-' || g, 'Seed ' || g, current_date - (g % 300), now() - make_interval(mins => g)
   from generate_series(1, 405) g;
+-- One purchase older than 13 months: the next tick must drop it (compliance verdict 2026-10-18).
+insert into public.purchase_history (user_id, name_key, name, bought_on, created_at)
+  values ('00000000-0000-4000-8000-0000000000e5', 'ancient', 'Ancient', current_date - 430, now() - interval '430 days');
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-8000-0000000000e5","role":"authenticated"}', true) \g /dev/null
 do $$
@@ -163,6 +166,9 @@ begin
   end if;
   if not exists (select 1 from public.purchase_history where name_key = 'eggs') then
     raise exception 'cap dropped the newest purchase';
+  end if;
+  if exists (select 1 from public.purchase_history where name_key = 'ancient') then
+    raise exception 'a purchase older than 13 months was kept';
   end if;
 end
 $$;

@@ -17,7 +17,9 @@ begin
   select count(*) into n from pg_class c where c.relnamespace = 'public'::regnamespace and c.relkind = 'r'
     -- Added by a later migration in this folder (checked in daily_caps_check.sql), not live yet.
     and c.relname not in ('daily_usage', 'ai_rate_limits', 'scan_correction_daily_counts',
-                          'purchase_history', 'usual_item_settings');
+                          'purchase_history', 'usual_item_settings',
+      -- Utensils tables: on live since 2026-10-17, checked in utensils_check.sql.
+      'equipment', 'user_equipment', 'equipment_swaps', 'equipment_requests', 'recipe_adaptations');
   if n <> 29 then raise exception 'expected 29 public tables, found %', n; end if;
 
   select count(*) into n from pg_class c where c.relnamespace = 'public'::regnamespace and c.relkind = 'r' and not c.relrowsecurity;
@@ -27,7 +29,9 @@ begin
     and policyname not in ('daily_usage_select_own',
                            'purchase_history_select_own', 'purchase_history_delete_own',
                            'usual_item_settings_select_own', 'usual_item_settings_insert_own',
-                           'usual_item_settings_update_own', 'usual_item_settings_delete_own');
+                           'usual_item_settings_update_own', 'usual_item_settings_delete_own',
+      -- Utensils policies (utensils_check.sql).
+      'equipment_read', 'user_equipment_own', 'equipment_swaps_read', 'recipe_adaptations_read');
   if n <> 46 then raise exception 'expected 46 public policies, found %', n; end if;
 
   select count(*) into n from pg_proc p where p.pronamespace = 'public'::regnamespace

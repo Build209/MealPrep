@@ -9,7 +9,7 @@ import { requireClient, requireUserId, useSessionUserId } from './session';
  *   purchase_history      days a grocery row was ticked as bought (written by a database trigger;
  *                         the app only reads it and can delete it)
  *   usual_item_settings   "hide" and "not now" choices
- * (db/supabase/migrations/20261020000000_usual_items.sql). Same rules as the rest of the data
+ * (db/supabase/migrations/20261021000000_usual_items.sql). Same rules as the rest of the data
  * layer (src/data/README.md): always filter by the owner, the query cache is the only copy.
  * Until that migration is on live, the reads fail with "table not found"; the card then shows
  * nothing (see useUsualsData).

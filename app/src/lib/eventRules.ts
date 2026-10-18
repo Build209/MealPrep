@@ -32,6 +32,12 @@ export const EVENT_NAMES = [
   'import_done',
   /** A question was sent to Ask Forky and answered. No text is recorded (old name). */
   'ask_forky_asked',
+  /** The Plans screen showed the buy options to a free account. No props. */
+  'plus_offer_shown',
+  /** The Ask Forky chat screen was opened (from the bar, Home or a link). No props. */
+  'ask_forky_opened',
+  /** A Forky tip appeared in the cloud under the bar. props: kind (which tip) */
+  'forky_prompt_shown',
 ] as const;
 
 export type EventName = (typeof EVENT_NAMES)[number];

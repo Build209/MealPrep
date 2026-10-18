@@ -19,7 +19,7 @@ test('every event name passes the database check on app_events.name', () => {
 });
 
 test('old app names are kept so old and new rows line up', () => {
-  for (const name of ['app_open', 'scan_saved', 'ask_forky_asked', 'checkout_started']) {
+  for (const name of ['app_open', 'scan_saved', 'ask_forky_asked', 'checkout_started', 'plus_offer_shown', 'ask_forky_opened', 'forky_prompt_shown']) {
     assert.ok(isEventName(name), name);
   }
 });
@@ -105,4 +105,10 @@ test('refused-for-good errors stop the log; network trouble does not', () => {
   assert.equal(shouldStopAfter({ status: 404 }), true);
   assert.equal(shouldStopAfter({ code: '', status: 0 }), false);
   assert.equal(shouldStopAfter({ status: 503 }), false);
+});
+
+test('funnel events carry no text: tip kind passes as a code word, a sentence is dropped', () => {
+  assert.deepEqual(buildEventRow('plus_offer_shown', undefined, 's', 'web')?.props, {});
+  assert.deepEqual(buildEventRow('forky_prompt_shown', { kind: 'pantry_low' }, 's', 'web')?.props, { kind: 'pantry_low' });
+  assert.deepEqual(buildEventRow('forky_prompt_shown', { kind: 'you are low on milk' }, 's', 'web')?.props, {});
 });
