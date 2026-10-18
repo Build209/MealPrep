@@ -28,5 +28,9 @@ export const GEAR_COPY = {
   skip: 'Skip for now',
   saved: 'Saved.',
   saveFailed: "Couldn't save that. Check your connection and try again.",
+  onlyMakeable: 'Only what I can make',
+  onlyMakeableHint: 'Hides recipes that need gear you did not pick.',
+  couldWorkWith: (gear: string) => `Could work with your ${gear}`,
+  needs: (gear: string) => `Needs: ${gear}`,
   tileA11y: (name: string, on: boolean) => `${name}, ${on ? 'picked' : 'not picked'}`,
 } as const;

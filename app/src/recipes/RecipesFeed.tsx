@@ -1,13 +1,17 @@
 import { hideThinLibraryRecipe, isComponentRecipe } from '../kitchen/recipeFeed';
 import { useRouter } from 'expo-router';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useScoredRecipes } from '../kitchen/useScoredRecipes';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, Pressable, View } from 'react-native';
 import { usePantryItems } from '../data';
-import { useRecipes } from '../data/recipes';
+import { useRecipes, type AppRecipe } from '../data/recipes';
 import { ALLERGEN_COPY } from '../allergens/copy';
 import { rankFeedWithAllergens } from '../allergens/rank';
 import { useAllergenPrefs } from '../allergens/useAllergenPrefs';
+import { GEAR_COPY } from '../utensils/copy';
+import { demoteLacking, gearStatus, sortByGear } from '../utensils/gear';
+import { gearNote } from '../utensils/gearNote';
+import { useGearCatalog, useGearSwaps, useOwnGear } from '../utensils/useGear';
 import { colors, space } from '../theme/tokens';
 import { AppText } from '../ui/AppText';
 import { Button } from '../ui/Button';
@@ -33,15 +37,33 @@ export function RecipesFeed() {
   const pantry = usePantryItems();
   const prefs = useAllergenPrefs();
   const userAllergens = prefs.allergens;
+  // Gear (soft sort): never blocks the feed. Skipped picker = owned null = nothing changes.
+  const gear = useOwnGear();
+  const gearCatalog = useGearCatalog();
+  const gearSwaps = useGearSwaps();
+  const owned = gear.owned;
+  const swaps = useMemo(() => gearSwaps.data ?? [], [gearSwaps.data]);
+  const [onlyMakeable, setOnlyMakeable] = useState(false);
+  const gearReady = owned !== null && gearCatalog.data !== undefined;
+  const nameOf = (slug: string) => gearCatalog.data?.find((g) => g.slug === slug)?.name ?? slug;
+
+  const visibleRecipes = useMemo(
+    () => (recipes.data && gearReady && onlyMakeable ? sortByGear(recipes.data, owned, swaps, { onlyMakeable: true }) : recipes.data),
+    [recipes.data, gearReady, onlyMakeable, owned, swaps],
+  );
 
   const scored = useScoredRecipes(recipes.data, pantry.data);
-  const feed = useMemo(
-    () =>
-      recipes.data && pantry.data && scored
-        ? rankFeedWithAllergens(recipes.data, pantry.data, userAllergens, { hideFromMore: hideThinLibraryRecipe, isComponent: isComponentRecipe, scoredById: scored })
-        : null,
-    [recipes.data, pantry.data, userAllergens, scored],
-  );
+  const feed = useMemo(() => {
+    if (!visibleRecipes || !pantry.data || !scored) return null;
+    const ranked = rankFeedWithAllergens(visibleRecipes, pantry.data, userAllergens, { hideFromMore: hideThinLibraryRecipe, isComponent: isComponentRecipe, scoredById: scored });
+    if (!gearReady) return ranked;
+    return {
+      ...ranked,
+      cookable: demoteLacking(ranked.cookable, (e) => e.recipe, owned, swaps),
+      more: demoteLacking(ranked.more, (e) => e.recipe, owned, swaps),
+    };
+  }, [visibleRecipes, pantry.data, userAllergens, scored, gearReady, owned, swaps]);
+  const noteFor = (recipe: AppRecipe) => (gearReady ? gearNote(gearStatus(recipe, owned, swaps), nameOf) : null);
   const scoring = Boolean(recipes.data && pantry.data && !scored);
 
   if (recipes.isPending || pantry.isPending || prefs.isLoading || scoring) {
@@ -80,6 +102,19 @@ export function RecipesFeed() {
     <View style={{ gap: space.groupGap }}>
       <View style={{ gap: space.gap }}>
         <SectionTitle>{FEED_COPY.cookTitle}</SectionTitle>
+        {gearReady ? (
+          <Pressable
+            accessibilityRole="switch"
+            accessibilityState={{ checked: onlyMakeable }}
+            accessibilityLabel={GEAR_COPY.onlyMakeable}
+            accessibilityHint={GEAR_COPY.onlyMakeableHint}
+            onPress={() => setOnlyMakeable((v) => !v)}
+            testID="gear-only-makeable"
+            style={{ minHeight: 44, justifyContent: 'center' }}
+          >
+            <AppText bold={onlyMakeable}>{`${onlyMakeable ? '✓ ' : ''}${GEAR_COPY.onlyMakeable}`}</AppText>
+          </Pressable>
+        ) : null}
         {pantryEmpty ? (
           <Card>
             <AppText bold>{FEED_COPY.emptyPantryTitle}</AppText>
@@ -94,7 +129,7 @@ export function RecipesFeed() {
               {feed.usedPartialFallback ? FEED_COPY.partialIntro : FEED_COPY.cookIntro}
             </AppText>
             {feed.cookable.map(({ recipe, match }) => (
-              <RecipeCard key={recipe.id} recipe={recipe} match={match} />
+              <RecipeCard key={recipe.id} recipe={recipe} match={match} gearNote={noteFor(recipe)} />
             ))}
             {feed.cookableHidden > 0 ? (
               <AppText variant="secondary" color="muted">
@@ -109,7 +144,7 @@ export function RecipesFeed() {
         <View style={{ gap: space.gap }}>
           <SectionTitle>{FEED_COPY.moreTitle}</SectionTitle>
           {feed.more.map(({ recipe, match }) => (
-            <RecipeCard key={recipe.id} recipe={recipe} match={match} />
+            <RecipeCard key={recipe.id} recipe={recipe} match={match} gearNote={noteFor(recipe)} />
           ))}
           {feed.moreHidden > 0 ? (
             <AppText variant="secondary" color="muted">

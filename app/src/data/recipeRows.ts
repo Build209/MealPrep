@@ -74,6 +74,9 @@ export type AppRecipe = {
   isMealPlanatic: boolean;
   credit: RecipeCredit | null;
   createdAt: string;
+  /** Gear slugs the recipe needs (library recipes only so far). Empty with no tagged date = not tagged yet. */
+  equipmentRequired?: string[];
+  equipmentTaggedAt?: string | null;
 };
 
 // ------------------------------------------------------------- public.recipes
@@ -126,6 +129,8 @@ export type LibraryRecipeRow = {
   source_url?: string | null;
   /** e.g. 'CC BY-SA 4.0'. */
   license?: string | null;
+  equipment_required?: string[] | null;
+  equipment_tagged_at?: string | null;
 };
 
 export const LIBRARY_RECIPE_COLUMNS =
@@ -133,7 +138,7 @@ export const LIBRARY_RECIPE_COLUMNS =
 
 /** The list reads (feed, counts) leave out the steps: 3,800 recipes of steps is megabytes nobody sees. */
 export const LIBRARY_LIST_COLUMNS =
-  'id, slug, title, dish_name, servings, prep_minutes, cook_minutes, ingredients, image_url, created_at, source_name, source_url, license';
+  'id, slug, title, dish_name, servings, prep_minutes, cook_minutes, ingredients, image_url, created_at, source_name, source_url, license, equipment_required, equipment_tagged_at';
 
 /** Credit for a library recipe from an outside source: "Source: Wikibooks Cookbook, CC BY-SA 4.0" linking the original page. */
 export function creditFromLibraryRow(row: Pick<LibraryRecipeRow, 'source_name' | 'source_url' | 'license'>): RecipeCredit | null {
@@ -261,6 +266,8 @@ export function libraryRecipeFromRow(row: LibraryRecipeRow): AppRecipe {
     isMealPlanatic: true,
     credit: creditFromLibraryRow(row),
     createdAt: row.created_at,
+    equipmentRequired: Array.isArray(row.equipment_required) ? row.equipment_required.map(text).filter(Boolean) : [],
+    equipmentTaggedAt: typeof row.equipment_tagged_at === 'string' ? row.equipment_tagged_at : null,
   };
 }
 
