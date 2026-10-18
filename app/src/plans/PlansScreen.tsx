@@ -1,7 +1,9 @@
 import { Redirect, useRouter } from 'expo-router';
+import { useEffect, useRef } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { useAuth } from '../auth/AuthProvider';
 import { LEGAL_LINKS } from '../auth/copy';
+import { logEvent } from '../lib/events';
 import { colors } from '../theme/tokens';
 import { AppText } from '../ui/AppText';
 import { Button } from '../ui/Button';
@@ -17,6 +19,16 @@ export function PlansScreen() {
   const { ready, session } = useAuth();
   const router = useRouter();
   const { profile, subscription, loading, state, statusLine } = useCurrentPlan();
+
+  // Once per visit, only when the buy options are really on screen.
+  const offerLogged = useRef(false);
+  const offerShown = !!state?.showBuy && !subscription.error;
+  useEffect(() => {
+    if (offerShown && !offerLogged.current) {
+      offerLogged.current = true;
+      logEvent('plus_offer_shown');
+    }
+  }, [offerShown]);
 
   if (ready && !session) return <Redirect href="/sign-in" />;
 
