@@ -45,12 +45,19 @@ export async function saveOwnGear(userId: string | null | undefined, picks: read
   const id = requireUserId(userId);
   const slugs = cleanPicks(picks, catalog);
   if (slugs.length > 0) {
-    await run(client.from('user_equipment').upsert(slugs.map((s) => ({ user_id: id, equipment_slug: s, source: 'picked' })), { onConflict: 'user_id,equipment_slug' }));
+    // Every write asks for rows back (.select): `run` treats "no data" as a failure, and a plain
+    // write returns none.
+    await run(
+      client
+        .from('user_equipment')
+        .upsert(slugs.map((s) => ({ user_id: id, equipment_slug: s, source: 'picked' })), { onConflict: 'user_id,equipment_slug' })
+        .select('equipment_slug'),
+    );
   }
   const del = client.from('user_equipment').delete().eq('user_id', id);
-  await run(slugs.length > 0 ? del.not('equipment_slug', 'in', `(${slugs.join(',')})`) : del);
+  await run((slugs.length > 0 ? del.not('equipment_slug', 'in', `(${slugs.join(',')})`) : del).select('equipment_slug'));
   const setAt = new Date().toISOString();
-  await run(client.from('profiles').update({ equipment_set_at: setAt }).eq('id', id));
+  await run(client.from('profiles').update({ equipment_set_at: setAt }).eq('id', id).select('id').single());
   return { slugs, setAt };
 }
 
