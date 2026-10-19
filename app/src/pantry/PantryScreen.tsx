@@ -30,6 +30,8 @@ import { UndoBar } from './parts/UndoBar';
 import { SHELF_VIEW_COPY, type PantryViewMode } from './shelves/packages';
 import { PantryShelves } from './shelves/PantryShelves';
 import { pantryShelfSummary, resolveShelfPlace } from './shelves/shelfView';
+import { GearCard } from '../utensils/GearCard';
+import { GEAR_COPY } from '../utensils/copy';
 import { toShelvedItem, type ShelvedItem } from './types';
 import { readPantryViewMode, writePantryViewMode } from './viewMode';
 
@@ -91,6 +93,7 @@ export function PantryScreen({ headerActions, emptyActions }: PantryScreenProps)
   const [viewMode, setViewMode] = useState<PantryViewMode>(() => readPantryViewMode());
   const [place, setPlace] = useState<PantryStorageLocation | null>(null);
   const [notice, setNotice] = useState<Notice>(null);
+  const [showGear, setShowGear] = useState(false);
 
   const items = useMemo(() => (query.data ?? []).map(toShelvedItem), [query.data]);
   const summary = pantryShelfSummary(items);
@@ -245,7 +248,11 @@ export function PantryScreen({ headerActions, emptyActions }: PantryScreenProps)
           <PantryShelves
             items={items}
             place={shelfPlace}
-            onChangePlace={setPlace}
+            onChangePlace={(next) => {
+              setShowGear(false);
+              setPlace(next);
+            }}
+            extra={{ label: GEAR_COPY.pantryPill, active: showGear, onSelect: () => setShowGear(true), content: <GearCard /> }}
             onPressItem={openItem}
             onSeeAll={() => chooseView('list')}
           />

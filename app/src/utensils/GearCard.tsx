@@ -7,7 +7,7 @@ import { GEAR_COPY as COPY } from './copy';
 import { GearPicker } from './GearPicker';
 import { useGearCatalog, useOwnGear } from './useGear';
 
-/** Account > Your kitchen gear: shows how many things are picked and opens the step-by-step picker. */
+/** Pantry tab > Kitchen gear: shows how many things are picked and opens the step-by-step picker. */
 export function GearCard() {
   const catalog = useGearCatalog();
   const own = useOwnGear();
