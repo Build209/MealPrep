@@ -1,10 +1,11 @@
 /**
- * Words for the kitchen gear picker (Account > Your kitchen gear). NEW wording, not yet reviewed by
+ * Words for the kitchen gear picker (Pantry tab > Kitchen gear). NEW wording, not yet reviewed by
  * compliance: see "Compliance request - Utensils picker 2026-10-18". Gear names come from the
  * database in plain text (no brand names, no logos). Nothing here promises a result: no recipe is
  * tagged with gear yet, so the picker only saves the answers.
  */
 export const GEAR_COPY = {
+  pantryPill: 'Kitchen gear',
   cardTitle: 'Your kitchen gear',
   cardExplainNone: "Tell us what's in your kitchen. Matching recipes to your gear is coming.",
   cardExplainSet: (n: number) => (n === 1 ? 'You picked 1 item.' : `You picked ${n} items.`),

@@ -9,7 +9,6 @@ import { AppText } from '../ui/AppText';
 import { Button } from '../ui/Button';
 import { Screen } from '../ui/Screen';
 import { UsualsSettingsCard } from '../usuals/UsualsSettingsCard';
-import { GearCard } from '../utensils/GearCard';
 import { HELP_COPY } from '../help/copy';
 import { Card } from '../ui/Card';
 import { ACCOUNT_SCREEN_COPY as COPY, PROFILE_COPY } from './copy';
@@ -61,7 +60,6 @@ export function AccountScreen() {
             <ProfileForm profile={profile.data} />
           </Card>
           <UsualsSettingsCard />
-          <GearCard />
           <CurrentPlan
           plan={profile.data.plan}
           planTier={profile.data.planTier}

@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, type ReactNode } from 'react';
 import { Pressable, ScrollView, useWindowDimensions, View } from 'react-native';
 import type { PantryStorageLocation } from '../../kitchen/storage';
 import { colors, layout, radius, space, touch } from '../../theme/tokens';
@@ -29,15 +29,31 @@ type Props = {
   onPressItem: (item: ShelvedItem) => void;
   /** "See all" and "+N more": show this place in the list view. */
   onSeeAll: () => void;
+  /**
+   * One more pill after the storage places whose content replaces the shelves (the Kitchen gear
+   * picker). Not a storage place: it never filters or files an item.
+   */
+  extra?: { label: string; active: boolean; onSelect: () => void; content: ReactNode };
   now?: Date;
 };
 
-export function PantryShelves({ items, place, onChangePlace, onPressItem, onSeeAll, now = new Date() }: Props) {
+const EXTRA_ID = '__extra__';
+
+export function PantryShelves({ items, place, onChangePlace, onPressItem, onSeeAll, extra, now = new Date() }: Props) {
   const shelves = buildPantryShelves(items, place, now);
+  const options = extra ? [...PLACE_OPTIONS, { id: EXTRA_ID, label: extra.label }] : PLACE_OPTIONS;
+  const value: string = extra?.active ? EXTRA_ID : place;
   return (
     <View style={{ gap: space.gap }}>
-      <ChoicePills label="Storage place" options={PLACE_OPTIONS} value={place} onChange={onChangePlace} />
-      {shelves.length === 0 ? (
+      <ChoicePills
+        label="Storage place"
+        options={options}
+        value={value}
+        onChange={(id) => (id === EXTRA_ID ? extra?.onSelect() : onChangePlace(id as PantryStorageLocation))}
+      />
+      {extra?.active ? (
+        extra.content
+      ) : shelves.length === 0 ? (
         <Card>
           <AppText variant="secondary" color="muted" style={{ textAlign: 'center' }}>
             {SHELF_VIEW_COPY.emptyPlace(SHELF_VIEW_COPY.placeLabels[place])}
