@@ -3,8 +3,11 @@ import { Pressable, View } from 'react-native';
 import { colors, radius, touch } from '../theme/tokens';
 import { AppText } from '../ui/AppText';
 import { Button } from '../ui/Button';
+import { CookwareDrawing } from './CookwareDrawing';
 import { GEAR_COPY as COPY } from './copy';
 import { shelves, type GearItem } from './gear';
+
+const TILE_COL_W = 100;
 
 /**
  * One shelf at a time: a grid of tap-to-pick tiles with Back / Next, and a Save on the last step.
@@ -64,17 +67,32 @@ export function GearPicker({
               accessibilityLabel={COPY.tileA11y(item.name, on)}
               testID={`gear-tile-${item.slug}`}
               style={({ pressed }) => ({
+                width: TILE_COL_W,
                 minHeight: touch.min,
-                paddingHorizontal: 16,
+                alignItems: 'center',
+                paddingTop: 10,
+                paddingBottom: 8,
+                paddingHorizontal: 4,
                 borderRadius: radius.control,
                 borderWidth: on ? 2 : 1,
                 borderColor: on ? colors.primary : colors.border,
-                backgroundColor: on ? colors.banana : colors.card,
-                justifyContent: 'center',
+                backgroundColor: on ? colors.warningLight : colors.card,
                 opacity: pressed ? 0.85 : 1,
               })}
             >
-              <AppText bold={on}>{item.name}</AppText>
+              <CookwareDrawing slug={item.slug} category={item.category} />
+              <AppText variant="label" bold={on} numberOfLines={2} style={{ textAlign: 'center', marginTop: 6 }}>
+                {item.name}
+              </AppText>
+              {on ? (
+                <View
+                  style={{ position: 'absolute', top: 6, right: 6, width: 22, height: 22, borderRadius: 11, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' }}
+                >
+                  <AppText variant="label" color="onPrimary">
+                    ✓
+                  </AppText>
+                </View>
+              ) : null}
             </Pressable>
           );
         })}
