@@ -4,10 +4,11 @@ import { AppText } from '../ui/AppText';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { GEAR_COPY as COPY } from './copy';
+import { CookwareShelves } from './CookwareShelves';
 import { GearPicker } from './GearPicker';
 import { useGearCatalog, useOwnGear } from './useGear';
 
-/** Pantry tab > Kitchen gear: shows how many things are picked and opens the step-by-step picker. */
+/** Pantry tab > Cookware: shows how many things are picked and opens the step-by-step picker. */
 export function GearCard() {
   const catalog = useGearCatalog();
   const own = useOwnGear();
@@ -46,6 +47,7 @@ export function GearCard() {
         ) : (
           <>
             <AppText>{answered ? COPY.cardExplainSet(own.slugs.length) : COPY.cardExplainNone}</AppText>
+            {answered && catalog.data ? <CookwareShelves catalog={catalog.data} ownedSlugs={own.slugs} /> : null}
             <AppText variant="secondary" color="muted">
               {COPY.cardStorage}
             </AppText>
