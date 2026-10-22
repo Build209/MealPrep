@@ -22,7 +22,8 @@ import { Screen } from '../ui/Screen';
 import { UsualsCard } from '../usuals/UsualsCard';
 import { AddGrocerySheet } from './AddGrocerySheet';
 import { GroceryList } from './GroceryList';
-import { GROCERY_COPY, groceryView } from './groceryLogic';
+import { GROCERY_COPY, groceryListText, groceryView } from './groceryLogic';
+import { shareListText } from './shareList';
 
 /** How long the "… Undo" bar stays up. */
 const UNDO_MS = 12_000;
@@ -164,10 +165,32 @@ export function GroceryScreen({ top }: { top?: ReactNode } = {}) {
           {GROCERY_COPY.summary(view.openCount, view.ticked.length)}
         </AppText>
         {addButton}
+        {view.openCount > 0 ? (
+          <Button
+            label={GROCERY_COPY.shareList}
+            kind="secondary"
+            accessibilityLabel={GROCERY_COPY.shareListA11y}
+            testID="grocery-share-list"
+            onPress={() => void onShareList()}
+          />
+        ) : null}
         {view.openCount === 0 ? <AppText color="muted">{GROCERY_COPY.allTicked}</AppText> : null}
         <GroceryList view={view} canChange={online} onTick={onTick} onUntick={onUntick} onClearTicked={onClearTicked} />
       </View>
     );
+  }
+
+  async function onShareList() {
+    const text = groceryListText(view);
+    if (!text) return;
+    try {
+      const result = await shareListText(text, GROCERY_COPY.shareTitle);
+      if (result === 'copied') setNotice({ text: GROCERY_COPY.shareCopied });
+    } catch (error) {
+      // Closing the share sheet is not a failure.
+      if (error instanceof Error && error.name === 'AbortError') return;
+      setNotice({ text: GROCERY_COPY.shareFailed });
+    }
   }
 
   const undoBusy = untick.isPending || restore.isPending;
