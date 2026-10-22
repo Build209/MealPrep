@@ -37,6 +37,11 @@ export const GROCERY_COPY = {
   untickFailed: (message: string) => `Couldn't untick it. ${message}`,
   clearFailed: (message: string) => `Not cleared. ${message}`,
   undoFailed: (message: string) => `Couldn't undo. ${message}`,
+  shareList: 'Share list',
+  shareListA11y: 'Share or copy your list as text',
+  shareTitle: 'My grocery list',
+  shareCopied: 'List copied. Paste it where you need it.',
+  shareFailed: "Couldn't share the list. Try again.",
 } as const;
 
 export const ADD_FORM_COPY = {
@@ -95,4 +100,16 @@ export function groceryView(items: readonly GroceryItem[]): GroceryView {
   const open = items.filter((item) => !item.checked);
   const ticked = items.filter((item) => item.checked).sort((a, b) => a.name.localeCompare(b.name));
   return { aisles: groupGroceryByAisle(open), ticked, openCount: open.length };
+}
+
+/**
+ * The open (unticked) list as plain text, one line per item, grouped by aisle, ready to paste into
+ * a store's app, a message or Notes. Ticked rows are left out. Empty list gives ''.
+ */
+export function groceryListText(view: GroceryView): string {
+  const blocks = view.aisles.map((aisle) => {
+    const lines = aisle.items.map((item) => `- ${item.name} (${groceryRowDetail(item)})`);
+    return [aisle.label, ...lines].join('\n');
+  });
+  return blocks.join('\n\n');
 }
